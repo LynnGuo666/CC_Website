@@ -1,38 +1,54 @@
 # -*- coding: utf-8 -*-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import datetime
-from app.modules.users.schemas import User  # 复用 User schema
+from app.modules.users.schemas import User
 
-# 队伍的基础属性
+# --- 用于嵌套显示的简化模型 ---
+
+class UserInfo(User):
+    """一个简化的User模型，用于在其他模型中嵌套显示"""
+    pass
+
+class TeamInfo(BaseModel):
+    """一个简化的Team模型，不包含成员列表以避免循环引用或序列化问题"""
+    id: int
+    name: str
+    color: str | None = None
+    team_number: int
+
+    class Config:
+        orm_mode = True
+
+# --- 队伍相关的完整模型 ---
+
 class TeamBase(BaseModel):
     name: str
     color: str | None = None
     team_number: int
 
-# 创建队伍时需要接收的属性
 class TeamCreate(TeamBase):
     pass
 
-# 从 API 返回给客户端的队伍信息
 class Team(TeamBase):
     id: int
-    members: list[User] = []  # 返回队伍信息时，也一并返回成员列表
+    # members: list[UserInfo] = []  # 移除此字段以避免序列化问题
 
     class Config:
-        orm_mode = True # 允许从 ORM 模型直接转换
+        orm_mode = True
 
-# 队伍成员关系的基础属性
+# --- 队伍成员关系相关的模型 ---
+
 class TeamMembershipBase(BaseModel):
     user_id: int
     team_id: int
     join_date: datetime.datetime | None = None
     leave_date: datetime.datetime | None = None
 
-# 创建成员关系时需要的数据
 class TeamMembershipCreate(TeamMembershipBase):
     pass
 
-# 从 API 返回的成员关系信息
 class TeamMembership(TeamMembershipBase):
+    user: UserInfo # 嵌套返回用户信息
+
     class Config:
         orm_mode = True

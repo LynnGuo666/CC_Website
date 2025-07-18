@@ -15,8 +15,10 @@ from app.modules.users.router import router as users_router
 from app.modules.teams.router import router as teams_router
 from app.modules.games.router import router as games_router
 from app.modules.matches.router import router as matches_router
+from app.modules.live.router import router as live_router
 
 app.include_router(users_router, prefix="/users", tags=["users"])
 app.include_router(teams_router, prefix="/teams", tags=["teams"])
 app.include_router(games_router, prefix="/games", tags=["games"])
 app.include_router(matches_router, prefix="/matches", tags=["matches"])
+app.include_router(live_router, prefix="/live", tags=["live"])

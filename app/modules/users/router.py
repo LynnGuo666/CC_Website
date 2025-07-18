@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
 from . import crud, models, schemas
+from app.core.security import get_api_key
 
 router = APIRouter()
 
@@ -16,7 +17,7 @@ def get_db():
 
 
 @router.post("/", response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     return crud.create_user(db=db, user=user)
 
 

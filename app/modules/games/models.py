@@ -12,5 +12,5 @@ class Game(Base):
     name = Column(String, index=True, comment="项目名称")
     description = Column(Text, comment="项目介绍")
 
-    # 建立与 Match 模型的关联 (一对多)
-    matches = relationship("Match", back_populates="game")
+    # 建立与 MatchGame 模型的关联，表示一个项目可以出现在多个赛程中
+    match_games = relationship("MatchGame", back_populates="game")

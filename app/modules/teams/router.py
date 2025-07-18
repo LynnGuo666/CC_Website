@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.db import SessionLocal
 from . import crud, models, schemas
 from app.modules.users import crud as users_crud # 引入用户crud，用于检查用户是否存在
+from app.core.security import get_api_key
 
 router = APIRouter()
 
@@ -19,7 +20,7 @@ def get_db():
 # --- 队伍接口 ---
 
 @router.post("/", response_model=schemas.Team)
-def create_team(team: schemas.TeamCreate, db: Session = Depends(get_db)):
+def create_team(team: schemas.TeamCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """创建一个新队伍"""
     return crud.create_team(db=db, team=team)
 
@@ -40,7 +41,7 @@ def read_team(team_id: int, db: Session = Depends(get_db)):
 # --- 队伍成员接口 ---
 
 @router.post("/{team_id}/members/{user_id}", response_model=schemas.TeamMembership)
-def add_team_member(team_id: int, user_id: int, db: Session = Depends(get_db)):
+def add_team_member(team_id: int, user_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """向队伍中添加一个成员"""
     # 检查队伍和用户是否存在
     db_team = crud.get_team(db, team_id=team_id)
@@ -53,7 +54,7 @@ def add_team_member(team_id: int, user_id: int, db: Session = Depends(get_db)):
     return crud.add_team_member(db=db, team_id=team_id, user_id=user_id)
 
 @router.delete("/{team_id}/members/{user_id}", response_model=schemas.TeamMembership)
-def remove_team_member(team_id: int, user_id: int, db: Session = Depends(get_db)):
+def remove_team_member(team_id: int, user_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """从队伍中移除一个成员"""
     # 检查队伍和用户是否存在
     db_team = crud.get_team(db, team_id=team_id)

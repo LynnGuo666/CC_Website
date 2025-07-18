@@ -12,7 +12,10 @@ def get_games(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Game).offset(skip).limit(limit).all()
 
 def create_game(db: Session, game: schemas.GameCreate):
-    """创建一个新比赛项目"""
+    """Get or Create a game."""
+    db_game = db.query(models.Game).filter(models.Game.name == game.name).first()
+    if db_game:
+        return db_game
     db_game = models.Game(name=game.name, description=game.description)
     db.add(db_game)
     db.commit()

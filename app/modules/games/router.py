@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
 from . import crud, models, schemas
+from app.core.security import get_api_key
 
 router = APIRouter()
 
@@ -16,7 +17,7 @@ def get_db():
         db.close()
 
 @router.post("/", response_model=schemas.Game)
-def create_game(game: schemas.GameCreate, db: Session = Depends(get_db)):
+def create_game(game: schemas.GameCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
     """创建一个新比赛项目"""
     return crud.create_game(db=db, game=game)
 
