@@ -173,3 +173,33 @@ def create_match_score(db: Session, match_game_id: int, score: schemas.ScoreCrea
 
 def get_scores_for_match_game(db: Session, match_game_id: int):
     return db.query(models.Score).filter(models.Score.match_game_id == match_game_id).all()
+
+def delete_match(db: Session, match_id: int):
+    """删除比赛"""
+    db_match = db.query(models.Match).filter(models.Match.id == match_id).first()
+    if not db_match:
+        return False
+    
+    db.delete(db_match)
+    db.commit()
+    return True
+
+def delete_match_game(db: Session, match_game_id: int):
+    """删除赛程"""
+    db_match_game = db.query(models.MatchGame).filter(models.MatchGame.id == match_game_id).first()
+    if not db_match_game:
+        return False
+    
+    db.delete(db_match_game)
+    db.commit()
+    return True
+
+def delete_score(db: Session, score_id: int):
+    """删除分数记录"""
+    db_score = db.query(models.Score).filter(models.Score.id == score_id).first()
+    if not db_score:
+        return False
+    
+    db.delete(db_score)
+    db.commit()
+    return True

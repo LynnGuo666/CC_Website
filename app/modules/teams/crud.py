@@ -70,21 +70,52 @@ def get_team_with_members(db: Session, team_id: int):
 
 def get_team_stats(db: Session, team_id: int) -> Optional[Dict[str, Any]]:
     """获取队伍统计信息"""
+    from app.modules.matches import models as match_models
+    
     team = db.query(models.Team).filter(models.Team.id == team_id).first()
     if not team:
         return None
     
-    # TODO: 实现详细的统计逻辑
-    # 这里先返回基本统计信息
+    # 获取队伍参与的所有比赛
+    team_matches = db.query(match_models.Match).join(
+        match_models.match_participants
+    ).filter(match_models.match_participants.c.team_id == team_id).all()
+    
+    # 计算队伍总积分
+    total_points = db.query(
+        db.func.coalesce(db.func.sum(match_models.Score.points), 0)
+    ).filter(match_models.Score.team_id == team_id).scalar()
+    
+    # 计算总比赛数和获胜数
+    total_matches = len(team_matches)
+    total_wins = db.query(match_models.Match).filter(
+        match_models.Match.winning_team_id == team_id
+    ).count()
+    
+    # 计算胜率
+    win_rate = (total_wins / total_matches) if total_matches > 0 else 0.0
+    
+    # 计算平均每场比赛得分
+    avg_score_per_match = (total_points / total_matches) if total_matches > 0 else 0.0
+    
+    # 获取当前成员
     current_members = db.query(models.TeamMembership).filter(
         models.TeamMembership.team_id == team_id,
         models.TeamMembership.leave_date == None
-    ).count()
+    ).all()
     
+    # 获取历史成员
     historical_members = db.query(models.TeamMembership).filter(
         models.TeamMembership.team_id == team_id,
         models.TeamMembership.leave_date != None
-    ).count()
+    ).all()
+    
+    # 获取最近比赛（最多5场）
+    recent_matches = db.query(match_models.Match).join(
+        match_models.match_participants
+    ).filter(
+        match_models.match_participants.c.team_id == team_id
+    ).order_by(match_models.Match.created_at.desc()).limit(5).all()
     
     return {
         "team": {
@@ -92,14 +123,35 @@ def get_team_stats(db: Session, team_id: int) -> Optional[Dict[str, Any]]:
             "name": team.name,
             "color": team.color
         },
-        "total_matches": 0,  # TODO: 从scores表计算
-        "total_wins": 0,     # TODO: 从matches表计算
-        "total_points": 0,   # TODO: 从scores表计算
-        "win_rate": 0.0,
-        "average_score_per_match": 0.0,
-        "current_members": [],
-        "historical_members": [],
-        "recent_matches": []
+        "total_matches": total_matches,
+        "total_wins": total_wins,
+        "total_points": int(total_points),
+        "win_rate": round(win_rate, 2),
+        "average_score_per_match": round(avg_score_per_match, 2),
+        "current_members": [
+            {
+                "user_id": member.user_id,
+                "user_name": member.user.username if member.user else "Unknown",
+                "join_date": member.join_date.isoformat() if member.join_date else None
+            } for member in current_members
+        ],
+        "historical_members": [
+            {
+                "user_id": member.user_id,
+                "user_name": member.user.username if member.user else "Unknown",
+                "join_date": member.join_date.isoformat() if member.join_date else None,
+                "leave_date": member.leave_date.isoformat() if member.leave_date else None
+            } for member in historical_members
+        ],
+        "recent_matches": [
+            {
+                "id": match.id,
+                "name": match.name,
+                "status": match.status.value if match.status else None,
+                "start_time": match.start_time.isoformat() if match.start_time else None,
+                "is_winner": match.winning_team_id == team_id
+            } for match in recent_matches
+        ]
     }
 
 def get_team_members(db: Session, team_id: int, include_historical: bool = False):
@@ -113,9 +165,68 @@ def get_team_members(db: Session, team_id: int, include_historical: bool = False
 
 def get_team_match_history(db: Session, team_id: int, skip: int = 0, limit: int = 50):
     """获取队伍历史比赛记录"""
-    # TODO: 实现队伍比赛历史查询
-    # 这里先返回空列表
-    return []
+    from app.modules.matches import models as match_models
+    
+    # 获取队伍参与的比赛，按时间倒序
+    matches = db.query(match_models.Match).join(
+        match_models.match_participants
+    ).filter(
+        match_models.match_participants.c.team_id == team_id
+    ).order_by(match_models.Match.created_at.desc()).offset(skip).limit(limit).all()
+    
+    result = []
+    for match in matches:
+        # 获取这场比赛中队伍的总得分
+        team_score = db.query(
+            db.func.coalesce(db.func.sum(match_models.Score.points), 0)
+        ).join(match_models.MatchGame).filter(
+            match_models.MatchGame.match_id == match.id,
+            match_models.Score.team_id == team_id
+        ).scalar()
+        
+        # 获取比赛中的游戏数量
+        game_count = db.query(match_models.MatchGame).filter(
+            match_models.MatchGame.match_id == match.id
+        ).count()
+        
+        # 获取队伍在各个游戏中的详细表现
+        game_performances = []
+        match_games = db.query(match_models.MatchGame).filter(
+            match_models.MatchGame.match_id == match.id
+        ).order_by(match_models.MatchGame.game_order).all()
+        
+        for match_game in match_games:
+            game_score = db.query(
+                db.func.coalesce(db.func.sum(match_models.Score.points), 0)
+            ).filter(
+                match_models.Score.match_game_id == match_game.id,
+                match_models.Score.team_id == team_id
+            ).scalar()
+            
+            game_performances.append({
+                "game_id": match_game.game_id,
+                "game_name": match_game.game.name if match_game.game else "Unknown",
+                "game_order": match_game.game_order,
+                "team_score": int(game_score),
+                "structure_type": match_game.structure_type
+            })
+        
+        result.append({
+            "match_id": match.id,
+            "match_name": match.name,
+            "description": match.description,
+            "status": match.status.value if match.status else None,
+            "start_time": match.start_time.isoformat() if match.start_time else None,
+            "end_time": match.end_time.isoformat() if match.end_time else None,
+            "is_winner": match.winning_team_id == team_id,
+            "total_score": int(team_score),
+            "game_count": game_count,
+            "average_score_per_game": round(team_score / game_count, 2) if game_count > 0 else 0.0,
+            "game_performances": game_performances,
+            "created_at": match.created_at.isoformat() if match.created_at else None
+        })
+    
+    return result
 
 def create_team(db: Session, team: schemas.TeamCreate):
     """Get or Create a team."""

@@ -139,23 +139,15 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
       {/* Content Section */}
       <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
-          {/* Player Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+          {/* Player Stats - 移除有问题的统计 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-2xl mx-auto">
             <div className="text-center p-6 rounded-2xl glass card-hover">
               <div className="text-3xl font-bold text-primary mb-2">{player.total_points}</div>
               <div className="text-muted-foreground">总积分</div>
             </div>
             <div className="text-center p-6 rounded-2xl glass card-hover">
-              <div className="text-3xl font-bold text-green-500 mb-2">{player.total_wins}</div>
-              <div className="text-muted-foreground">总获胜次数</div>
-            </div>
-            <div className="text-center p-6 rounded-2xl glass card-hover">
               <div className="text-3xl font-bold text-accent mb-2">{player.total_matches}</div>
               <div className="text-muted-foreground">参与比赛</div>
-            </div>
-            <div className="text-center p-6 rounded-2xl glass card-hover">
-              <div className="text-3xl font-bold text-orange-500 mb-2">{player.win_rate}%</div>
-              <div className="text-muted-foreground">胜率</div>
             </div>
           </div>
 
@@ -174,7 +166,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                         </Badge>
                       </CardTitle>
                       <CardDescription>
-                        总得分: {stats.total_score} | 平均分: {Math.round(stats.total_score / stats.games_played)}
+                        总得分: {stats.total_score} | 平均分: {stats.games_played > 0 ? Math.round(stats.total_score / stats.games_played) : 0}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -224,7 +216,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                           <span className="font-semibold text-primary">{match.total_points}</span>
                         </TableCell>
                         <TableCell>
-                          {Math.round(match.total_points / match.games_played)}
+                          {match.games_played > 0 ? Math.round(match.total_points / match.games_played) : 0}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -290,54 +282,6 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Performance Metrics */}
-          <div className="mb-16">
-            <h2 className="text-2xl font-bold mb-8">性能指标</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="glass card-hover">
-                <CardHeader>
-                  <CardTitle className="text-lg">平均得分</CardTitle>
-                  <CardDescription>每场比赛平均获得积分</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-primary">{player.average_score}</div>
-                </CardContent>
-              </Card>
-              
-              <Card className="glass card-hover">
-                <CardHeader>
-                  <CardTitle className="text-lg">活跃度</CardTitle>
-                  <CardDescription>最后活跃时间</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    {new Date(player.last_active).toLocaleDateString('zh-CN', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="glass card-hover">
-                <CardHeader>
-                  <CardTitle className="text-lg">注册时间</CardTitle>
-                  <CardDescription>首次参与时间</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    {new Date(player.created_at).toLocaleDateString('zh-CN', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
 

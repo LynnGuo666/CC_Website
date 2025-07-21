@@ -34,3 +34,19 @@ def read_game(game_id: int, db: Session = Depends(get_db)):
     if db_game is None:
         raise HTTPException(status_code=404, detail="Game not found")
     return db_game
+
+@router.put("/{game_id}", response_model=schemas.Game)
+def update_game(game_id: int, game: schemas.GameCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    """更新比赛项目"""
+    db_game = crud.update_game(db, game_id=game_id, game_update=game)
+    if db_game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return db_game
+
+@router.delete("/{game_id}")
+def delete_game(game_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    """删除比赛项目"""
+    success = crud.delete_game(db, game_id=game_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Game not found")
+    return {"message": "Game deleted successfully"}

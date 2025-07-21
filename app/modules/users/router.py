@@ -64,3 +64,19 @@ def get_user_team_history(user_id: int, db: Session = Depends(get_db)):
         "current_team": teams.get("current_team"),
         "historical_teams": teams.get("historical_teams", [])
     }
+
+@router.put("/{user_id}", response_model=schemas.User)
+def update_user(user_id: int, user: schemas.UserCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    """更新用户信息"""
+    db_user = crud.update_user(db, user_id=user_id, user_update=user)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
+
+@router.delete("/{user_id}")
+def delete_user(user_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    """删除用户"""
+    success = crud.delete_user(db, user_id=user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "User deleted successfully"}

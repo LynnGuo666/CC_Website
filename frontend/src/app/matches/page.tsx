@@ -99,26 +99,20 @@ export default async function MatchesPage() {
           {!error && (
             <>
               {/* Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-                <div className="text-center p-6 rounded-2xl glass card-hover">
-                  <div className="text-3xl font-bold text-primary mb-2">{matches.length}</div>
-                  <div className="text-muted-foreground">总赛事数</div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+                <div className="text-center p-5 rounded-xl glass card-hover">
+                  <div className="text-2xl font-bold text-primary mb-1">{matches.length}</div>
+                  <div className="text-sm text-muted-foreground">总赛事数</div>
                 </div>
-                <div className="text-center p-6 rounded-2xl glass card-hover">
-                  <div className="text-3xl font-bold text-green-500 mb-2">{ongoingMatches.length}</div>
-                  <div className="text-muted-foreground">进行中</div>
+                <div className="text-center p-5 rounded-xl glass card-hover">
+                  <div className="text-2xl font-bold text-green-500 mb-1">{ongoingMatches.length}</div>
+                  <div className="text-sm text-muted-foreground">进行中</div>
                 </div>
-                <div className="text-center p-6 rounded-2xl glass card-hover">
-                  <div className="text-3xl font-bold text-accent mb-2">
+                <div className="text-center p-5 rounded-xl glass card-hover">
+                  <div className="text-2xl font-bold text-accent mb-1">
                     {matches.reduce((total, match) => total + match.participants.length, 0)}
                   </div>
-                  <div className="text-muted-foreground">参赛队伍</div>
-                </div>
-                <div className="text-center p-6 rounded-2xl glass card-hover">
-                  <div className="text-3xl font-bold text-orange-500 mb-2">
-                    {matches.reduce((total, match) => total + match.match_games.length, 0)}
-                  </div>
-                  <div className="text-muted-foreground">小游戏数量</div>
+                  <div className="text-sm text-muted-foreground">参赛队伍</div>
                 </div>
               </div>
 
@@ -236,29 +230,22 @@ function MatchCard({ match, priority = false }: { match: Match; priority?: boole
               <span className="font-semibold">{match.match_games.length} 项</span>
             </div>
 
-            {match.prize_pool && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">奖金池</span>
-                <span className="font-semibold text-orange-500">{match.prize_pool}</span>
-              </div>
-            )}
-            
             {match.participants.length > 0 && (
               <div className="space-y-2">
                 <span className="text-sm text-muted-foreground">参赛队伍</span>
                 <div className="flex flex-wrap gap-1">
-                  {match.participants.slice(0, 3).map((team) => (
+                  {match.participants.slice(0, 4).map((team) => (
                     <span 
                       key={team.id}
-                      className="px-2 py-1 text-xs rounded-full bg-secondary/50 text-secondary-foreground"
+                      className="px-2 py-0.5 text-xs rounded-md bg-secondary/50 text-secondary-foreground"
                       style={{ backgroundColor: team.color ? `${team.color}20` : undefined }}
                     >
                       {team.name}
                     </span>
                   ))}
-                  {match.participants.length > 3 && (
-                    <span className="px-2 py-1 text-xs rounded-full bg-muted text-muted-foreground">
-                      +{match.participants.length - 3}
+                  {match.participants.length > 4 && (
+                    <span className="px-2 py-0.5 text-xs rounded-md bg-muted text-muted-foreground">
+                      +{match.participants.length - 4}
                     </span>
                   )}
                 </div>
@@ -270,18 +257,18 @@ function MatchCard({ match, priority = false }: { match: Match; priority?: boole
               <div className="space-y-2">
                 <span className="text-sm text-muted-foreground">小游戏项目</span>
                 <div className="flex flex-wrap gap-1">
-                  {match.match_games.slice(0, 3).map((game) => (
+                  {match.match_games.slice(0, 4).map((game) => (
                     <span 
                       key={game.id}
-                      className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary flex items-center space-x-1"
+                      className="px-2 py-0.5 text-xs rounded-md bg-primary/10 text-primary flex items-center gap-1"
                     >
                       {game.is_live && <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>}
                       <span>{game.game.name}</span>
                     </span>
                   ))}
-                  {match.match_games.length > 3 && (
-                    <span className="px-2 py-1 text-xs rounded-full bg-muted text-muted-foreground">
-                      +{match.match_games.length - 3}
+                  {match.match_games.length > 4 && (
+                    <span className="px-2 py-0.5 text-xs rounded-md bg-muted text-muted-foreground">
+                      +{match.match_games.length - 4}
                     </span>
                   )}
                 </div>

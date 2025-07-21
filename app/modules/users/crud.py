@@ -202,3 +202,29 @@ def create_user(db: Session, user: schemas.UserCreate):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+def update_user(db: Session, user_id: int, user_update: schemas.UserCreate):
+    """更新用户信息"""
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
+        return None
+    
+    db_user.nickname = user_update.nickname
+    if user_update.display_name is not None:
+        db_user.display_name = user_update.display_name
+    if user_update.source is not None:
+        db_user.source = user_update.source
+    
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def delete_user(db: Session, user_id: int):
+    """删除用户"""
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
+        return False
+    
+    db.delete(db_user)
+    db.commit()
+    return True

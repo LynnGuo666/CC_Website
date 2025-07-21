@@ -152,3 +152,19 @@ def get_match_stats(match_id: int, db: Session = Depends(get_db)):
     if not stats:
         raise HTTPException(status_code=404, detail="Match not found")
     return stats
+
+@router.delete("/{match_id}")
+def delete_match(match_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    """删除比赛"""
+    success = crud.delete_match(db, match_id=match_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Match not found")
+    return {"message": "Match deleted successfully"}
+
+@router.delete("/games/{match_game_id}")
+def delete_match_game(match_game_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+    """删除赛程"""
+    success = crud.delete_match_game(db, match_game_id=match_game_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="MatchGame not found")
+    return {"message": "MatchGame deleted successfully"}

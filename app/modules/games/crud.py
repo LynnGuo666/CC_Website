@@ -21,3 +21,27 @@ def create_game(db: Session, game: schemas.GameCreate):
     db.commit()
     db.refresh(db_game)
     return db_game
+
+def update_game(db: Session, game_id: int, game_update: schemas.GameCreate):
+    """更新比赛项目"""
+    db_game = db.query(models.Game).filter(models.Game.id == game_id).first()
+    if not db_game:
+        return None
+    
+    db_game.name = game_update.name
+    if game_update.description is not None:
+        db_game.description = game_update.description
+    
+    db.commit()
+    db.refresh(db_game)
+    return db_game
+
+def delete_game(db: Session, game_id: int):
+    """删除比赛项目"""
+    db_game = db.query(models.Game).filter(models.Game.id == game_id).first()
+    if not db_game:
+        return False
+    
+    db.delete(db_game)
+    db.commit()
+    return True

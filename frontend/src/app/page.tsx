@@ -55,7 +55,7 @@ export default function Home() {
           </div>
           
           {/* Stats */}
-          <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
+          <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-lg mx-auto">
             <div className="text-center p-6 rounded-2xl glass card-hover">
               <div className="text-3xl md:text-4xl font-bold text-primary mb-2">16+</div>
               <div className="text-muted-foreground">参赛队伍</div>
@@ -63,10 +63,6 @@ export default function Home() {
             <div className="text-center p-6 rounded-2xl glass card-hover">
               <div className="text-3xl md:text-4xl font-bold text-accent mb-2">50+</div>
               <div className="text-muted-foreground">参赛选手</div>
-            </div>
-            <div className="text-center p-6 rounded-2xl glass card-hover">
-              <div className="text-3xl md:text-4xl font-bold text-orange-500 mb-2">¥100K+</div>
-              <div className="text-muted-foreground">奖金池</div>
             </div>
           </div>
         </div>
