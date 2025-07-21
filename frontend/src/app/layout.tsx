@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -33,10 +35,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN">
+    <html lang="zh-CN" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
         {/* Apple-style Navigation */}
         <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-apple bg-white/80 dark:bg-black/80 border-b border-border/50">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -61,13 +69,17 @@ export default function RootLayout({
                 </div>
               </div>
               
-              {/* Mobile menu button - 可以后续添加 */}
-              <div className="md:hidden">
-                <button className="p-2 rounded-lg text-foreground/60 hover:text-foreground hover:bg-white/10 transition-all">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                  </svg>
-                </button>
+              <div className="flex items-center space-x-4">
+                <ThemeToggle />
+                
+                {/* Mobile menu button - 可以后续添加 */}
+                <div className="md:hidden">
+                  <button className="p-2 rounded-lg text-foreground/60 hover:text-foreground hover:bg-white/10 transition-all">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -89,6 +101,7 @@ export default function RootLayout({
             </div>
           </div>
         </footer>
+        </ThemeProvider>
       </body>
     </html>
   );

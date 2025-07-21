@@ -1,7 +1,9 @@
 import { getMatchById, Match } from '@/services/matchService';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -16,25 +18,92 @@ type TeamTotalScore = {
   name: string;
   color: string | null;
   total_points: number;
+  games_played: number;
+  average_score: number;
+  best_game_score: number;
+  best_game_name: string;
 };
 
-// Helper function to calculate total scores
-function calculateTotalScores(match: Match): TeamTotalScore[] {
-  const scores: Record<number, TeamTotalScore> = {};
+// Enhanced function to calculate comprehensive team statistics
+function calculateTeamStats(match: Match): TeamTotalScore[] {
+  const teamStats: Record<number, TeamTotalScore> = {};
 
+  // Initialize team stats
   for (const team of match.participants) {
-    scores[team.id] = { id: team.id, name: team.name, color: team.color, total_points: 0 };
+    teamStats[team.id] = {
+      id: team.id,
+      name: team.name,
+      color: team.color,
+      total_points: 0,
+      games_played: 0,
+      average_score: 0,
+      best_game_score: 0,
+      best_game_name: '',
+    };
   }
 
+  // Calculate stats from scores
   for (const game of match.match_games) {
+    const gameTeamScores: Record<number, number> = {};
+    
+    // Calculate team totals for this game
     for (const score of game.scores) {
-      if (scores[score.team_id]) {
-        scores[score.team_id].total_points += score.points;
+      if (!gameTeamScores[score.team_id]) {
+        gameTeamScores[score.team_id] = 0;
+      }
+      gameTeamScores[score.team_id] += score.points;
+    }
+
+    // Update team stats
+    for (const [teamId, gameScore] of Object.entries(gameTeamScores)) {
+      const id = parseInt(teamId);
+      if (teamStats[id]) {
+        teamStats[id].total_points += gameScore;
+        teamStats[id].games_played += 1;
+        
+        // Track best game performance
+        if (gameScore > teamStats[id].best_game_score) {
+          teamStats[id].best_game_score = gameScore;
+          teamStats[id].best_game_name = game.game.name;
+        }
       }
     }
   }
 
-  return Object.values(scores).sort((a, b) => b.total_points - a.total_points);
+  // Calculate averages
+  Object.values(teamStats).forEach(team => {
+    if (team.games_played > 0) {
+      team.average_score = Math.round(team.total_points / team.games_played);
+    }
+  });
+
+  return Object.values(teamStats).sort((a, b) => b.total_points - a.total_points);
+}
+
+// Function to get status badge styling
+function getStatusBadge(status: string) {
+  switch (status) {
+    case 'preparing':
+      return <Badge variant="secondary">筹办中</Badge>;
+    case 'ongoing':
+      return <Badge variant="default" className="bg-blue-500">进行中</Badge>;
+    case 'finished':
+      return <Badge variant="default" className="bg-green-500">已结束</Badge>;
+    case 'cancelled':
+      return <Badge variant="destructive">已取消</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
+  }
+}
+
+// Function to get medal emoji for ranking
+function getMedal(rank: number): string {
+  switch (rank) {
+    case 1: return '🏆';
+    case 2: return '🥈';
+    case 3: return '🥉';
+    default: return '';
+  }
 }
 
 type MatchDetailPageProps = {
@@ -44,7 +113,7 @@ type MatchDetailPageProps = {
 export default async function MatchDetailPage({ params }: MatchDetailPageProps) {
   let match: Match | null = null;
   let error: string | null = null;
-  let totalScores: TeamTotalScore[] = [];
+  let teamStats: TeamTotalScore[] = [];
 
   try {
     const { id } = await params;
@@ -54,7 +123,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
     }
     match = await getMatchById(matchId);
     if (match) {
-      totalScores = calculateTotalScores(match);
+      teamStats = calculateTeamStats(match);
     }
   } catch (e: any) {
     console.error(e);
@@ -64,10 +133,19 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   if (error) {
     return (
       <main className="container mx-auto p-4">
-        <p className="text-red-500 bg-red-100 p-4 rounded-lg">{error}</p>
-        <Button asChild variant="link" className="mt-4">
-          <Link href="/matches">&larr; 返回赛事列表</Link>
-        </Button>
+        <div className="p-6 rounded-2xl bg-destructive/10 border border-destructive/20 glass">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+              <svg className="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <p className="text-destructive font-medium">{error}</p>
+          </div>
+        </div>
+        <Link href="/matches" className="text-primary hover:underline mt-4 inline-block">
+          ← 返回赛事列表
+        </Link>
       </main>
     );
   }
@@ -75,83 +153,320 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   if (!match) {
     return (
       <main className="container mx-auto p-4">
-        <p>未找到该赛事。</p>
-        <Button asChild variant="link" className="mt-4">
-          <Link href="/matches">&larr; 返回赛事列表</Link>
-        </Button>
+        <p className="text-muted-foreground">未找到该赛事。</p>
+        <Link href="/matches" className="text-primary hover:underline mt-4 inline-block">
+          ← 返回赛事列表
+        </Link>
       </main>
     );
   }
 
   return (
-    <main className="container mx-auto p-4 sm:p-6 lg:p-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-        <h1 className="text-3xl font-bold mb-2 sm:mb-0">{match.name}</h1>
-        <Button asChild>
-          <Link href={`/live/${match.id}`}>★ 前往实时视图</Link>
-        </Button>
-      </div>
+    <div className="min-h-screen">
+      {/* Hero Header */}
+      <section className="relative py-20 px-6 bg-gradient-to-br from-background via-muted/20 to-background">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
+        <div className="relative max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
+            <div className="flex-1">
+              <div className="flex items-center space-x-4 mb-4">
+                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  {match.name}
+                </h1>
+                {getStatusBadge(match.status)}
+              </div>
+              
+              {match.description && (
+                <p className="text-xl text-muted-foreground mb-6 max-w-3xl">
+                  {match.description}
+                </p>
+              )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <h2 className="text-2xl font-bold">赛程详情</h2>
-          {match.match_games.map(game => (
-            <Card key={game.id}>
-              <CardHeader>
-                <CardTitle>{game.game.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>选手</TableHead>
-                      <TableHead>队伍</TableHead>
-                      <TableHead className="text-right">分数</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {game.scores.length > 0 ? game.scores.map(score => (
-                      <TableRow key={score.id}>
-                        <TableCell>{score.user.nickname}</TableCell>
-                        <TableCell>{score.team.name}</TableCell>
-                        <TableCell className="text-right font-mono">{score.points}</TableCell>
-                      </TableRow>
-                    )) : (
-                      <TableRow><TableCell colSpan={3} className="text-center">暂无得分记录</TableCell></TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              {/* Match Info - Small Tags */}
+              <div className="flex flex-wrap items-center gap-4 mb-8">
+                <Badge variant="secondary" className="px-4 py-2 text-sm">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  {match.participants.length} 支队伍
+                </Badge>
+                
+                <Badge variant="secondary" className="px-4 py-2 text-sm">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  {match.match_games.length} 个项目
+                </Badge>
+                
+                <Badge variant="secondary" className="px-4 py-2 text-sm">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  {match.match_games.reduce((total, game) => total + game.scores.length, 0)} 条记录
+                </Badge>
+                
+                <Badge variant="secondary" className="px-4 py-2 text-sm">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  最高 {teamStats[0]?.total_points || 0} 分
+                </Badge>
+                
+                {/* Champion Badge */}
+                {(match.winning_team_id || (match.status === 'finished' && teamStats.length > 0)) && (
+                  <Badge variant="default" className="px-4 py-2 text-sm bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-0">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                    总冠军: {
+                      match.winning_team_id 
+                        ? (teamStats.find(t => t.id === match.winning_team_id)?.name || '未知队伍')
+                        : (teamStats[0]?.name || '未知队伍')
+                    }
+                  </Badge>
+                )}
+              </div>
+            </div>
 
-        <div>
-          <h2 className="text-2xl font-bold mb-4">总分榜</h2>
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>排名</TableHead>
-                    <TableHead>队伍</TableHead>
-                    <TableHead className="text-right">总分</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {totalScores.map((team, index) => (
-                    <TableRow key={team.id}>
-                      <TableCell className="font-medium">{index + 1}</TableCell>
-                      <TableCell>{team.name}</TableCell>
-                      <TableCell className="text-right font-bold">{team.total_points}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+            {/* Action Buttons - Only show live view for non-archived matches */}
+            <div className="flex flex-col sm:flex-row gap-4 mt-6 lg:mt-0">
+              {!match.is_archived && (
+                <Button asChild size="lg" className="glass card-hover">
+                  <Link href={`/live/${match.id}`}>
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    实时视图
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </main>
+      </section>
+
+      {/* Content */}
+      <section className="py-12 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            {/* Leaderboard */}
+            <div className="xl:col-span-1">
+              <div className="sticky top-6">
+                <h2 className="text-2xl font-bold mb-6 flex items-center">
+                  <svg className="w-6 h-6 mr-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                  积分榜
+                </h2>
+                
+                <Card className="glass">
+                  <CardContent className="p-0">
+                    <div className="space-y-1">
+                      {teamStats.map((team, index) => (
+                        <div key={team.id} className={`p-4 ${index === 0 ? 'bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border-l-4 border-yellow-400' : index === 1 ? 'bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800/20 dark:to-gray-700/20 border-l-4 border-gray-400' : index === 2 ? 'bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-l-4 border-orange-400' : 'hover:bg-muted/50 transition-colors'} ${index < teamStats.length - 1 ? 'border-b' : ''}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-lg font-bold text-muted-foreground min-w-[24px]">
+                                  {index + 1}
+                                </span>
+                                <span className="text-xl">{getMedal(index + 1)}</span>
+                              </div>
+                              <div className="flex items-center space-x-3">
+                                <div 
+                                  className="w-4 h-4 rounded-full border-2 border-white/50 shadow-sm"
+                                  style={{ backgroundColor: team.color || '#6b7280' }}
+                                ></div>
+                                <div>
+                                  <h3 className="font-semibold text-sm">{team.name}</h3>
+                                  <p className="text-xs text-muted-foreground">
+                                    平均 {team.average_score} 分 • {team.games_played} 场
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold">{team.total_points}</div>
+                              <div className="text-xs text-muted-foreground">总积分</div>
+                            </div>
+                          </div>
+                          {team.best_game_name && (
+                            <div className="mt-2 pt-2 border-t border-border/50">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground">最佳表现</span>
+                                <span className="font-medium">
+                                  {team.best_game_name}: {team.best_game_score}分
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+              </div>
+            </div>
+
+            {/* Games Detail */}
+            <div className="xl:col-span-2 space-y-8">
+              <h2 className="text-2xl font-bold flex items-center">
+                <svg className="w-6 h-6 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                赛程详情
+              </h2>
+              
+              {match.match_games.map((game, index) => {
+                const gameTeamScores = new Map<number, { name: string; color: string | null; total: number; players: Array<{name: string; score: number}> }>();
+                
+                // Calculate team totals for this game
+                game.scores.forEach(score => {
+                  if (!gameTeamScores.has(score.team_id)) {
+                    gameTeamScores.set(score.team_id, {
+                      name: score.team.name,
+                      color: score.team.color,
+                      total: 0,
+                      players: []
+                    });
+                  }
+                  const teamData = gameTeamScores.get(score.team_id)!;
+                  teamData.total += score.points;
+                  teamData.players.push({ name: score.user.nickname, score: score.points });
+                });
+
+                const sortedTeams = Array.from(gameTeamScores.values()).sort((a, b) => b.total - a.total);
+                const maxScore = sortedTeams[0]?.total || 1;
+
+                return (
+                  <Card key={game.id} className="glass card-hover">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="flex items-center">
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
+                              <span className="text-sm font-bold text-primary">{index + 1}</span>
+                            </div>
+                            {game.game.name}
+                          </CardTitle>
+                          <CardDescription className="mt-2">
+                            {game.game.description}
+                            {game.structure_details?.multiplier && game.structure_details.multiplier !== 1.0 && (
+                              <Badge variant="outline" className="ml-2">
+                                {game.structure_details.multiplier}x 倍率
+                              </Badge>
+                            )}
+                          </CardDescription>
+                        </div>
+                        <Badge variant="secondary">
+                          {game.scores.length} 条记录
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-6">
+                      {/* Team Performance Chart */}
+                      <div className="space-y-3">
+                        <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">队伍表现</h4>
+                        {sortedTeams.map((team, idx) => (
+                          <div key={idx} className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-sm font-medium text-muted-foreground min-w-[16px]">
+                                    {idx + 1}
+                                  </span>
+                                  <span className="text-lg">{idx === 0 ? '🏆' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ''}</span>
+                                </div>
+                                <div 
+                                  className="w-3 h-3 rounded-full"
+                                  style={{ backgroundColor: team.color || '#6b7280' }}
+                                ></div>
+                                <span className="font-medium">{team.name}</span>
+                              </div>
+                              <span className="font-bold text-lg">{team.total}</span>
+                            </div>
+                            <Progress 
+                              value={(team.total / maxScore) * 100} 
+                              className="h-2"
+                            />
+                            <div className="flex flex-wrap gap-2 text-xs">
+                              {team.players.sort((a, b) => b.score - a.score).map((player, pidx) => (
+                                <span key={pidx} className="px-2 py-1 rounded bg-muted text-muted-foreground">
+                                  {player.name}: {player.score}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Individual Scores Table */}
+                      {game.scores.length > 0 && (
+                        <div>
+                          <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-3">个人得分排行</h4>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>排名</TableHead>
+                                <TableHead>选手</TableHead>
+                                <TableHead>队伍</TableHead>
+                                <TableHead className="text-right">得分</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {game.scores
+                                .sort((a, b) => b.points - a.points)
+                                .slice(0, 10)
+                                .map((score, idx) => (
+                                <TableRow key={score.id}>
+                                  <TableCell className="font-medium">
+                                    <div className="flex items-center space-x-2">
+                                      <span>{idx + 1}</span>
+                                      <span>{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ''}</span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="font-medium">{score.user.nickname}</TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center space-x-2">
+                                      <div 
+                                        className="w-3 h-3 rounded-full"
+                                        style={{ backgroundColor: score.team.color || '#6b7280' }}
+                                      ></div>
+                                      <span>{score.team.name}</span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <span className="font-mono font-bold text-lg">{score.points}</span>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div className="flex justify-center pt-12">
+            <Link 
+              href="/matches"
+              className="inline-flex items-center px-6 py-3 rounded-2xl glass card-hover border-primary/20 hover:border-primary/40 transition-all"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+              返回赛事列表
+            </Link>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
