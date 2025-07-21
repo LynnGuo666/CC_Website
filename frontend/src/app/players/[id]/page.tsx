@@ -174,11 +174,23 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                         <div className="flex justify-between text-sm">
                           <span>表现评级</span>
                           <span className="font-semibold">
-                            {stats.total_score > 1000 ? 'S' : stats.total_score > 500 ? 'A' : stats.total_score > 200 ? 'B' : 'C'}
+                            {(() => {
+                              const avgScore = stats.games_played > 0 ? Math.round(stats.total_score / stats.games_played) : 0;
+                              // 基于实际得分范围的评级系统 (400-900分)
+                              if (avgScore >= 700) return 'S';
+                              if (avgScore >= 600) return 'A';
+                              if (avgScore >= 500) return 'B';
+                              if (avgScore >= 400) return 'C';
+                              return 'D';
+                            })()}
                           </span>
                         </div>
                         <Progress 
-                          value={Math.min((stats.total_score / 2000) * 100, 100)} 
+                          value={(() => {
+                            const avgScore = stats.games_played > 0 ? Math.round(stats.total_score / stats.games_played) : 0;
+                            // 进度条基于900分满分 (400-900分范围)
+                            return Math.min(Math.max((avgScore - 400) / 500 * 100, 0), 100);
+                          })()} 
                           className="h-2"
                         />
                       </div>
