@@ -12,10 +12,21 @@ class Team(Base):
     id = Column(Integer, primary_key=True, index=True, comment="队伍ID")
     name = Column(String, index=True, comment="队伍名称")
     color = Column(String, comment="队伍颜色（仅锦标赛启用）")
-    team_number = Column(Integer, unique=True, comment="队伍编号")
 
     # 建立与 TeamMembership 的关联
     members = relationship("TeamMembership", back_populates="team")
+    
+    @property
+    def current_players(self):
+        """获取当前队伍成员"""
+        return [membership.user for membership in self.members 
+                if membership.leave_date is None]
+    
+    @property 
+    def historical_players(self):
+        """获取历史队伍成员"""
+        return [membership.user for membership in self.members 
+                if membership.leave_date is not None]
 
 # 队伍成员关系模型（用于记录历史队伍关系）
 class TeamMembership(Base):

@@ -38,7 +38,7 @@ function calculateTotalScores(match: Match): TeamTotalScore[] {
 }
 
 type MatchDetailPageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export default async function MatchDetailPage({ params }: MatchDetailPageProps) {
@@ -47,7 +47,8 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   let totalScores: TeamTotalScore[] = [];
 
   try {
-    const matchId = parseInt(params.id, 10);
+    const { id } = await params;
+    const matchId = parseInt(id, 10);
     if (isNaN(matchId)) {
       throw new Error('无效的赛事ID。');
     }

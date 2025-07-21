@@ -44,72 +44,109 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 1rem;
+  
+  /* Apple-inspired color palette */
+  --background: #fafafa;
+  --foreground: #1d1d1f;
+  --card: rgba(255, 255, 255, 0.8);
+  --card-foreground: #1d1d1f;
+  --popover: rgba(255, 255, 255, 0.95);
+  --popover-foreground: #1d1d1f;
+  
+  /* Primary - Apple Blue */
+  --primary: #007aff;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary - Light Gray */
+  --secondary: #f2f2f7;
+  --secondary-foreground: #1d1d1f;
+  
+  /* Muted colors */
+  --muted: #f2f2f7;
+  --muted-foreground: #8e8e93;
+  
+  /* Accent - Apple Green */
+  --accent: #30d158;
+  --accent-foreground: #ffffff;
+  
+  /* Destructive - Apple Red */
+  --destructive: #ff3b30;
+  --destructive-foreground: #ffffff;
+  
+  /* Borders and inputs */
+  --border: rgba(0, 0, 0, 0.1);
+  --input: rgba(0, 0, 0, 0.05);
+  --ring: #007aff;
+  
+  /* Chart colors - Apple style */
+  --chart-1: #007aff;
+  --chart-2: #30d158;
+  --chart-3: #ff9500;
+  --chart-4: #ff3b30;
+  --chart-5: #af52de;
+  
+  /* Sidebar */
+  --sidebar: rgba(242, 242, 247, 0.8);
+  --sidebar-foreground: #1d1d1f;
+  --sidebar-primary: #007aff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f2f2f7;
+  --sidebar-accent-foreground: #1d1d1f;
+  --sidebar-border: rgba(0, 0, 0, 0.1);
+  --sidebar-ring: #007aff;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Apple-inspired dark mode */
+  --background: #000000;
+  --foreground: #f2f2f7;
+  --card: rgba(28, 28, 30, 0.8);
+  --card-foreground: #f2f2f7;
+  --popover: rgba(28, 28, 30, 0.95);
+  --popover-foreground: #f2f2f7;
+  
+  /* Primary - Apple Blue (slightly adjusted for dark) */
+  --primary: #0a84ff;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary - Dark Gray */
+  --secondary: #1c1c1e;
+  --secondary-foreground: #f2f2f7;
+  
+  /* Muted colors */
+  --muted: #2c2c2e;
+  --muted-foreground: #8e8e93;
+  
+  /* Accent - Apple Green */
+  --accent: #30d158;
+  --accent-foreground: #ffffff;
+  
+  /* Destructive - Apple Red */
+  --destructive: #ff453a;
+  --destructive-foreground: #ffffff;
+  
+  /* Borders and inputs */
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.05);
+  --ring: #0a84ff;
+  
+  /* Chart colors - Dark mode */
+  --chart-1: #0a84ff;
+  --chart-2: #30d158;
+  --chart-3: #ff9f0a;
+  --chart-4: #ff453a;
+  --chart-5: #bf5af2;
+  
+  /* Sidebar */
+  --sidebar: rgba(28, 28, 30, 0.8);
+  --sidebar-foreground: #f2f2f7;
+  --sidebar-primary: #0a84ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2c2c2e;
+  --sidebar-accent-foreground: #f2f2f7;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #0a84ff;
 }
 
 @layer base {
@@ -117,6 +154,83 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-['SF_Pro_Display',system-ui,-apple-system,BlinkMacSystemFont,'Segoe_UI',sans-serif];
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Apple-style backdrop blur effects */
+  .backdrop-blur-apple {
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Apple-style selection */
+  ::selection {
+    background-color: rgb(0, 122, 255, 0.3);
+  }
+  
+  /* Apple-style focus rings */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2;
+  }
+  
+  /* Improved button hover states */
+  .btn-hover {
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: scale(1);
+  }
+  
+  .btn-hover:hover {
+    transform: scale(1.02);
+  }
+  
+  .btn-hover:active {
+    transform: scale(0.98);
+  }
+  
+  /* Card hover effects */
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform: translateY(0px);
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dark .card-hover:hover {
+    box-shadow: 0 20px 40px rgba(255, 255, 255, 0.05);
+  }
+  
+  /* Apple-style gradients */
+  .gradient-apple {
+    background: linear-gradient(135deg, #007aff 0%, #0051d5 100%);
+  }
+  
+  .gradient-apple-green {
+    background: linear-gradient(135deg, #30d158 0%, #248a3d 100%);
+  }
+  
+  .gradient-apple-red {
+    background: linear-gradient(135deg, #ff3b30 0%, #d70015 100%);
+  }
+  
+  /* Glass morphism effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .dark .glass {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 }

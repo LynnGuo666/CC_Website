@@ -22,7 +22,6 @@ const formSchema = z.object({
   name: z.string().min(2, {
     message: "队伍名称至少需要2个字符。",
   }),
-  team_number: z.coerce.number().int().positive({ message: "队伍编号必须为正整数。" }),
   color: z.string().optional(),
 })
 
@@ -33,7 +32,6 @@ export function CreateTeamForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      team_number: 1,
       color: "#ffffff",
     },
   })
@@ -62,22 +60,6 @@ export function CreateTeamForm() {
               <FormControl>
                 <Input placeholder="例如：Invictus Gaming" {...field} />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="team_number"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>队伍编号</FormLabel>
-              <FormControl>
-                <Input type="number" {...field} />
-              </FormControl>
-              <FormDescription>
-                一个用于识别队伍的唯一正整数。
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

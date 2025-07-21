@@ -1,15 +1,16 @@
 import apiFetch from './api';
-import { TeamSchema } from '@/types/schemas';
+import { TeamSchema, TeamWithMembersSchema, TeamStatsSchema } from '@/types/schemas';
 import { z } from 'zod';
 
 // Infer the TypeScript type from the schema
 export type Team = z.infer<typeof TeamSchema>;
+export type TeamWithMembers = z.infer<typeof TeamWithMembersSchema>;
+export type TeamStats = z.infer<typeof TeamStatsSchema>;
 
 // Define the schema for the create request body
 const TeamCreateSchema = z.object({
   name: z.string().min(1, "队伍名称不能为空"),
   color: z.string().optional(),
-  team_number: z.number().int().positive("队伍编号必须为正整数"),
 });
 
 export type TeamCreate = z.infer<typeof TeamCreateSchema>;
@@ -32,17 +33,33 @@ export async function getTeams(): Promise<Team[]> {
 }
 
 /**
- * 根据 ID 获取单个队伍的详细信息
+ * 根据 ID 获取单个队伍的详细信息 (包含成员)
  * @param id The ID of the team.
- * @returns A promise that resolves to a single team object.
+ * @returns A promise that resolves to a single team object with members.
  */
-export async function getTeamById(id: number): Promise<Team> {
-  return await apiFetch<Team>(`/teams/${id}`, {
+export async function getTeamById(id: number): Promise<TeamWithMembers> {
+  return await apiFetch<TeamWithMembers>(`/teams/${id}`, {
     method: 'GET',
-    schema: TeamSchema,
+    schema: TeamWithMembersSchema,
     next: {
       revalidate: 300,
       tags: ['teams', `team:${id}`],
+    },
+  });
+}
+
+/**
+ * 获取队伍统计信息
+ * @param id The ID of the team.
+ * @returns A promise that resolves to team statistics.
+ */
+export async function getTeamStats(id: number): Promise<TeamStats> {
+  return await apiFetch<TeamStats>(`/teams/${id}/stats`, {
+    method: 'GET',
+    schema: TeamStatsSchema,
+    next: {
+      revalidate: 60, // Revalidate every minute
+      tags: ['teams', `team:${id}`, 'stats'],
     },
   });
 }
@@ -60,5 +77,66 @@ export async function createTeam(teamData: TeamCreate): Promise<Team> {
     method: 'POST',
     body: validatedData,
     schema: TeamSchema,
+  });
+}
+
+/**
+ * 向队伍添加成员
+ * @param teamId The ID of the team.
+ * @param userId The ID of the user to add.
+ * @returns A promise that resolves to the team membership object.
+ */
+export async function addTeamMember(teamId: number, userId: number): Promise<any> {
+  return await apiFetch<any>(`/teams/${teamId}/members/${userId}`, {
+    method: 'POST',
+    schema: z.any(), // Using any for now since we don't have the exact schema
+  });
+}
+
+/**
+ * 从队伍移除成员
+ * @param teamId The ID of the team.
+ * @param userId The ID of the user to remove.
+ * @returns A promise that resolves to the team membership object.
+ */
+export async function removeTeamMember(teamId: number, userId: number): Promise<any> {
+  return await apiFetch<any>(`/teams/${teamId}/members/${userId}`, {
+    method: 'DELETE',
+    schema: z.any(), // Using any for now since we don't have the exact schema
+  });
+}
+
+/**
+ * 获取队伍成员列表
+ * @param teamId The ID of the team.
+ * @param includeHistorical Whether to include historical members.
+ * @returns A promise that resolves to the team members list.
+ */
+export async function getTeamMembers(teamId: number, includeHistorical: boolean = false): Promise<any[]> {
+  return await apiFetch<any[]>(`/teams/${teamId}/members?include_historical=${includeHistorical}`, {
+    method: 'GET',
+    schema: z.array(z.any()),
+    next: {
+      revalidate: 300,
+      tags: ['teams', `team:${teamId}`, 'members'],
+    },
+  });
+}
+
+/**
+ * 获取队伍历史比赛记录
+ * @param teamId The ID of the team.
+ * @param skip Number of records to skip.
+ * @param limit Maximum number of records to return.
+ * @returns A promise that resolves to team match history.
+ */
+export async function getTeamMatchHistory(teamId: number, skip: number = 0, limit: number = 50): Promise<any[]> {
+  return await apiFetch<any[]>(`/teams/${teamId}/matches?skip=${skip}&limit=${limit}`, {
+    method: 'GET',
+    schema: z.array(z.any()),
+    next: {
+      revalidate: 300,
+      tags: ['teams', `team:${teamId}`, 'matches'],
+    },
   });
 }

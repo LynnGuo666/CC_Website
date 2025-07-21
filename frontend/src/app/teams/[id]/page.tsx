@@ -1,10 +1,16 @@
 import { getTeamById, Team } from '@/services/teamService';
 import Link from 'next/link';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 type TeamDetailPageProps = {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 };
 
 export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
@@ -12,7 +18,8 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
   let error: string | null = null;
 
   try {
-    const teamId = parseInt(params.id, 10);
+    const { id } = await params;
+    const teamId = parseInt(id, 10);
     if (isNaN(teamId)) {
       throw new Error('无效的队伍ID。');
     }
@@ -22,55 +29,213 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
     error = e.message || '加载队伍详情失败。';
   }
 
-if (error) {
-  return (
-    <main className="container mx-auto p-4">
-      <p className="text-red-500 bg-red-100 p-4 rounded-lg">{error}</p>
-      <Link href="/teams" className="text-blue-500 hover:underline mt-4 inline-block">
-        &larr; 返回队伍列表
-      </Link>
-    </main>
-  );
-}
-
-if (!team) {
-  return (
-    <main className="container mx-auto p-4">
-      <p>未找到该队伍。</p>
-      <Link href="/teams" className="text-blue-500 hover:underline mt-4 inline-block">
-        &larr; 返回队伍列表
-      </Link>
-    </main>
-  );
-}
-
-return (
-  <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-    <div className="flex items-center space-x-6 mb-6">
-      <div
-        className="w-28 h-28 rounded-full border-4 border-white dark:border-gray-700 shadow-lg"
-        style={{ backgroundColor: team.color || '#cccccc' }}
-      ></div>
-      <div>
-        <h1 className="text-4xl font-bold">{team.name}</h1>
-        <p className="text-gray-500 dark:text-gray-400">队伍编号: {team.team_number}</p>
-      </div>
-    </div>
-
-    <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">队伍成员</h2>
-      {team.members && team.members.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {team.members.map(member => (
-            <Link key={member.id} href={`/players/${member.id}`} className="block p-4 bg-white dark:bg-gray-800 border rounded-lg text-center hover:shadow-lg transition-shadow">
-              {member.nickname}
-            </Link>
-          ))}
+  if (error) {
+    return (
+      <main className="container mx-auto p-4">
+        <div className="p-6 rounded-2xl bg-destructive/10 border border-destructive/20 glass">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
+              <svg className="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <p className="text-destructive font-medium">{error}</p>
+          </div>
         </div>
-      ) : (
-        <p>该队伍暂无成员。</p>
-      )}
+        <Link href="/teams" className="text-primary hover:underline mt-4 inline-block">
+          ← 返回队伍列表
+        </Link>
+      </main>
+    );
+  }
+
+  if (!team) {
+    return (
+      <main className="container mx-auto p-4">
+        <p className="text-muted-foreground">未找到该队伍。</p>
+        <Link href="/teams" className="text-primary hover:underline mt-4 inline-block">
+          ← 返回队伍列表
+        </Link>
+      </main>
+    );
+  }
+
+  const currentMembers = (team as any).current_members || (team as any).members || [];
+  const historicalMembers = (team as any).historical_members || [];
+
+  return (
+    <div className="min-h-screen">
+      {/* Hero Header */}
+      <section className="relative py-20 px-6 bg-gradient-to-br from-background via-muted/20 to-background">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
+        <div className="relative max-w-4xl mx-auto">
+          <div className="flex items-center space-x-8 mb-6">
+            <div
+              className="w-32 h-32 rounded-2xl border-4 border-white/20 shadow-2xl glass flex items-center justify-center"
+              style={{ backgroundColor: team.color || '#3b82f6' }}
+            >
+              <span className="text-4xl font-bold text-white">
+                {team.name.charAt(0)}
+              </span>
+            </div>
+            <div>
+              <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                {team.name}
+              </h1>
+              <div className="flex items-center space-x-4">
+                <Badge variant="secondary" className="text-lg px-4 py-2">
+                  队伍ID: {team.id}
+                </Badge>
+                {team.color && (
+                  <div className="flex items-center space-x-2">
+                    <div 
+                      className="w-6 h-6 rounded-full border-2 border-white/50"
+                      style={{ backgroundColor: team.color }}
+                    ></div>
+                    <span className="text-muted-foreground">队伍颜色</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Content Section */}
+      <section className="py-12 px-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Team Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="text-center p-6 rounded-2xl glass card-hover">
+              <div className="text-3xl font-bold text-primary mb-2">{currentMembers.length}</div>
+              <div className="text-muted-foreground">当前成员</div>
+            </div>
+            <div className="text-center p-6 rounded-2xl glass card-hover">
+              <div className="text-3xl font-bold text-accent mb-2">{historicalMembers.length}</div>
+              <div className="text-muted-foreground">历史成员</div>
+            </div>
+            <div className="text-center p-6 rounded-2xl glass card-hover">
+              <div className="text-3xl font-bold text-orange-500 mb-2">{currentMembers.length + historicalMembers.length}</div>
+              <div className="text-muted-foreground">总成员数</div>
+            </div>
+          </div>
+
+          {/* Current Members */}
+          {currentMembers.length > 0 && (
+            <div className="mb-16">
+              <div className="flex items-center mb-8">
+                <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse mr-3"></div>
+                <h2 className="text-2xl font-bold">当前队员</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {currentMembers.map((member: any) => (
+                  <Link key={member.id} href={`/players/${member.id}`} className="group">
+                    <Card className="h-full glass card-hover border-primary/10 hover:border-primary/30 transition-all duration-300">
+                      <CardHeader className="text-center">
+                        <div className="w-16 h-16 rounded-full bg-primary/20 mx-auto mb-3 flex items-center justify-center">
+                          <span className="text-primary font-bold text-xl">
+                            {member.nickname?.charAt(0)?.toUpperCase()}
+                          </span>
+                        </div>
+                        <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                          {member.nickname}
+                        </CardTitle>
+                        {member.display_name && (
+                          <CardDescription>
+                            {member.display_name}
+                          </CardDescription>
+                        )}
+                      </CardHeader>
+                      <CardContent className="text-center space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">总积分</span>
+                          <span className="font-semibold text-primary">{member.total_points || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">胜率</span>
+                          <span className="font-semibold text-green-500">{member.win_rate || 0}%</span>
+                        </div>
+                        <Badge variant="outline" className="w-full justify-center">
+                          现役队员
+                        </Badge>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Historical Members */}
+          {historicalMembers.length > 0 && (
+            <div className="mb-16">
+              <h2 className="text-2xl font-bold mb-8">历史队员</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {historicalMembers.map((member: any) => (
+                  <Link key={member.id} href={`/players/${member.id}`} className="group">
+                    <Card className="h-full glass card-hover border-muted/20 hover:border-muted/40 transition-all duration-300 opacity-80">
+                      <CardHeader className="text-center">
+                        <div className="w-16 h-16 rounded-full bg-muted/20 mx-auto mb-3 flex items-center justify-center">
+                          <span className="text-muted-foreground font-bold text-xl">
+                            {member.nickname?.charAt(0)?.toUpperCase()}
+                          </span>
+                        </div>
+                        <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                          {member.nickname}
+                        </CardTitle>
+                        {member.display_name && (
+                          <CardDescription>
+                            {member.display_name}
+                          </CardDescription>
+                        )}
+                      </CardHeader>
+                      <CardContent className="text-center space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">总积分</span>
+                          <span className="font-semibold">{member.total_points || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">胜率</span>
+                          <span className="font-semibold">{member.win_rate || 0}%</span>
+                        </div>
+                        <Badge variant="secondary" className="w-full justify-center">
+                          历史队员
+                        </Badge>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {currentMembers.length === 0 && historicalMembers.length === 0 && (
+            <div className="text-center py-20">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-muted/50 flex items-center justify-center">
+                <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold mb-2">暂无队员</h3>
+              <p className="text-muted-foreground mb-6">该队伍目前没有成员记录</p>
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div className="flex justify-center">
+            <Link 
+              href="/teams"
+              className="inline-flex items-center px-6 py-3 rounded-2xl glass card-hover border-primary/20 hover:border-primary/40 transition-all"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+              返回队伍列表
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
-  </div>
-);
+  );
 }
