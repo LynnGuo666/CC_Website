@@ -15,4 +15,4 @@ class Game(GameBase):
     id: int
 
     class Config:
-        orm_mode = True # 允许从 ORM 模型直接转换
+        from_attributes = True  # 替换过时的orm_mode

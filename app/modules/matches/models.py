@@ -41,8 +41,8 @@ class Match(Base):
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, comment="更新时间")
 
     # 关联关系
-    teams = relationship("MatchTeam", back_populates="match", cascade="all, delete-orphan")
-    match_games = relationship("MatchGame", back_populates="match", cascade="all, delete-orphan")
+    teams = relationship("MatchTeam", back_populates="match", cascade="all, delete-orphan", lazy="select")
+    match_games = relationship("MatchGame", back_populates="match", cascade="all, delete-orphan", lazy="select")
 
     @property
     def can_start_live(self) -> bool:
@@ -76,10 +76,10 @@ class MatchTeam(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow, comment="创建时间")
     
     # 关联关系
-    match = relationship("Match", back_populates="teams")
-    memberships = relationship("MatchTeamMembership", back_populates="team", cascade="all, delete-orphan")
-    lineups = relationship("GameLineup", back_populates="team", cascade="all, delete-orphan")
-    scores = relationship("Score", back_populates="team")
+    match = relationship("Match", back_populates="teams", lazy="select")
+    memberships = relationship("MatchTeamMembership", back_populates="team", cascade="all, delete-orphan", lazy="select")
+    lineups = relationship("GameLineup", back_populates="team", cascade="all, delete-orphan", lazy="select")
+    scores = relationship("Score", back_populates="team", lazy="select")
 
     @property
     def main_players(self):
@@ -120,8 +120,8 @@ class MatchTeamMembership(Base):
     joined_at = Column(DateTime, default=datetime.datetime.utcnow, comment="加入时间")
     
     # 关联关系
-    team = relationship("MatchTeam", back_populates="memberships")
-    user = relationship("User", back_populates="team_memberships")
+    team = relationship("MatchTeam", back_populates="memberships", lazy="select")
+    user = relationship("User", back_populates="team_memberships", lazy="select")
 
 # 赛程数据模型
 class MatchGame(Base):
@@ -145,10 +145,10 @@ class MatchGame(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow, comment="创建时间")
     
     # 关联关系
-    match = relationship("Match", back_populates="match_games")
-    game = relationship("Game")
-    lineups = relationship("GameLineup", back_populates="match_game", cascade="all, delete-orphan")
-    scores = relationship("Score", back_populates="match_game", cascade="all, delete-orphan")
+    match = relationship("Match", back_populates="match_games", lazy="select")
+    game = relationship("Game", lazy="select")
+    lineups = relationship("GameLineup", back_populates="match_game", cascade="all, delete-orphan", lazy="select")
+    scores = relationship("Score", back_populates="match_game", cascade="all, delete-orphan", lazy="select")
 
 # 每个小游戏的出战阵容
 class GameLineup(Base):
@@ -167,9 +167,9 @@ class GameLineup(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow, comment="创建时间")
     
     # 关联关系
-    match_game = relationship("MatchGame", back_populates="lineups")
-    team = relationship("MatchTeam", back_populates="lineups")
-    user = relationship("User")
+    match_game = relationship("MatchGame", back_populates="lineups", lazy="select")
+    team = relationship("MatchTeam", back_populates="lineups", lazy="select")
+    user = relationship("User", lazy="select")
 
 # 分数数据模型
 class Score(Base):
@@ -187,6 +187,6 @@ class Score(Base):
     recorded_at = Column(DateTime, default=datetime.datetime.utcnow, comment="记录时间")
 
     # 关联关系
-    user = relationship("User")
-    team = relationship("MatchTeam", back_populates="scores")
-    match_game = relationship("MatchGame", back_populates="scores")
+    user = relationship("User", lazy="select")
+    team = relationship("MatchTeam", back_populates="scores", lazy="select")
+    match_game = relationship("MatchGame", back_populates="scores", lazy="select")

@@ -29,7 +29,7 @@ class User(UserBase):
     average_score: float = 0.0
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # Extended user info with team relationships

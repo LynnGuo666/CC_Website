@@ -24,8 +24,8 @@ export function Avatar({
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Generate cache key for localStorage
-  const cacheKey = `avatar_${userId || username}`;
+  // Generate cache key for localStorage - use both userId and username for uniqueness
+  const cacheKey = `avatar_${userId ? `id_${userId}` : ''}${username ? `_user_${username}` : ''}`;
   
   useEffect(() => {
     if (!userId && !username) {
@@ -45,13 +45,17 @@ export function Avatar({
       const cacheTime = localStorage.getItem(`${cacheKey}_time`);
       const now = Date.now();
       
-      // Cache for 24 hours
-      const CACHE_DURATION = 24 * 60 * 60 * 1000;
+      // Cache for 1 hour to allow for more frequent updates
+      const CACHE_DURATION = 60 * 60 * 1000;
       
       if (cachedUrl && cacheTime && (now - parseInt(cacheTime)) < CACHE_DURATION) {
         setImageUrl(cachedUrl);
         setIsLoading(false);
         return;
+      } else if (cachedUrl && cacheTime) {
+        // Clear expired cache
+        localStorage.removeItem(cacheKey);
+        localStorage.removeItem(`${cacheKey}_time`);
       }
     } catch (error) {
       console.warn('Failed to access localStorage:', error);
@@ -64,7 +68,7 @@ export function Avatar({
     // Simple check if the URL exists
     setImageUrl(mcHeadsUrl);
     
-    // Cache the URL
+    // Cache the URL with timestamp
     try {
       localStorage.setItem(cacheKey, mcHeadsUrl);
       localStorage.setItem(`${cacheKey}_time`, Date.now().toString());

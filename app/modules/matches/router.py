@@ -25,7 +25,7 @@ def create_match(match: schemas.MatchCreate, db: Session = Depends(get_db), api_
     """创建一场新比赛"""
     return crud.create_match(db=db, match=match)
 
-@router.get("/", response_model=List[schemas.Match])
+@router.get("/", response_model=List[schemas.MatchList])
 def read_matches(
     skip: int = 0, 
     limit: int = 100, 
@@ -314,7 +314,7 @@ def delete_score(score_id: int, db: Session = Depends(get_db), api_key: str = De
 
 # --- 统计接口 ---
 
-@router.get("/archived", response_model=List[schemas.Match])
+@router.get("/archived", response_model=List[schemas.MatchList])
 def get_archived_matches(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """获取已归档的比赛"""
     return crud.get_archived_matches(db, skip=skip, limit=limit)

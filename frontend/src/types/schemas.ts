@@ -163,19 +163,32 @@ export const GameLineupSchema = z.object({
 
 // User Stats Schema
 export const UserStatsSchema = z.object({
-  user_id: z.number(),
-  nickname: z.string(),
-  total_matches: z.number(),
-  total_wins: z.number(),
-  total_points: z.number(),
-  win_rate: z.number(),
-  average_score: z.number(),
-  current_team: z.string().nullable(),
+  user: z.object({
+    id: z.number(),
+    nickname: z.string(),
+    display_name: z.string().nullable(),
+    total_points: z.number(),
+    win_rate: z.number(),
+    created_at: z.string().nullable(),
+    last_active: z.string().nullable(),
+  }),
+  current_team: z.any().nullable(),
+  historical_teams: z.array(z.any()).default([]),
   match_history: z.array(z.object({
     match_id: z.number(),
     match_name: z.string(),
     total_points: z.number(),
     games_played: z.number(),
-    team_name: z.string().nullable(),
+    team_name: z.string(),
   })).default([]),
+  recent_scores: z.array(z.object({
+    points: z.number(),
+    game_name: z.string(),
+    team_name: z.string(),
+    recorded_at: z.string(),
+  })).default([]),
+  game_scores: z.record(z.string(), z.object({
+    total_score: z.number(),
+    games_played: z.number(),
+  })).default({}),
 });

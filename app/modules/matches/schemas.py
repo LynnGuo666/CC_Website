@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
 from datetime import datetime
 import enum
+
+if TYPE_CHECKING:
+    from app.modules.users.schemas import User
 
 # 比赛状态枚举
 class MatchStatus(str, enum.Enum):
@@ -33,10 +36,6 @@ class Score(ScoreBase):
     match_game_id: int
     recorded_at: datetime
     
-    # 关联对象（可选）
-    user: Optional[Any] = None
-    team: Optional[Any] = None
-    
     class Config:
         from_attributes = True
 
@@ -52,7 +51,6 @@ class TeamMemberCreate(TeamMemberBase):
 class TeamMember(TeamMemberBase):
     id: int
     joined_at: datetime
-    user: Optional[Any] = None
     
     class Config:
         from_attributes = True
@@ -77,10 +75,6 @@ class MatchTeam(MatchTeamBase):
     games_played: int = 0
     created_at: datetime
     
-    # 关联对象
-    memberships: List[TeamMember] = []
-    scores: List[Score] = []
-    
     class Config:
         from_attributes = True
 
@@ -99,8 +93,6 @@ class GameLineup(GameLineupBase):
     match_game_id: int
     match_team_id: int
     created_at: datetime
-    
-    user: Optional[Any] = None
     
     class Config:
         from_attributes = True
@@ -128,11 +120,6 @@ class MatchGame(MatchGameBase):
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     created_at: datetime
-    
-    # 关联对象
-    game: Optional[Any] = None
-    scores: List[Score] = []
-    lineups: List[GameLineup] = []
     
     class Config:
         from_attributes = True
@@ -169,14 +156,14 @@ class Match(MatchBase):
     created_at: datetime
     updated_at: datetime
     
-    # 关联对象
-    teams: List[MatchTeam] = []
-    match_games: List[MatchGame] = []
-    
-    # 兼容性属性
-    @property
-    def participants(self):
-        return self.teams
+    class Config:
+        from_attributes = True
+
+class MatchList(MatchBase):
+    """Simple match schema for list endpoints without relationships"""
+    id: int
+    created_at: datetime
+    updated_at: datetime
     
     class Config:
         from_attributes = True
