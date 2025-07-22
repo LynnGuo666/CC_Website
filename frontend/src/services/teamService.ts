@@ -1,5 +1,6 @@
 import apiFetch from './api';
 import { MatchTeamSchema } from '@/types/schemas';
+import { getMatchTeam } from './matchTeamService';
 import { z } from 'zod';
 
 // 兼容性：使用MatchTeam作为Team的别名
@@ -45,19 +46,12 @@ export async function getTeams(): Promise<Team[]> {
 }
 
 /**
- * 根据 ID 获取单个队伍的详细信息 (包含成员)
+ * 根据 ID 获取单个队伍的详细信息 (包含成员) - 兼容性函数，重定向到matchTeamService
  * @param id The ID of the team.
  * @returns A promise that resolves to a single team object with members.
  */
 export async function getTeamById(id: number): Promise<TeamWithMembers> {
-  return await apiFetch<TeamWithMembers>(`/teams/${id}`, {
-    method: 'GET',
-    schema: TeamWithMembersSchema,
-    next: {
-      revalidate: 300,
-      tags: ['teams', `team:${id}`],
-    },
-  });
+  return await getMatchTeam(id);
 }
 
 /**

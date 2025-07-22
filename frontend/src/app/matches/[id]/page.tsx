@@ -1,4 +1,5 @@
-import { getMatchById, Match } from '@/services/matchService';
+import { getMatchById, Match, getMatchGames, MatchGame, getMatchGameScores, getGameById } from '@/services/matchService';
+import { getMatchTeams, MatchTeam } from '@/services/matchTeamService';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,12 +27,11 @@ type TeamTotalScore = {
 };
 
 // Enhanced function to calculate comprehensive team statistics
-function calculateTeamStats(match: Match): TeamTotalScore[] {
+function calculateTeamStats(teams: MatchTeam[], matchGames: MatchGame[]): TeamTotalScore[] {
   const teamStats: Record<number, TeamTotalScore> = {};
 
-  // Initialize team stats using the new teams array instead of participants
-  const teamsArray = match.teams || match.participants || [];
-  for (const team of teamsArray) {
+  // Initialize team stats using the teams data
+  for (const team of teams) {
     teamStats[team.id] = {
       id: team.id,
       name: team.name,
@@ -45,7 +45,7 @@ function calculateTeamStats(match: Match): TeamTotalScore[] {
   }
 
   // Calculate stats from scores
-  for (const game of match.match_games) {
+  for (const game of matchGames) {
     const gameTeamScores: Record<number, number> = {};
     
     // Calculate team totals for this game
@@ -114,6 +114,8 @@ type MatchDetailPageProps = {
 
 export default async function MatchDetailPage({ params }: MatchDetailPageProps) {
   let match: Match | null = null;
+  let teams: MatchTeam[] = [];
+  let matchGames: any[] = []; // 包含游戏和分数信息的完整数据
   let error: string | null = null;
   let teamStats: TeamTotalScore[] = [];
 
@@ -123,9 +125,46 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
     if (isNaN(matchId)) {
       throw new Error('无效的赛事ID。');
     }
-    match = await getMatchById(matchId);
-    if (match) {
-      teamStats = calculateTeamStats(match);
+    
+    // Fetch match, teams, and basic game data in parallel
+    const [matchData, teamsData, gamesData] = await Promise.all([
+      getMatchById(matchId),
+      getMatchTeams(matchId),
+      getMatchGames(matchId),
+    ]);
+    
+    match = matchData;
+    teams = teamsData;
+    
+    // Now fetch detailed game info and scores for each game
+    const enrichedGames = await Promise.all(
+      gamesData.map(async (game: any) => {
+        try {
+          const [gameInfo, scores] = await Promise.all([
+            getGameById(game.game_id),
+            getMatchGameScores(game.id),
+          ]);
+          
+          return {
+            ...game,
+            game: gameInfo,
+            scores: scores || [],
+          };
+        } catch (err) {
+          console.warn(`Failed to fetch data for game ${game.id}:`, err);
+          return {
+            ...game,
+            game: { id: game.game_id, name: '未知游戏', description: null },
+            scores: [],
+          };
+        }
+      })
+    );
+    
+    matchGames = enrichedGames;
+    
+    if (match && teams.length > 0 && matchGames.length > 0) {
+      teamStats = calculateTeamStats(teams, matchGames);
     }
   } catch (e: any) {
     console.error(e);
@@ -190,21 +229,21 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  {(match.teams || match.participants || []).length} 支队伍
+                  {teams.length} 支队伍
                 </Badge>
                 
                 <Badge variant="secondary" className="px-4 py-2 text-sm">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
-                  {match.match_games.length} 个项目
+                  {matchGames.length} 个项目
                 </Badge>
                 
                 <Badge variant="secondary" className="px-4 py-2 text-sm">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                  {match.match_games.reduce((total, game) => total + game.scores.length, 0)} 条记录
+                  {matchGames.reduce((total, game) => total + game.scores.length, 0)} 条记录
                 </Badge>
                 
                 <Badge variant="secondary" className="px-4 py-2 text-sm">
@@ -320,22 +359,28 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                 赛程详情
               </h2>
               
-              {match.match_games.map((game, index) => {
+              {matchGames.map((game, index) => {
                 const gameTeamScores = new Map<number, { name: string; color: string | null; total: number; players: Array<{name: string; score: number}> }>();
                 
                 // Calculate team totals for this game
-                game.scores.forEach(score => {
-                  if (!gameTeamScores.has(score.team_id)) {
-                    gameTeamScores.set(score.team_id, {
-                      name: score.team.name,
-                      color: score.team.color,
+                game.scores.forEach((score: any) => {
+                  const teamId = score.team_id;
+                  const team = teams.find(t => t.id === teamId);
+                  
+                  if (!gameTeamScores.has(teamId)) {
+                    gameTeamScores.set(teamId, {
+                      name: team?.name || `队伍 ${teamId}`,
+                      color: team?.color || '#6b7280',
                       total: 0,
                       players: []
                     });
                   }
-                  const teamData = gameTeamScores.get(score.team_id)!;
+                  const teamData = gameTeamScores.get(teamId)!;
                   teamData.total += score.points;
-                  teamData.players.push({ name: score.user.nickname, score: score.points });
+                  teamData.players.push({ 
+                    name: score.user?.nickname || `用户 ${score.user_id}`, 
+                    score: score.points 
+                  });
                 });
 
                 const sortedTeams = Array.from(gameTeamScores.values()).sort((a, b) => b.total - a.total);
@@ -419,10 +464,12 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                             </TableHeader>
                             <TableBody>
                               {game.scores
-                                .sort((a, b) => b.points - a.points)
+                                .sort((a: any, b: any) => b.points - a.points)
                                 .slice(0, 10)
-                                .map((score, idx) => (
-                                <TableRow key={score.id}>
+                                .map((score: any, idx: number) => {
+                                  const team = teams.find(t => t.id === score.team_id);
+                                  return (
+                                <TableRow key={score.id || idx}>
                                   <TableCell className="font-medium">
                                     <div className="flex items-center space-x-2">
                                       <span>{idx + 1}</span>
@@ -432,18 +479,18 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                                   <TableCell>
                                     <div className="flex items-center space-x-3">
                                       <Avatar
-                                        username={score.user.nickname}
-                                        userId={score.user.id}
+                                        username={score.user?.nickname || `用户${score.user_id}`}
+                                        userId={score.user_id}
                                         size={32}
                                         className="rounded-full"
                                         fallbackClassName="rounded-full bg-primary/20"
-                                        fallbackLetter={score.user.nickname?.charAt(0)?.toUpperCase()}
+                                        fallbackLetter={score.user?.nickname?.charAt(0)?.toUpperCase() || 'U'}
                                       />
                                       <Link 
-                                        href={`/players/${score.user.id}`}
+                                        href={`/players/${score.user_id}`}
                                         className="font-medium hover:text-primary transition-colors"
                                       >
-                                        {score.user.nickname}
+                                        {score.user?.nickname || `用户 ${score.user_id}`}
                                       </Link>
                                     </div>
                                   </TableCell>
@@ -451,16 +498,16 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                                     <div className="flex items-center space-x-2">
                                       <div 
                                         className="w-3 h-3 rounded-full"
-                                        style={{ backgroundColor: score.team.color || '#6b7280' }}
+                                        style={{ backgroundColor: team?.color || '#6b7280' }}
                                       ></div>
-                                      <span>{score.team.name}</span>
+                                      <span>{team?.name || `队伍 ${score.team_id}`}</span>
                                     </div>
                                   </TableCell>
                                   <TableCell className="text-right">
                                     <span className="font-mono font-bold text-lg">{score.points}</span>
                                   </TableCell>
                                 </TableRow>
-                              ))}
+                              )})}
                             </TableBody>
                           </Table>
                         </div>

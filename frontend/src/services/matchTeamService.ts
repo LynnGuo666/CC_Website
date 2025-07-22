@@ -218,17 +218,71 @@ export async function getUserTeamsInMatch(matchId: number, userId: number): Prom
 }
 
 /**
- * 获取用户参与的所有比赛
- * @param userId 用户ID
- * @returns 比赛列表
+ * 获取队伍成员数量
+ * @param teamId 队伍ID
+ * @returns 队伍成员数量
  */
-export async function getUserMatches(userId: number): Promise<any[]> {
-  return await apiFetch<any[]>(`/matches/users/${userId}/matches`, {
+export async function getTeamMemberCount(teamId: number): Promise<number> {
+  try {
+    // 尝试使用成员统计接口（如果存在）
+    const response = await apiFetch<{ count: number }>(`/matches/teams/${teamId}/members/count`, {
+      method: 'GET',
+      schema: z.object({ count: z.number() }),
+      next: {
+        revalidate: 300,
+        tags: ['teams', `team:${teamId}`, 'member-count'],
+      },
+    });
+    return response.count;
+  } catch (error) {
+    // 如果没有专门的计数接口，获取全部成员然后计数
+    try {
+      const members = await apiFetch<TeamMember[]>(`/matches/teams/${teamId}/members`, {
+        method: 'GET',
+        schema: z.array(TeamMemberSchema),
+        next: {
+          revalidate: 300,
+          tags: ['teams', `team:${teamId}`, 'members'],
+        },
+      });
+      return members.length;
+    } catch (fallbackError) {
+      console.warn(`Failed to get member count for team ${teamId}:`, fallbackError);
+      return 0;
+    }
+  }
+}
+
+/**
+ * 获取多个队伍的成员数量
+ * @param teamIds 队伍ID数组
+ * @returns 队伍ID到成员数量的映射
+ */
+export async function getTeamMemberCounts(teamIds: number[]): Promise<Record<number, number>> {
+  const counts: Record<number, number> = {};
+  
+  // 并行获取所有队伍的成员数量
+  await Promise.all(
+    teamIds.map(async (teamId) => {
+      counts[teamId] = await getTeamMemberCount(teamId);
+    })
+  );
+  
+  return counts;
+}
+
+/**
+ * 获取队伍成员列表
+ * @param teamId 队伍ID
+ * @returns 队伍成员列表
+ */
+export async function getTeamMembers(teamId: number): Promise<TeamMember[]> {
+  return await apiFetch<TeamMember[]>(`/matches/teams/${teamId}/members`, {
     method: 'GET',
-    schema: z.array(z.any()), // Using any since match schema might be different here
+    schema: z.array(TeamMemberSchema),
     next: {
       revalidate: 300,
-      tags: ['matches', `user:${userId}`],
+      tags: ['teams', `team:${teamId}`, 'members'],
     },
   });
 }

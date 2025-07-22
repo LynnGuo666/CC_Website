@@ -1,4 +1,5 @@
-import { getTeamById, Team } from '@/services/teamService';
+import { getMatchTeam, MatchTeam, getTeamMembers } from '@/services/matchTeamService';
+import { getUserById } from '@/services/userService';
 import Link from 'next/link';
 import {
   Card,
@@ -15,7 +16,8 @@ type TeamDetailPageProps = {
 };
 
 export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
-  let team: Team | null = null;
+  let team: MatchTeam | null = null;
+  let members: any[] = [];
   let error: string | null = null;
 
   try {
@@ -24,7 +26,34 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
     if (isNaN(teamId)) {
       throw new Error('无效的队伍ID。');
     }
-    team = await getTeamById(teamId);
+    
+    // Get team details and members
+    team = await getMatchTeam(teamId);
+    const rawMembers = await getTeamMembers(teamId);
+    
+    // Enrich member data with user information
+    members = await Promise.all(
+      rawMembers.map(async (member: any) => {
+        try {
+          const user = await getUserById(member.user_id);
+          return {
+            ...member,
+            user: user,
+          };
+        } catch (err) {
+          console.warn(`Failed to fetch user ${member.user_id}:`, err);
+          return {
+            ...member,
+            user: {
+              id: member.user_id,
+              nickname: `用户 ${member.user_id}`,
+              display_name: null,
+              total_points: 0,
+            },
+          };
+        }
+      })
+    );
   } catch (e: any) {
     console.error(e);
     error = e.message || '加载队伍详情失败。';
@@ -61,8 +90,8 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
     );
   }
 
-  const currentMembers = (team as any).current_members || (team as any).members || [];
-  const historicalMembers = (team as any).historical_members || [];
+  const currentMembers = members.filter((m: any) => m.role !== 'historical');
+  const historicalMembers = members.filter((m: any) => m.role === 'historical');
 
   return (
     <div className="min-h-screen">
@@ -129,8 +158,10 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
                 <h2 className="text-2xl font-bold">当前队员</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {currentMembers.map((member: any) => (
-                  <Link key={member.id} href={`/players/${member.id}`} className="group">
+                {currentMembers.map((membership: any) => {
+                  const member = membership.user;
+                  return (
+                  <Link key={membership.id} href={`/players/${member.id}`} className="group">
                     <Card className="h-full glass card-hover border-primary/10 hover:border-primary/30 transition-all duration-300">
                       <CardHeader className="text-center">
                         <Avatar
@@ -156,8 +187,12 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
                           <span className="font-semibold text-primary">{member.total_points || 0}</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
-                          <span className="text-muted-foreground">胜率</span>
-                          <span className="font-semibold text-green-500">{member.win_rate || 0}%</span>
+                          <span className="text-muted-foreground">角色</span>
+                          <span className="font-semibold text-blue-500">
+                            {membership.role === 'main' ? '主力' : 
+                             membership.role === 'substitute' ? '替补' : 
+                             membership.role === 'captain' ? '队长' : '队员'}
+                          </span>
                         </div>
                         <Badge variant="outline" className="w-full justify-center">
                           现役队员
@@ -165,7 +200,7 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
                       </CardContent>
                     </Card>
                   </Link>
-                ))}
+                );})}
               </div>
             </div>
           )}
@@ -175,8 +210,10 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
             <div className="mb-16">
               <h2 className="text-2xl font-bold mb-8">历史队员</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {historicalMembers.map((member: any) => (
-                  <Link key={member.id} href={`/players/${member.id}`} className="group">
+                {historicalMembers.map((membership: any) => {
+                  const member = membership.user;
+                  return (
+                  <Link key={membership.id} href={`/players/${member.id}`} className="group">
                     <Card className="h-full glass card-hover border-muted/20 hover:border-muted/40 transition-all duration-300 opacity-80">
                       <CardHeader className="text-center">
                         <Avatar
@@ -202,8 +239,12 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
                           <span className="font-semibold">{member.total_points || 0}</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
-                          <span className="text-muted-foreground">胜率</span>
-                          <span className="font-semibold">{member.win_rate || 0}%</span>
+                          <span className="text-muted-foreground">角色</span>
+                          <span className="font-semibold">
+                            {membership.role === 'main' ? '主力' : 
+                             membership.role === 'substitute' ? '替补' : 
+                             membership.role === 'captain' ? '队长' : '队员'}
+                          </span>
                         </div>
                         <Badge variant="secondary" className="w-full justify-center">
                           历史队员
@@ -211,7 +252,7 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
                       </CardContent>
                     </Card>
                   </Link>
-                ))}
+                );})}
               </div>
             </div>
           )}

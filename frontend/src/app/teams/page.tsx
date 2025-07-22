@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { getMatches } from '@/services/matchService';
-import { getMatchTeams } from '@/services/matchTeamService';
+import { getMatchTeams, getTeamMemberCounts } from '@/services/matchTeamService';
 
 export default async function TeamsPage() {
   let matches = [];
   let allTeams = [];
+  let teamsByMatch: Record<string, any[]> = {};
   let error: string | null = null;
 
   try {
@@ -14,7 +15,9 @@ export default async function TeamsPage() {
     // 获取每个比赛的队伍
     for (const match of matches) {
       const teams = await getMatchTeams(match.id);
-      allTeams.push(...teams.map(team => ({ ...team, match_name: match.name })));
+      const teamsWithMatch = teams.map(team => ({ ...team, match_name: match.name, match_id: match.id }));
+      allTeams.push(...teamsWithMatch);
+      teamsByMatch[match.name] = teamsWithMatch;
     }
   } catch (e) {
     console.error(e);
@@ -65,45 +68,99 @@ export default async function TeamsPage() {
                   <div className="text-sm text-muted-foreground">总队伍数</div>
                 </div>
                 <div className="text-center p-4 rounded-xl glass card-hover">
-                  <div className="text-2xl font-bold text-secondary mb-1">{allTeams.reduce((sum, team) => sum + (team.memberships?.length || 0), 0)}</div>
+                  <div className="text-2xl font-bold text-secondary mb-1">--</div>
                   <div className="text-sm text-muted-foreground">总选手数</div>
                 </div>
               </div>
 
-              {/* Teams Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {allTeams.length > 0 ? (
-                  allTeams.map((team) => (
-                    <Link href={`/teams/${team.id}`} key={`${team.match_id}-${team.id}`} className="group">
-                      <div className="block p-4 glass card-hover rounded-2xl text-center border-primary/10 hover:border-primary/30 transition-all duration-300">
-                        <div
-                          className="w-16 h-16 rounded-xl mx-auto mb-3 border-2 border-white/20 shadow-lg flex items-center justify-center"
-                          style={{ backgroundColor: team.color || '#8B5CF6' }}
-                        >
-                          <span className="text-white font-bold text-sm">
-                            {team.name.charAt(0)}
-                          </span>
+              {/* Teams by Match */}
+              <div className="space-y-12">
+                {matches.map((match: any) => {
+                  const matchTeams = teamsByMatch[match.name] || [];
+                  return (
+                    <div key={match.id} className="space-y-6">
+                      {/* Match Header */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h2 className="text-2xl font-bold mb-2">{match.name}</h2>
+                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                            <span className="flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                              </svg>
+                              {matchTeams.length} 支队伍
+                            </span>
+                            <span className="flex items-center">
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {match.status === 'preparing' ? '筹办中' : 
+                               match.status === 'ongoing' ? '进行中' : 
+                               match.status === 'finished' ? '已结束' : '未知状态'}
+                            </span>
+                          </div>
                         </div>
-                        <h2 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-2">
-                          {team.name}
-                        </h2>
-                        <p className="text-xs text-muted-foreground">{team.match_name}</p>
-                        <p className="text-xs text-accent mt-1">{team.memberships?.length || 0} 名队员</p>
+                        <Link 
+                          href={`/matches/${match.id}`}
+                          className="text-primary hover:underline text-sm font-medium"
+                        >
+                          查看比赛详情 →
+                        </Link>
                       </div>
-                    </Link>
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-20">
-                    <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-muted/50 flex items-center justify-center">
-                      <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                      </svg>
+
+                      {/* Teams Grid */}
+                      {matchTeams.length > 0 ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                          {matchTeams.map((team) => (
+                            <Link href={`/teams/${team.id}`} key={team.id} className="group">
+                              <div className="block p-4 glass card-hover rounded-2xl text-center border-primary/10 hover:border-primary/30 transition-all duration-300">
+                                <div
+                                  className="w-16 h-16 rounded-xl mx-auto mb-3 border-2 border-white/20 shadow-lg flex items-center justify-center"
+                                  style={{ backgroundColor: team.color || '#8B5CF6' }}
+                                >
+                                  <span className="text-white font-bold text-sm">
+                                    {team.name.charAt(0)}
+                                  </span>
+                                </div>
+                                <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-2">
+                                  {team.name}
+                                </h3>
+                                <div className="space-y-1">
+                                  <p className="text-xs text-accent">总分: {team.total_score || 0}</p>
+                                  <p className="text-xs text-muted-foreground">已参与: {team.games_played || 0} 场</p>
+                                </div>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 bg-muted/10 rounded-2xl">
+                          <svg className="w-12 h-12 mx-auto mb-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                          </svg>
+                          <h3 className="text-lg font-medium mb-2">该比赛暂无队伍</h3>
+                          <p className="text-muted-foreground">尚未创建任何队伍参与此比赛</p>
+                        </div>
+                      )}
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">暂无队伍</h3>
-                    <p className="text-muted-foreground">还没有注册的队伍，请先创建比赛并添加队伍</p>
-                  </div>
-                )}
+                  );
+                })}
               </div>
+
+              {/* Empty State */}
+              {matches.length === 0 && (
+                <div className="text-center py-20">
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-muted/50 flex items-center justify-center">
+                    <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-2">暂无比赛</h3>
+                  <p className="text-muted-foreground max-w-md mx-auto">
+                    还没有创建任何比赛，请等待管理员添加新的比赛项目！
+                  </p>
+                </div>
+              )}
             </>
           )}
         </div>

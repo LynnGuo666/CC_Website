@@ -151,6 +151,12 @@ def get_match_team(db: Session, team_id: int):
     """获取单个比赛队伍"""
     return db.query(models.MatchTeam).filter(models.MatchTeam.id == team_id).first()
 
+def get_team_members(db: Session, team_id: int):
+    """获取队伍成员列表"""
+    return db.query(models.MatchTeamMembership).filter(
+        models.MatchTeamMembership.match_team_id == team_id
+    ).all()
+
 def update_match_team(db: Session, team_id: int, team_update: schemas.MatchTeamUpdate):
     """更新比赛队伍信息"""
     db_team = db.query(models.MatchTeam).filter(models.MatchTeam.id == team_id).first()

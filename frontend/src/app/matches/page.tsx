@@ -1,4 +1,4 @@
-import { getMatches, Match } from '@/services/matchService';
+import { getMatches, MatchList } from '@/services/matchService';
 import Link from 'next/link';
 import {
   Card,
@@ -51,7 +51,7 @@ const getStatusInfo = (status: string) => {
 };
 
 export default async function MatchesPage() {
-  let matches: Match[] = [];
+  let matches: MatchList[] = [];
   let error: string | null = null;
 
   try {
@@ -110,9 +110,10 @@ export default async function MatchesPage() {
                 </div>
                 <div className="text-center p-5 rounded-xl glass card-hover">
                   <div className="text-2xl font-bold text-accent mb-1">
-                    {matches.reduce((total, match) => total + match.participants.length, 0)}
+                    {/* 由于MatchList不包含participants，暂时显示总比赛数 */}
+                    {matches.length}
                   </div>
-                  <div className="text-sm text-muted-foreground">参赛队伍</div>
+                  <div className="text-sm text-muted-foreground">已创建赛事</div>
                 </div>
               </div>
 
@@ -125,7 +126,7 @@ export default async function MatchesPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {ongoingMatches.map((match) => (
-                      <MatchCard key={match.id} match={match} priority />
+                      <MatchCard key={match.id} match={match} priority={true} />
                     ))}
                   </div>
                 </div>
@@ -163,14 +164,10 @@ export default async function MatchesPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                     </svg>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">暂无赛事</h3>
-                  <p className="text-muted-foreground mb-6">目前没有进行中的赛事，敬请期待！</p>
-                  <Link 
-                    href="/admin/create-match"
-                    className="inline-flex items-center px-6 py-3 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors btn-hover focus-ring"
-                  >
-                    创建新赛事
-                  </Link>
+                  <h3 className="text-2xl font-semibold mb-2">暂无赛事</h3>
+                  <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                    还没有创建任何赛事。等待管理员添加新的比赛项目吧！
+                  </p>
                 </div>
               )}
             </>
@@ -182,7 +179,7 @@ export default async function MatchesPage() {
 }
 
 // Match Card Component
-function MatchCard({ match, priority = false }: { match: Match; priority?: boolean }) {
+function MatchCard({ match, priority = false }: { match: MatchList; priority?: boolean }) {
   const statusInfo = getStatusInfo(match.status);
   
   return (
@@ -221,85 +218,29 @@ function MatchCard({ match, priority = false }: { match: Match; priority?: boole
         <CardContent className="flex-1 pb-4">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">参赛队伍</span>
-              <span className="font-semibold">{match.participants.length} 支</span>
+              <span className="text-sm text-muted-foreground">最大队伍数</span>
+              <span className="font-semibold">{match.max_teams || '未限制'}</span>
             </div>
             
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">小游戏</span>
-              <span className="font-semibold">{match.match_games.length} 项</span>
+              <span className="text-sm text-muted-foreground">队员人数</span>
+              <span className="font-semibold">{match.max_players_per_team} 人/队</span>
             </div>
-
-            {match.participants.length > 0 && (
-              <div className="space-y-2">
-                <span className="text-sm text-muted-foreground">参赛队伍</span>
-                <div className="flex flex-wrap gap-1">
-                  {match.participants.slice(0, 4).map((team) => (
-                    <span 
-                      key={team.id}
-                      className="px-2 py-0.5 text-xs rounded-md bg-secondary/50 text-secondary-foreground"
-                      style={{ backgroundColor: team.color ? `${team.color}20` : undefined }}
-                    >
-                      {team.name}
-                    </span>
-                  ))}
-                  {match.participants.length > 4 && (
-                    <span className="px-2 py-0.5 text-xs rounded-md bg-muted text-muted-foreground">
-                      +{match.participants.length - 4}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Display some mini games */}
-            {match.match_games.length > 0 && (
-              <div className="space-y-2">
-                <span className="text-sm text-muted-foreground">小游戏项目</span>
-                <div className="flex flex-wrap gap-1">
-                  {match.match_games.slice(0, 4).map((game) => (
-                    <span 
-                      key={game.id}
-                      className="px-2 py-0.5 text-xs rounded-md bg-primary/10 text-primary flex items-center gap-1"
-                    >
-                      {game.is_live && <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>}
-                      <span>{game.game.name}</span>
-                    </span>
-                  ))}
-                  {match.match_games.length > 4 && (
-                    <span className="px-2 py-0.5 text-xs rounded-md bg-muted text-muted-foreground">
-                      +{match.match_games.length - 4}
-                    </span>
-                  )}
-                </div>
+            
+            {match.prize_pool && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">奖金池</span>
+                <span className="font-semibold">{match.prize_pool}</span>
               </div>
             )}
           </div>
         </CardContent>
         
         <CardFooter className="pt-0">
-          <div className="w-full flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              {match.start_time ? 
-                new Date(match.start_time).toLocaleDateString('zh-CN', {
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                }) : 
-                '时间待定'
-              }
+          <div className="w-full text-center">
+            <span className="text-sm font-medium text-primary group-hover:underline">
+              查看详情 →
             </span>
-            <div className="flex items-center space-x-1">
-              {match.can_start_live && (
-                <div className="px-2 py-1 text-xs bg-green-500/10 text-green-500 rounded-full">
-                  可直播
-                </div>
-              )}
-              <svg className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-              </svg>
-            </div>
           </div>
         </CardFooter>
       </Card>

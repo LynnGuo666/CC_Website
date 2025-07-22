@@ -28,12 +28,11 @@ export const MatchTeamSchema = z.object({
     id: z.number(),
     match_id: z.number(),
     name: z.string(),
-    color: z.string(),
+    color: z.string().nullable(),
     total_score: z.number(),
     games_played: z.number(),
     created_at: z.string(),
-    members: z.array(UserSchema), // This is a property on the model, let's see if it's in the schema
-    memberships: z.array(MatchTeamMembershipSchema),
+    memberships: z.array(MatchTeamMembershipSchema).optional(),
 });
 
 // OpenAPI Schema: Game
@@ -43,12 +42,12 @@ export const GameSchema = z.object({
   description: z.string().nullable(),
 });
 
-// Represents Score
+// Represents Score (simplified for API responses)
 export const ScoreSchema = z.object({
   id: z.number(),
   points: z.number(),
   user_id: z.number(),
-  match_team_id: z.number(),
+  team_id: z.number(),  // 注意：前端使用team_id，后端model中为match_team_id
   match_game_id: z.number(),
   event_data: z.any().nullable(),
   recorded_at: z.string(),
@@ -56,23 +55,37 @@ export const ScoreSchema = z.object({
   team: MatchTeamSchema,
 });
 
-// Represents MatchGame
+// Represents MatchGame (simplified for API responses)
 export const MatchGameSchema = z.object({
   id: z.number(),
   match_id: z.number(),
   game_id: z.number(),
   game_order: z.number(),
-  structure_type: z.string(),
-  structure_details: z.record(z.string(), z.any()),
+  structure_type: z.string().nullable(),
+  structure_details: z.record(z.string(), z.any()).nullable(),
   is_live: z.boolean(),
   start_time: z.string().nullable(),
   end_time: z.string().nullable(),
   created_at: z.string(),
-  game: GameSchema,
-  scores: z.array(ScoreSchema).default([]),
 });
 
-// The main Match schema, updated to match the backend
+// Simplified Match schema for list endpoints (matches MatchList in backend)
+export const MatchListSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  description: z.string().nullable(),
+  start_time: z.string().nullable(),
+  end_time: z.string().nullable(),
+  status: z.string(), // Assuming status is a string from enum
+  prize_pool: z.string().nullable(),
+  max_teams: z.number().nullable(),
+  max_players_per_team: z.number(),
+  allow_substitutes: z.boolean(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+// The full Match schema for detailed endpoints 
 export const MatchSchema = z.object({
   id: z.number(),
   name: z.string(),
@@ -82,17 +95,16 @@ export const MatchSchema = z.object({
   status: z.string(), // Assuming status is a string from enum
   prize_pool: z.string().nullable(),
   max_teams: z.number().nullable(),
+  max_players_per_team: z.number(),
+  allow_substitutes: z.boolean(),
   created_at: z.string(),
   updated_at: z.string(),
-  winning_team_id: z.number().nullable(),
-  participants: z.array(MatchTeamSchema), // participants is an alias for teams
-  match_games: z.array(MatchGameSchema).default([]),
-  can_start_live: z.boolean(),
-  is_archived: z.boolean(),
+  winning_team_id: z.number().nullable().optional(),
+  is_archived: z.boolean().optional(),
 });
 
 // --- API Response Schemas ---
-export const MatchesApiResponseSchema = z.array(MatchSchema);
+export const MatchesApiResponseSchema = z.array(MatchListSchema);
 
 // --- WebSocket Schemas (from previous knowledge) ---
 export const TeamSubScoreSchema = z.object({

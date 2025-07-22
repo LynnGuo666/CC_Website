@@ -114,6 +114,17 @@ def get_match_team(team_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Team not found")
     return db_team
 
+@router.get("/teams/{team_id}/members", response_model=List[schemas.MatchTeamMembershipSchema])
+def get_team_members(team_id: int, db: Session = Depends(get_db)):
+    """获取队伍成员列表"""
+    db_team = crud.get_match_team(db, team_id=team_id)
+    if db_team is None:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    # 获取队伍成员
+    members = crud.get_team_members(db, team_id=team_id)
+    return members
+
 @router.put("/teams/{team_id}", response_model=schemas.MatchTeam)
 def update_match_team(
     team_id: int, 

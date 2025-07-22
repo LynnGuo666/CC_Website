@@ -55,6 +55,23 @@ class TeamMember(TeamMemberBase):
     class Config:
         from_attributes = True
 
+# --- 比赛队伍成员Schema ---
+
+class MatchTeamMembershipBase(BaseModel):
+    user_id: int
+    role: Optional[str] = "main"
+
+class MatchTeamMembershipCreate(MatchTeamMembershipBase):
+    pass
+
+class MatchTeamMembershipSchema(MatchTeamMembershipBase):
+    id: int
+    match_team_id: int
+    joined_at: datetime
+    
+    class Config:
+        from_attributes = True
+
 # --- 比赛队伍Schema ---
 
 class MatchTeamBase(BaseModel):
