@@ -10,7 +10,6 @@ from .websocket import manager
 from app.modules.matches import crud as matches_crud
 from app.modules.matches import models as matches_models
 from app.modules.matches import schemas as matches_schemas
-from app.modules.teams import models as teams_models
 
 router = APIRouter()
 
@@ -54,13 +53,15 @@ async def create_live_event(
     if not match_game:
         return {"message": "Event for non-existent match_game received, ignored."}
 
-    # 2. 计算当前赛程的子项目得分
+    # 2. 计算当前赛程的子项目得分 - 使用新的MatchTeam系统
     sub_scores_query = db.query(
         matches_models.Score.team_id,
-        teams_models.Team.name,
+        matches_models.MatchTeam.name,
         func.sum(matches_models.Score.points).label("sub_total")
-    ).join(teams_models.Team).filter(matches_models.Score.match_game_id == event.match_game_id).group_by(
-        matches_models.Score.team_id, teams_models.Team.name
+    ).join(matches_models.MatchTeam).filter(
+        matches_models.Score.match_game_id == event.match_game_id
+    ).group_by(
+        matches_models.Score.team_id, matches_models.MatchTeam.name
     ).order_by(func.sum(matches_models.Score.points).desc()).all()
 
     sub_scores = [
@@ -68,14 +69,19 @@ async def create_live_event(
         for row in sub_scores_query
     ]
 
-    # 3. 计算整个比赛的总积分榜
+    # 3. 计算整个比赛的总积分榜 - 使用新的MatchTeam系统
     total_scores_query = db.query(
         matches_models.Score.team_id,
-        teams_models.Team.name,
+        matches_models.MatchTeam.name,
         func.sum(matches_models.Score.points).label("total")
-    ).join(matches_models.MatchGame).join(teams_models.Team).filter(
+    ).join(matches_models.MatchGame).join(
+        matches_models.MatchTeam, 
+        matches_models.Score.team_id == matches_models.MatchTeam.id
+    ).filter(
         matches_models.MatchGame.match_id == match_game.match_id
-    ).group_by(matches_models.Score.team_id, teams_models.Team.name).order_by(
+    ).group_by(
+        matches_models.Score.team_id, matches_models.MatchTeam.name
+    ).order_by(
         func.sum(matches_models.Score.points).desc()
     ).all()
 

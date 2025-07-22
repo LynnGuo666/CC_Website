@@ -1,153 +1,98 @@
 import { z } from 'zod';
 
-// Match Status Enum
-export const MatchStatusSchema = z.enum(['preparing', 'ongoing', 'finished', 'cancelled']);
-
-// OpenAPI Schema: User (Enhanced)
+// OpenAPI Schema: User
 export const UserSchema = z.object({
   id: z.number(),
   nickname: z.string(),
-  display_name: z.string().nullable().optional(),
-  source: z.string().nullable().optional(),
-  total_matches: z.number().default(0),
-  total_wins: z.number().default(0),
-  total_points: z.number().default(0),
+  display_name: z.string().nullable(),
+  source: z.string(),
+  total_matches: z.number(),
+  total_wins: z.number(),
+  total_points: z.number(),
   created_at: z.string(),
   last_active: z.string(),
-  win_rate: z.number().default(0),
-  average_score: z.number().default(0),
 });
 
-// UserInfo - Simplified version for nested usage
-export const UserInfoSchema = z.object({
-  id: z.number(),
-  nickname: z.string(),
-  display_name: z.string().nullable().optional(),
-  total_points: z.number().default(0),
-  win_rate: z.number().default(0),
+// Represents MatchTeamMembership
+export const MatchTeamMembershipSchema = z.object({
+    id: z.number(),
+    match_team_id: z.number(),
+    user_id: z.number(),
+    role: z.string(), // Assuming role is a string from enum
+    joined_at: z.string(),
+    user: UserSchema,
 });
 
-// OpenAPI Schema: Team
-export const TeamInfoSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  color: z.string().nullable().optional(),
-});
-
-export const TeamSchema = TeamInfoSchema.extend({});
-
-// Team with Members
-export const TeamWithMembersSchema = TeamSchema.extend({
-  current_members: z.array(UserInfoSchema).default([]),
-  historical_members: z.array(UserInfoSchema).default([]),
-  total_members: z.number().default(0),
+// Represents MatchTeam
+export const MatchTeamSchema = z.object({
+    id: z.number(),
+    match_id: z.number(),
+    name: z.string(),
+    color: z.string(),
+    total_score: z.number(),
+    games_played: z.number(),
+    created_at: z.string(),
+    members: z.array(UserSchema), // This is a property on the model, let's see if it's in the schema
+    memberships: z.array(MatchTeamMembershipSchema),
 });
 
 // OpenAPI Schema: Game
 export const GameSchema = z.object({
   id: z.number(),
   name: z.string(),
-  description: z.string().nullable().optional(),
+  description: z.string().nullable(),
 });
 
-// OpenAPI Schema: Score (Enhanced)
+// Represents Score
 export const ScoreSchema = z.object({
   id: z.number(),
   points: z.number(),
   user_id: z.number(),
-  team_id: z.number(),
-  user: UserSchema,
-  team: TeamInfoSchema,
-  event_data: z.record(z.string(), z.any()).nullable().optional(),
+  match_team_id: z.number(),
+  match_game_id: z.number(),
+  event_data: z.any().nullable(),
   recorded_at: z.string(),
+  user: UserSchema,
+  team: MatchTeamSchema,
 });
 
-// OpenAPI Schema: MatchGame (Enhanced)
+// Represents MatchGame
 export const MatchGameSchema = z.object({
   id: z.number(),
   match_id: z.number(),
   game_id: z.number(),
-  game_order: z.number().default(1),
+  game_order: z.number(),
   structure_type: z.string(),
   structure_details: z.record(z.string(), z.any()),
+  is_live: z.boolean(),
+  start_time: z.string().nullable(),
+  end_time: z.string().nullable(),
+  created_at: z.string(),
   game: GameSchema,
   scores: z.array(ScoreSchema).default([]),
-  is_live: z.boolean().default(false),
-  start_time: z.string().nullable().optional(),
-  end_time: z.string().nullable().optional(),
-  created_at: z.string(),
 });
 
-// OpenAPI Schema: Match (Enhanced)
+// The main Match schema, updated to match the backend
 export const MatchSchema = z.object({
   id: z.number(),
   name: z.string(),
-  description: z.string().nullable().optional(),
-  start_time: z.string().nullable().optional(),
-  end_time: z.string().nullable().optional(),
-  status: MatchStatusSchema.default('preparing'),
-  prize_pool: z.string().nullable().optional(),
-  max_teams: z.number().nullable().optional(),
-  winning_team_id: z.number().nullable().optional(),
-  participants: z.array(TeamSchema).default([]),
-  match_games: z.array(MatchGameSchema).default([]),
+  description: z.string().nullable(),
+  start_time: z.string().nullable(),
+  end_time: z.string().nullable(),
+  status: z.string(), // Assuming status is a string from enum
+  prize_pool: z.string().nullable(),
+  max_teams: z.number().nullable(),
   created_at: z.string(),
   updated_at: z.string(),
-  can_start_live: z.boolean().default(false),
-  is_archived: z.boolean().default(false),
-});
-
-// Player Statistics
-export const PlayerMatchStatsSchema = z.object({
-  match_id: z.number(),
-  match_name: z.string(),
-  total_points: z.number(),
-  games_played: z.number(),
-  team_name: z.string().nullable().optional(),
-});
-
-export const PlayerStatsSchema = z.object({
-  user_id: z.number(),
-  nickname: z.string(),
-  total_matches: z.number(),
-  total_wins: z.number(),
-  total_points: z.number(),
-  win_rate: z.number(),
-  average_score: z.number(),
-  current_team: z.string().nullable().optional(),
-  match_history: z.array(PlayerMatchStatsSchema).default([]),
-});
-
-// Enhanced User Statistics with Game Scores
-export const UserStatsSchema = z.object({
-  user: UserSchema,
-  current_team: z.record(z.string(), z.any()).nullable().optional(),
-  historical_teams: z.array(z.record(z.string(), z.any())).default([]),
-  match_history: z.array(z.record(z.string(), z.any())).default([]),
-  recent_scores: z.array(z.record(z.string(), z.any())).default([]),
-  game_scores: z.record(z.string(), z.object({
-    total_score: z.number(),
-    games_played: z.number(),
-  })).default({}),
-});
-
-// Team Statistics
-export const TeamStatsSchema = z.object({
-  team: TeamSchema,
-  total_matches: z.number().default(0),
-  total_wins: z.number().default(0),
-  total_points: z.number().default(0),
-  win_rate: z.number().default(0),
-  average_score_per_match: z.number().default(0),
-  current_members: z.array(UserInfoSchema).default([]),
-  historical_members: z.array(UserInfoSchema).default([]),
-  recent_matches: z.array(z.any()).default([]),
+  winning_team_id: z.number().nullable(),
+  participants: z.array(MatchTeamSchema), // participants is an alias for teams
+  match_games: z.array(MatchGameSchema).default([]),
+  can_start_live: z.boolean(),
+  is_archived: z.boolean(),
 });
 
 // --- API Response Schemas ---
 export const MatchesApiResponseSchema = z.array(MatchSchema);
-export const TeamsApiResponseSchema = z.array(TeamSchema);
-export const UsersApiResponseSchema = z.array(UserSchema);
 
 // --- WebSocket Schemas (from previous knowledge) ---
 export const TeamSubScoreSchema = z.object({
@@ -184,18 +129,53 @@ export const LiveUpdateSchema = z.object({
   last_event: LastEventSchema.nullable(),
 });
 
-// TypeScript types
-export type MatchStatus = z.infer<typeof MatchStatusSchema>;
-export type User = z.infer<typeof UserSchema>;
-export type UserInfo = z.infer<typeof UserInfoSchema>;
-export type Team = z.infer<typeof TeamSchema>;
-export type TeamInfo = z.infer<typeof TeamInfoSchema>;
-export type TeamWithMembers = z.infer<typeof TeamWithMembersSchema>;
-export type Game = z.infer<typeof GameSchema>;
-export type Score = z.infer<typeof ScoreSchema>;
-export type MatchGame = z.infer<typeof MatchGameSchema>;
-export type Match = z.infer<typeof MatchSchema>;
-export type PlayerStats = z.infer<typeof PlayerStatsSchema>;
-export type UserStats = z.infer<typeof UserStatsSchema>;
-export type TeamStats = z.infer<typeof TeamStatsSchema>;
-export type LiveUpdate = z.infer<typeof LiveUpdateSchema>;
+// --- Create Schemas for API ---
+
+export const TeamMemberCreateSchema = z.object({
+  user_id: z.number(),
+  role: z.string().default('main'),
+});
+
+export const MatchTeamCreateSchema = z.object({
+  name: z.string().min(2),
+  color: z.string().optional(),
+  members: z.array(TeamMemberCreateSchema).optional(),
+});
+
+export const TeamMemberSchema = z.object({
+  id: z.number(),
+  user_id: z.number(),
+  role: z.string(),
+  joined_at: z.string(),
+  user: UserSchema.optional(),
+});
+
+export const GameLineupSchema = z.object({
+  id: z.number(),
+  match_game_id: z.number(),
+  match_team_id: z.number(),
+  user_id: z.number(),
+  is_starting: z.boolean(),
+  substitute_reason: z.string().nullable(),
+  created_at: z.string(),
+  user: UserSchema.optional(),
+});
+
+// User Stats Schema
+export const UserStatsSchema = z.object({
+  user_id: z.number(),
+  nickname: z.string(),
+  total_matches: z.number(),
+  total_wins: z.number(),
+  total_points: z.number(),
+  win_rate: z.number(),
+  average_score: z.number(),
+  current_team: z.string().nullable(),
+  match_history: z.array(z.object({
+    match_id: z.number(),
+    match_name: z.string(),
+    total_points: z.number(),
+    games_played: z.number(),
+    team_name: z.string().nullable(),
+  })).default([]),
+});

@@ -23,24 +23,28 @@ class User(Base):
     last_active = Column(DateTime, default=datetime.datetime.utcnow, comment="最后活跃时间")
 
     # 关联关系
-    team_memberships = relationship("TeamMembership", back_populates="user")
+    team_memberships = relationship("MatchTeamMembership", back_populates="user")
     scores = relationship("Score", back_populates="user")
     
     @property
-    def current_team(self):
-        """获取当前队伍"""
-        current_membership = None
-        for membership in self.team_memberships:
-            if membership.leave_date is None:
-                current_membership = membership
-                break
-        return current_membership.team if current_membership else None
+    def current_teams(self):
+        """获取当前所有队伍（支持多队伍）"""
+        return [membership.team for membership in self.team_memberships]
     
     @property
-    def historical_teams(self):
-        """获取历史队伍列表"""
-        return [membership.team for membership in self.team_memberships 
-                if membership.leave_date is not None]
+    def teams_by_match(self):
+        """按比赛分组的队伍列表"""
+        teams_by_match = {}
+        for membership in self.team_memberships:
+            match_id = membership.team.match_id
+            if match_id not in teams_by_match:
+                teams_by_match[match_id] = []
+            teams_by_match[match_id].append({
+                'team': membership.team,
+                'role': membership.role,
+                'joined_at': membership.joined_at
+            })
+        return teams_by_match
     
     @property
     def win_rate(self):

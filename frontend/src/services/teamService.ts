@@ -1,6 +1,18 @@
 import apiFetch from './api';
-import { TeamSchema, TeamWithMembersSchema, TeamStatsSchema } from '@/types/schemas';
+import { MatchTeamSchema } from '@/types/schemas';
 import { z } from 'zod';
+
+// 兼容性：使用MatchTeam作为Team的别名
+export const TeamSchema = MatchTeamSchema;
+export const TeamWithMembersSchema = MatchTeamSchema;
+export const TeamStatsSchema = z.object({
+  team_id: z.number(),
+  team_name: z.string(),
+  total_points: z.number(),
+  games_played: z.number(),
+  wins: z.number(),
+  losses: z.number(),
+});
 
 // Infer the TypeScript type from the schema
 export type Team = z.infer<typeof TeamSchema>;

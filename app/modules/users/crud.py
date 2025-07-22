@@ -3,7 +3,6 @@ from sqlalchemy import func, desc
 from typing import Optional, Dict, Any
 
 from . import models, schemas
-from app.modules.teams import models as team_models
 from app.modules.matches import models as match_models
 
 
@@ -34,15 +33,15 @@ def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
         game_scores[game_name]["total_score"] += score.points
         game_scores[game_name]["games_played"] += 1
     
-    # 查询比赛历史
+    # 查询比赛历史 - 基于新的MatchTeamMembership系统
     match_history = []
     user_matches = db.query(match_models.Match).join(
-        match_models.match_participants
-    ).filter(match_models.match_participants.c.team_id.in_(
-        db.query(team_models.TeamMembership.team_id).filter(
-            team_models.TeamMembership.user_id == user_id
-        ).subquery()
-    )).all()
+        match_models.MatchTeam
+    ).join(
+        match_models.MatchTeamMembership
+    ).filter(
+        match_models.MatchTeamMembership.user_id == user_id
+    ).distinct().all()
     
     for match in user_matches:
         # 计算该玩家在这场比赛中的总得分
@@ -61,12 +60,12 @@ def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
             )
         ).scalar() or 0
         
-        # 获取队伍名称
-        team_membership = db.query(team_models.TeamMembership).filter(
-            team_models.TeamMembership.user_id == user_id,
-            team_models.TeamMembership.team_id.in_(
-                [p.id for p in match.participants]
-            )
+        # 获取队伍名称 - 基于新的MatchTeamMembership
+        team_membership = db.query(match_models.MatchTeamMembership).join(
+            match_models.MatchTeam
+        ).filter(
+            match_models.MatchTeamMembership.user_id == user_id,
+            match_models.MatchTeam.match_id == match.id
         ).first()
         
         team_name = team_membership.team.name if team_membership else "未知队伍"
@@ -103,8 +102,8 @@ def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
             "created_at": user.created_at.isoformat() if user.created_at else None,
             "last_active": user.last_active.isoformat() if user.last_active else None,
         },
-        "current_team": None,  # 下面的函数中会查询
-        "historical_teams": [],  # 下面的函数中会查询
+        "current_team": None,  # 使用下面的 get_user_team_history 函数
+        "historical_teams": [],  # 使用下面的 get_user_team_history 函数
         "match_history": match_history,
         "recent_scores": recent_scores_data,
         "game_scores": game_scores
@@ -112,15 +111,14 @@ def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
 
 def get_user_match_history(db: Session, user_id: int, skip: int = 0, limit: int = 50):
     """获取玩家历史比赛记录"""
-    # 通过队伍成员关系查询用户参与的比赛
+    # 通过新的MatchTeamMembership查询用户参与的比赛
     user_matches = db.query(match_models.Match).join(
-        match_models.match_participants
+        match_models.MatchTeam
     ).join(
-        team_models.TeamMembership,
-        match_models.match_participants.c.team_id == team_models.TeamMembership.team_id
+        match_models.MatchTeamMembership
     ).filter(
-        team_models.TeamMembership.user_id == user_id
-    ).order_by(desc(match_models.Match.created_at)).offset(skip).limit(limit).all()
+        match_models.MatchTeamMembership.user_id == user_id
+    ).order_by(desc(match_models.Match.created_at)).offset(skip).limit(limit).distinct().all()
     
     match_history = []
     for match in user_matches:
@@ -151,45 +149,55 @@ def get_user_match_history(db: Session, user_id: int, skip: int = 0, limit: int 
     return match_history
 
 def get_user_team_history(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
-    """获取玩家队伍历史"""
+    """获取玩家队伍历史 - 新版本基于比赛队伍"""
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         return None
     
-    # 查询当前队伍 (leave_date为空的)
-    current_membership = db.query(team_models.TeamMembership).filter(
-        team_models.TeamMembership.user_id == user_id,
-        team_models.TeamMembership.leave_date == None
-    ).first()
+    # 查询玩家参与的所有比赛队伍
+    memberships = db.query(match_models.MatchTeamMembership).join(
+        match_models.MatchTeam
+    ).join(
+        match_models.Match
+    ).filter(
+        match_models.MatchTeamMembership.user_id == user_id
+    ).all()
     
-    current_team = None
-    if current_membership:
-        current_team = {
-            "id": current_membership.team.id,
-            "name": current_membership.team.name,
-            "color": current_membership.team.color,
-            "join_date": current_membership.join_date.isoformat()
-        }
-    
-    # 查询历史队伍 (leave_date不为空的)
-    historical_memberships = db.query(team_models.TeamMembership).filter(
-        team_models.TeamMembership.user_id == user_id,
-        team_models.TeamMembership.leave_date != None
-    ).order_by(desc(team_models.TeamMembership.leave_date)).all()
-    
-    historical_teams = []
-    for membership in historical_memberships:
-        historical_teams.append({
+    teams_info = []
+    for membership in memberships:
+        team_info = {
             "id": membership.team.id,
             "name": membership.team.name,
             "color": membership.team.color,
-            "join_date": membership.join_date.isoformat(),
-            "leave_date": membership.leave_date.isoformat()
-        })
+            "role": membership.role.value,
+            "match_id": membership.team.match_id,
+            "match_name": membership.team.match.name,
+            "join_date": membership.joined_at.isoformat() if membership.joined_at else None
+        }
+        teams_info.append(team_info)
+    
+    # 按照加入时间排序，最新的在前
+    teams_info.sort(key=lambda x: x['join_date'] or '', reverse=True)
+    
+    # 分离当前活跃的队伍和历史队伍
+    current_teams = []
+    historical_teams = []
+    
+    for team in teams_info:
+        # 判断比赛是否还在进行中
+        match = db.query(match_models.Match).filter(
+            match_models.Match.id == team['match_id']
+        ).first()
+        
+        if match and match.status in [match_models.MatchStatus.PREPARING, match_models.MatchStatus.ONGOING]:
+            current_teams.append(team)
+        else:
+            historical_teams.append(team)
     
     return {
-        "current_team": current_team,
-        "historical_teams": historical_teams
+        "current_teams": current_teams,
+        "historical_teams": historical_teams,
+        "total_teams": len(teams_info)
     }
 
 def create_user(db: Session, user: schemas.UserCreate):

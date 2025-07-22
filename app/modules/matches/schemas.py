@@ -1,106 +1,202 @@
 # -*- coding: utf-8 -*-
-from pydantic import BaseModel, Field
-import datetime
-from typing import List, Any, Dict, Optional
-from enum import Enum
-from app.modules.users.schemas import User
-from app.modules.teams.schemas import Team, TeamInfo
-from app.modules.games.schemas import Game as GameSchema
+from pydantic import BaseModel
+from typing import Optional, List, Dict, Any
+from datetime import datetime
+import enum
 
 # 比赛状态枚举
-class MatchStatus(str, Enum):
-    PREPARING = "preparing"      # 筹办中
-    ONGOING = "ongoing"          # 进行中
-    FINISHED = "finished"        # 已结束
-    CANCELLED = "cancelled"      # 已取消
+class MatchStatus(str, enum.Enum):
+    PREPARING = "preparing"
+    ONGOING = "ongoing"
+    FINISHED = "finished"
+    CANCELLED = "cancelled"
 
-# --- 分数相关的 Schemas ---
+# 队员角色枚举
+class MemberRole(str, enum.Enum):
+    MAIN = "main"
+    SUBSTITUTE = "substitute"
+    CAPTAIN = "captain"
+
+# --- 基础Schema ---
 
 class ScoreBase(BaseModel):
     points: int
     user_id: int
-    team_id: int
+    team_id: int  # 现在是match_team_id
+    event_data: Optional[Dict[str, Any]] = None
 
 class ScoreCreate(ScoreBase):
-    event_data: Optional[Dict[str, Any]] = None
+    pass
 
 class Score(ScoreBase):
     id: int
-    user: User
-    team: TeamInfo
-    event_data: Optional[Dict[str, Any]] = None
-    recorded_at: datetime.datetime
-
+    match_game_id: int
+    recorded_at: datetime
+    
+    # 关联对象（可选）
+    user: Optional[Any] = None
+    team: Optional[Any] = None
+    
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-# --- 赛程相关的 Schemas ---
+# --- 队员相关Schema ---
+
+class TeamMemberBase(BaseModel):
+    user_id: int
+    role: Optional[str] = "main"
+
+class TeamMemberCreate(TeamMemberBase):
+    pass
+
+class TeamMember(TeamMemberBase):
+    id: int
+    joined_at: datetime
+    user: Optional[Any] = None
+    
+    class Config:
+        from_attributes = True
+
+# --- 比赛队伍Schema ---
+
+class MatchTeamBase(BaseModel):
+    name: str
+    color: Optional[str] = None
+
+class MatchTeamCreate(MatchTeamBase):
+    members: Optional[List[TeamMemberCreate]] = None
+
+class MatchTeamUpdate(BaseModel):
+    name: Optional[str] = None
+    color: Optional[str] = None
+
+class MatchTeam(MatchTeamBase):
+    id: int
+    match_id: int
+    total_score: int = 0
+    games_played: int = 0
+    created_at: datetime
+    
+    # 关联对象
+    memberships: List[TeamMember] = []
+    scores: List[Score] = []
+    
+    class Config:
+        from_attributes = True
+
+# --- 游戏阵容Schema ---
+
+class GameLineupBase(BaseModel):
+    user_id: int
+    is_starting: bool = True
+    substitute_reason: Optional[str] = None
+
+class GameLineupCreate(GameLineupBase):
+    pass
+
+class GameLineup(GameLineupBase):
+    id: int
+    match_game_id: int
+    match_team_id: int
+    created_at: datetime
+    
+    user: Optional[Any] = None
+    
+    class Config:
+        from_attributes = True
+
+# --- 赛程Schema ---
 
 class MatchGameBase(BaseModel):
     game_id: int
-    structure_type: str
-    structure_details: Dict[str, Any]
+    game_order: Optional[int] = 1
+    structure_type: Optional[str] = None
+    structure_details: Optional[Dict[str, Any]] = None
 
 class MatchGameCreate(MatchGameBase):
-    game_order: Optional[int] = 1
+    pass
+
+class MatchGameUpdate(BaseModel):
+    structure_type: Optional[str] = None
+    structure_details: Optional[Dict[str, Any]] = None
+    is_live: Optional[bool] = None
 
 class MatchGame(MatchGameBase):
     id: int
     match_id: int
-    game_order: int
-    game: GameSchema
-    scores: List[Score] = []
     is_live: bool = False
-    start_time: Optional[datetime.datetime] = None
-    end_time: Optional[datetime.datetime] = None
-    created_at: datetime.datetime
-
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    created_at: datetime
+    
+    # 关联对象
+    game: Optional[Any] = None
+    scores: List[Score] = []
+    lineups: List[GameLineup] = []
+    
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-# --- 比赛相关的 Schemas ---
+# --- 比赛Schema ---
 
 class MatchBase(BaseModel):
     name: str
     description: Optional[str] = None
-    start_time: Optional[datetime.datetime] = None
-    end_time: Optional[datetime.datetime] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
     status: Optional[MatchStatus] = MatchStatus.PREPARING
     prize_pool: Optional[str] = None
     max_teams: Optional[int] = None
+    max_players_per_team: Optional[int] = 4
+    allow_substitutes: Optional[bool] = True
 
 class MatchCreate(MatchBase):
-    """用于创建一场新比赛，支持一次性定义所有赛程，方便历史数据导入"""
-    participant_team_ids: List[int] = []
     match_games: Optional[List[MatchGameCreate]] = None
 
 class MatchUpdate(BaseModel):
-    """用于更新比赛信息"""
     name: Optional[str] = None
     description: Optional[str] = None
-    start_time: Optional[datetime.datetime] = None
-    end_time: Optional[datetime.datetime] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
     status: Optional[MatchStatus] = None
-    winning_team_id: Optional[int] = None
     prize_pool: Optional[str] = None
     max_teams: Optional[int] = None
+    max_players_per_team: Optional[int] = None
+    allow_substitutes: Optional[bool] = None
 
 class Match(MatchBase):
     id: int
-    participants: List[Team] = []
+    created_at: datetime
+    updated_at: datetime
+    
+    # 关联对象
+    teams: List[MatchTeam] = []
     match_games: List[MatchGame] = []
-    winning_team_id: Optional[int] = None
-    created_at: datetime.datetime
-    updated_at: datetime.datetime
-
-    # 计算属性
-    can_start_live: bool = False
-    is_archived: bool = False
-
+    
+    # 兼容性属性
+    @property
+    def participants(self):
+        return self.teams
+    
     class Config:
-        orm_mode = True
+        from_attributes = True
 
-# --- 统计相关的 Schemas ---
+# --- 特殊操作Schema ---
+
+class LineupSetting(BaseModel):
+    """设置阵容的Schema"""
+    team_lineups: Dict[int, List[int]]  # team_id -> [user_id, user_id, ...]
+    substitute_info: Optional[Dict[str, str]] = None  # user_id -> reason
+
+class BatchTeamCreate(BaseModel):
+    """批量创建队伍的Schema"""
+    teams: List[MatchTeamCreate]
+
+class MemberRoleUpdate(BaseModel):
+    """更新队员角色的Schema"""
+    role: str  # "main" | "substitute" | "captain"
+
+# --- 兼容性Schema ---
 
 class PlayerMatchStats(BaseModel):
     """玩家在特定比赛中的统计"""

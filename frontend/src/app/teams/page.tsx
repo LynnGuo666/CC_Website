@@ -1,12 +1,21 @@
-import { getTeams, Team } from '@/services/teamService';
 import Link from 'next/link';
+import { getMatches } from '@/services/matchService';
+import { getMatchTeams } from '@/services/matchTeamService';
 
 export default async function TeamsPage() {
-  let teams: Team[] = [];
+  let matches = [];
+  let allTeams = [];
   let error: string | null = null;
 
   try {
-    teams = await getTeams();
+    // 获取所有比赛
+    matches = await getMatches();
+    
+    // 获取每个比赛的队伍
+    for (const match of matches) {
+      const teams = await getMatchTeams(match.id);
+      allTeams.push(...teams.map(team => ({ ...team, match_name: match.name })));
+    }
   } catch (e) {
     console.error(e);
     error = '无法加载队伍列表。后端服务是否正在运行？';
@@ -46,22 +55,26 @@ export default async function TeamsPage() {
           {!error && (
             <>
               {/* Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 max-w-md mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
                 <div className="text-center p-4 rounded-xl glass card-hover">
-                  <div className="text-2xl font-bold text-primary mb-1">{teams.length}</div>
+                  <div className="text-2xl font-bold text-primary mb-1">{matches.length}</div>
+                  <div className="text-sm text-muted-foreground">总比赛数</div>
+                </div>
+                <div className="text-center p-4 rounded-xl glass card-hover">
+                  <div className="text-2xl font-bold text-accent mb-1">{allTeams.length}</div>
                   <div className="text-sm text-muted-foreground">总队伍数</div>
                 </div>
                 <div className="text-center p-4 rounded-xl glass card-hover">
-                  <div className="text-2xl font-bold text-accent mb-1">{teams.length * 3}</div>
-                  <div className="text-sm text-muted-foreground">预估选手</div>
+                  <div className="text-2xl font-bold text-secondary mb-1">{allTeams.reduce((sum, team) => sum + (team.memberships?.length || 0), 0)}</div>
+                  <div className="text-sm text-muted-foreground">总选手数</div>
                 </div>
               </div>
 
               {/* Teams Grid */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {teams.length > 0 ? (
-                  teams.map((team) => (
-                    <Link href={`/teams/${team.id}`} key={team.id} className="group">
+                {allTeams.length > 0 ? (
+                  allTeams.map((team) => (
+                    <Link href={`/teams/${team.id}`} key={`${team.match_id}-${team.id}`} className="group">
                       <div className="block p-4 glass card-hover rounded-2xl text-center border-primary/10 hover:border-primary/30 transition-all duration-300">
                         <div
                           className="w-16 h-16 rounded-xl mx-auto mb-3 border-2 border-white/20 shadow-lg flex items-center justify-center"
@@ -71,9 +84,11 @@ export default async function TeamsPage() {
                             {team.name.charAt(0)}
                           </span>
                         </div>
-                        <h2 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                        <h2 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-2">
                           {team.name}
                         </h2>
+                        <p className="text-xs text-muted-foreground">{team.match_name}</p>
+                        <p className="text-xs text-accent mt-1">{team.memberships?.length || 0} 名队员</p>
                       </div>
                     </Link>
                   ))
@@ -85,7 +100,7 @@ export default async function TeamsPage() {
                       </svg>
                     </div>
                     <h3 className="text-xl font-semibold mb-2">暂无队伍</h3>
-                    <p className="text-muted-foreground">还没有注册的队伍</p>
+                    <p className="text-muted-foreground">还没有注册的队伍，请先创建比赛并添加队伍</p>
                   </div>
                 )}
               </div>
