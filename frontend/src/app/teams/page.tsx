@@ -27,15 +27,12 @@ export default async function TeamsPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Header */}
-      <section className="relative py-16 px-6 bg-gradient-to-br from-background via-muted/20 to-background">
+      <section className="relative py-12 px-6 bg-gradient-to-br from-background via-muted/20 to-background">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
         <div className="relative max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             参赛队伍
           </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            查看所有参赛队伍的详细信息和比赛表现
-          </p>
         </div>
       </section>
 
@@ -57,22 +54,6 @@ export default async function TeamsPage() {
 
           {!error && (
             <>
-              {/* Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 max-w-2xl mx-auto">
-                <div className="text-center p-4 rounded-xl glass card-hover">
-                  <div className="text-2xl font-bold text-primary mb-1">{matches.length}</div>
-                  <div className="text-sm text-muted-foreground">总比赛数</div>
-                </div>
-                <div className="text-center p-4 rounded-xl glass card-hover">
-                  <div className="text-2xl font-bold text-accent mb-1">{allTeams.length}</div>
-                  <div className="text-sm text-muted-foreground">总队伍数</div>
-                </div>
-                <div className="text-center p-4 rounded-xl glass card-hover">
-                  <div className="text-2xl font-bold text-secondary mb-1">--</div>
-                  <div className="text-sm text-muted-foreground">总选手数</div>
-                </div>
-              </div>
-
               {/* Teams by Match */}
               <div className="space-y-12">
                 {matches.map((match: any) => {
@@ -127,7 +108,6 @@ export default async function TeamsPage() {
                                 </h3>
                                 <div className="space-y-1">
                                   <p className="text-xs text-accent">总分: {team.total_score || 0}</p>
-                                  <p className="text-xs text-muted-foreground">已参与: {team.games_played || 0} 场</p>
                                 </div>
                               </div>
                             </Link>

@@ -125,7 +125,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           {/* Footer */}
           <div className="p-4 border-t border-border">
             <div className="text-xs text-muted-foreground text-center">
-              <p>© 2025 TRIALHAMMER</p>
+              <p>© 2023-2025 联合锦标赛</p>
               <p>管理系统 v1.0</p>
             </div>
           </div>

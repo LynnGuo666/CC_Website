@@ -29,10 +29,6 @@ export async function getMatches(): Promise<MatchList[]> {
   return await apiFetch<MatchList[]>('/matches', {
     method: 'GET',
     schema: MatchesApiResponseSchema,
-    next: {
-      revalidate: 60, // Revalidate every 60 seconds
-      tags: ['matches'], // Cache tag for on-demand revalidation
-    },
   });
 }
 
@@ -45,10 +41,6 @@ export async function getMatchById(id: number): Promise<Match> {
   return await apiFetch<Match>(`/matches/${id}`, {
     method: 'GET',
     schema: MatchSchema,
-    next: {
-      revalidate: 60,
-      tags: ['matches', `match:${id}`],
-    },
   });
 }
 
@@ -61,10 +53,6 @@ export async function getMatchGames(matchId: number): Promise<MatchGame[]> {
   return await apiFetch<MatchGame[]>(`/matches/${matchId}/games`, {
     method: 'GET',
     schema: z.array(MatchGameSchema),
-    next: {
-      revalidate: 30,
-      tags: ['matches', `match:${matchId}`, 'games'],
-    },
   });
 }
 
@@ -77,10 +65,6 @@ export async function getMatchGameScores(matchGameId: number) {
   const scores = await apiFetch(`/matches/games/${matchGameId}/scores`, {
     method: 'GET',
     schema: z.array(z.any()), // 暂时使用any
-    next: {
-      revalidate: 30,
-      tags: ['matches', `match-game:${matchGameId}`, 'scores'],
-    },
   });
   
   // 获取涉及的用户信息
@@ -91,10 +75,6 @@ export async function getMatchGameScores(matchGameId: number) {
         const user = await apiFetch(`/users/${userId}`, {
           method: 'GET',
           schema: z.any(),
-          next: {
-            revalidate: 300,
-            tags: ['users', `user:${userId}`],
-          },
         });
         return { id: userId, ...user };
       } catch (err) {
@@ -120,9 +100,5 @@ export async function getGameById(gameId: number) {
   return await apiFetch(`/games/${gameId}`, {
     method: 'GET',
     schema: z.any(), // 暂时使用any
-    next: {
-      revalidate: 3600, // 游戏信息变化不频繁
-      tags: ['games', `game:${gameId}`],
-    },
   });
 }

@@ -14,8 +14,5 @@ export async function getGames(): Promise<Game[]> {
   return await apiFetch<Game[]>('/games', {
     method: 'GET',
     schema: GamesApiResponseSchema,
-    next: {
-      revalidate: 3600, // Games list doesn't change often
-    },
   });
 }

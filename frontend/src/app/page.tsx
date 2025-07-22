@@ -19,11 +19,11 @@ export default function Home() {
           {/* Main heading */}
           <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8">
             <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-pulse">
-              TRIALHAMMER
+              联合锦标赛
             </span>
             <br />
             <span className="text-4xl md:text-5xl lg:text-6xl text-foreground/80">
-              x RIA 联合锦标赛
+              TRIALHAMMER x RIA x INF
             </span>
           </h1>
           

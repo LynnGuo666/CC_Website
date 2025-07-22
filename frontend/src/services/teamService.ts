@@ -38,10 +38,6 @@ export async function getTeams(): Promise<Team[]> {
   return await apiFetch<Team[]>('/teams', {
     method: 'GET',
     schema: TeamsApiResponseSchema,
-    next: {
-      revalidate: 300, // Revalidate every 5 minutes
-      tags: ['teams'],
-    },
   });
 }
 
@@ -63,10 +59,6 @@ export async function getTeamStats(id: number): Promise<TeamStats> {
   return await apiFetch<TeamStats>(`/teams/${id}/stats`, {
     method: 'GET',
     schema: TeamStatsSchema,
-    next: {
-      revalidate: 60, // Revalidate every minute
-      tags: ['teams', `team:${id}`, 'stats'],
-    },
   });
 }
 
@@ -122,10 +114,6 @@ export async function getTeamMembers(teamId: number, includeHistorical: boolean 
   return await apiFetch<any[]>(`/teams/${teamId}/members?include_historical=${includeHistorical}`, {
     method: 'GET',
     schema: z.array(z.any()),
-    next: {
-      revalidate: 300,
-      tags: ['teams', `team:${teamId}`, 'members'],
-    },
   });
 }
 
@@ -140,9 +128,5 @@ export async function getTeamMatchHistory(teamId: number, skip: number = 0, limi
   return await apiFetch<any[]>(`/teams/${teamId}/matches?skip=${skip}&limit=${limit}`, {
     method: 'GET',
     schema: z.array(z.any()),
-    next: {
-      revalidate: 300,
-      tags: ['teams', `team:${teamId}`, 'matches'],
-    },
   });
 }

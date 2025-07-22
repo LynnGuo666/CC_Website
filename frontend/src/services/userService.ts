@@ -23,10 +23,6 @@ export async function getUsers(): Promise<User[]> {
   return await apiFetch<User[]>('/users', {
     method: 'GET',
     schema: UsersApiResponseSchema,
-    next: {
-      revalidate: 300, // Revalidate every 5 minutes
-      tags: ['users'],
-    },
   });
 }
 
@@ -54,10 +50,6 @@ export async function getUserById(id: number): Promise<User> {
   return await apiFetch<User>(`/users/${id}`, {
     method: 'GET',
     schema: UserSchema,
-    next: {
-      revalidate: 300,
-      tags: ['users', `user:${id}`],
-    },
   });
 }
 
@@ -70,10 +62,6 @@ export async function getUserStats(id: number): Promise<UserStats> {
   return await apiFetch<UserStats>(`/users/${id}/stats`, {
     method: 'GET',
     schema: UserStatsSchema,
-    next: {
-      revalidate: 60, // Revalidate every minute
-      tags: ['users', `user:${id}`, 'stats'],
-    },
   });
 }
 
@@ -88,10 +76,6 @@ export async function getUserMatchHistory(id: number, skip: number = 0, limit: n
   return await apiFetch<any[]>(`/users/${id}/matches?skip=${skip}&limit=${limit}`, {
     method: 'GET',
     schema: z.array(z.any()),
-    next: {
-      revalidate: 300,
-      tags: ['users', `user:${id}`, 'matches'],
-    },
   });
 }
 
@@ -107,9 +91,5 @@ export async function getUserTeamHistory(id: number): Promise<{current_team: any
       current_team: z.any().nullable(),
       historical_teams: z.array(z.any()),
     }),
-    next: {
-      revalidate: 300,
-      tags: ['users', `user:${id}`, 'teams'],
-    },
   });
 }

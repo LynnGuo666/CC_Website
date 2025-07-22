@@ -45,10 +45,6 @@ export async function getMatchTeams(matchId: number): Promise<MatchTeam[]> {
   return await apiFetch<MatchTeam[]>(`/matches/${matchId}/teams`, {
     method: 'GET',
     schema: MatchTeamsApiResponseSchema,
-    next: {
-      revalidate: 300,
-      tags: ['matches', `match:${matchId}`, 'teams'],
-    },
   });
 }
 
@@ -61,10 +57,6 @@ export async function getMatchTeam(teamId: number): Promise<MatchTeam> {
   return await apiFetch<MatchTeam>(`/matches/teams/${teamId}`, {
     method: 'GET',
     schema: MatchTeamSchema,
-    next: {
-      revalidate: 300,
-      tags: ['teams', `team:${teamId}`],
-    },
   });
 }
 
@@ -173,10 +165,6 @@ export async function getGameLineups(matchGameId: number, teamId?: number): Prom
   return await apiFetch<GameLineup[]>(url, {
     method: 'GET',
     schema: GameLineupsApiResponseSchema,
-    next: {
-      revalidate: 300,
-      tags: ['matches', `match-game:${matchGameId}`, 'lineups'],
-    },
   });
 }
 
@@ -210,10 +198,6 @@ export async function getUserTeamsInMatch(matchId: number, userId: number): Prom
   return await apiFetch<MatchTeam[]>(`/matches/users/${userId}/teams?match_id=${matchId}`, {
     method: 'GET',
     schema: MatchTeamsApiResponseSchema,
-    next: {
-      revalidate: 300,
-      tags: ['matches', `match:${matchId}`, `user:${userId}`, 'teams'],
-    },
   });
 }
 
@@ -228,10 +212,6 @@ export async function getTeamMemberCount(teamId: number): Promise<number> {
     const response = await apiFetch<{ count: number }>(`/matches/teams/${teamId}/members/count`, {
       method: 'GET',
       schema: z.object({ count: z.number() }),
-      next: {
-        revalidate: 300,
-        tags: ['teams', `team:${teamId}`, 'member-count'],
-      },
     });
     return response.count;
   } catch (error) {
@@ -240,10 +220,6 @@ export async function getTeamMemberCount(teamId: number): Promise<number> {
       const members = await apiFetch<TeamMember[]>(`/matches/teams/${teamId}/members`, {
         method: 'GET',
         schema: z.array(TeamMemberSchema),
-        next: {
-          revalidate: 300,
-          tags: ['teams', `team:${teamId}`, 'members'],
-        },
       });
       return members.length;
     } catch (fallbackError) {
@@ -280,9 +256,5 @@ export async function getTeamMembers(teamId: number): Promise<TeamMember[]> {
   return await apiFetch<TeamMember[]>(`/matches/teams/${teamId}/members`, {
     method: 'GET',
     schema: z.array(TeamMemberSchema),
-    next: {
-      revalidate: 300,
-      tags: ['teams', `team:${teamId}`, 'members'],
-    },
   });
 }
