@@ -171,7 +171,6 @@ class GameLineup(Base):
     team = relationship("MatchTeam", back_populates="lineups", lazy="select")
     user = relationship("User", lazy="select")
 
-# 分数数据模型
 class Score(Base):
     __tablename__ = "scores"
 
@@ -190,3 +189,9 @@ class Score(Base):
     user = relationship("User", lazy="select")
     team = relationship("MatchTeam", back_populates="scores", lazy="select")
     match_game = relationship("MatchGame", back_populates="scores", lazy="select")
+    
+    # 兼容性属性，用于序列化
+    @property
+    def team_id(self):
+        """兼容旧的team_id字段名"""
+        return self.match_team_id

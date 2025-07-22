@@ -186,6 +186,16 @@ def update_member_role(
 
 # --- 赛程接口 ---
 
+@router.get("/{match_id}/games", response_model=List[schemas.MatchGame])
+def get_match_games(match_id: int, db: Session = Depends(get_db)):
+    """获取指定比赛的所有赛程"""
+    # 验证比赛存在
+    db_match = crud.get_match(db, match_id=match_id)
+    if not db_match:
+        raise HTTPException(status_code=404, detail="Match not found")
+    
+    return crud.get_match_games_by_match(db, match_id=match_id)
+
 @router.post("/{match_id}/games", response_model=schemas.MatchGame, status_code=201)
 def create_match_game(
     match_id: int, 

@@ -220,6 +220,9 @@ def delete_match_team(db: Session, team_id: int):
 def get_match_game(db: Session, match_game_id: int):
     return db.query(models.MatchGame).filter(models.MatchGame.id == match_game_id).first()
 
+def get_match_games_by_match(db: Session, match_id: int):
+    return db.query(models.MatchGame).filter(models.MatchGame.match_id == match_id).order_by(models.MatchGame.game_order).all()
+
 def create_match_game(db: Session, match_id: int, match_game: schemas.MatchGameCreate):
     db_match_game = models.MatchGame(
         match_id=match_id,

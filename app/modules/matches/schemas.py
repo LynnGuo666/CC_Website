@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any, TYPE_CHECKING
 from datetime import datetime
 import enum
@@ -25,7 +25,7 @@ class MemberRole(str, enum.Enum):
 class ScoreBase(BaseModel):
     points: int
     user_id: int
-    team_id: int  # 现在是match_team_id
+    team_id: int  # 对应数据库中的match_team_id字段
     event_data: Optional[Dict[str, Any]] = None
 
 class ScoreCreate(ScoreBase):
