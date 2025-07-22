@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
 
 type TeamDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -132,11 +133,14 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
                   <Link key={member.id} href={`/players/${member.id}`} className="group">
                     <Card className="h-full glass card-hover border-primary/10 hover:border-primary/30 transition-all duration-300">
                       <CardHeader className="text-center">
-                        <div className="w-16 h-16 rounded-full bg-primary/20 mx-auto mb-3 flex items-center justify-center">
-                          <span className="text-primary font-bold text-xl">
-                            {member.nickname?.charAt(0)?.toUpperCase()}
-                          </span>
-                        </div>
+                        <Avatar
+                          username={member.nickname}
+                          userId={member.id}
+                          size={64}
+                          className="rounded-full mx-auto mb-3"
+                          fallbackClassName="rounded-full bg-primary/20"
+                          fallbackLetter={member.nickname?.charAt(0)?.toUpperCase()}
+                        />
                         <CardTitle className="text-lg group-hover:text-primary transition-colors">
                           {member.nickname}
                         </CardTitle>
@@ -175,11 +179,14 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
                   <Link key={member.id} href={`/players/${member.id}`} className="group">
                     <Card className="h-full glass card-hover border-muted/20 hover:border-muted/40 transition-all duration-300 opacity-80">
                       <CardHeader className="text-center">
-                        <div className="w-16 h-16 rounded-full bg-muted/20 mx-auto mb-3 flex items-center justify-center">
-                          <span className="text-muted-foreground font-bold text-xl">
-                            {member.nickname?.charAt(0)?.toUpperCase()}
-                          </span>
-                        </div>
+                        <Avatar
+                          username={member.nickname}
+                          userId={member.id}
+                          size={64}
+                          className="rounded-full mx-auto mb-3"
+                          fallbackClassName="rounded-full bg-muted/20"
+                          fallbackLetter={member.nickname?.charAt(0)?.toUpperCase()}
+                        />
                         <CardTitle className="text-lg group-hover:text-primary transition-colors">
                           {member.nickname}
                         </CardTitle>

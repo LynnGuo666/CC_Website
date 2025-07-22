@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Avatar } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -427,7 +428,24 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                                       <span>{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ''}</span>
                                     </div>
                                   </TableCell>
-                                  <TableCell className="font-medium">{score.user.nickname}</TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center space-x-3">
+                                      <Avatar
+                                        username={score.user.nickname}
+                                        userId={score.user.id}
+                                        size={32}
+                                        className="rounded-full"
+                                        fallbackClassName="rounded-full bg-primary/20"
+                                        fallbackLetter={score.user.nickname?.charAt(0)?.toUpperCase()}
+                                      />
+                                      <Link 
+                                        href={`/players/${score.user.id}`}
+                                        className="font-medium hover:text-primary transition-colors"
+                                      >
+                                        {score.user.nickname}
+                                      </Link>
+                                    </div>
+                                  </TableCell>
                                   <TableCell>
                                     <div className="flex items-center space-x-2">
                                       <div 

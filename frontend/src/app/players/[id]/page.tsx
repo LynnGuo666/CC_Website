@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Avatar } from "@/components/ui/avatar";
 import {
   Table,
   TableBody,
@@ -100,11 +101,14 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
         <div className="relative max-w-4xl mx-auto">
           <div className="flex items-center space-x-8 mb-6">
-            <div className="w-32 h-32 rounded-2xl border-4 border-white/20 shadow-2xl glass flex items-center justify-center bg-gradient-to-br from-primary to-accent">
-              <span className="text-4xl font-bold text-white">
-                {player.nickname?.charAt(0)?.toUpperCase()}
-              </span>
-            </div>
+            <Avatar
+              username={player.nickname}
+              userId={player.id}
+              size={128}
+              className="rounded-2xl border-4 border-white/20 shadow-2xl"
+              fallbackClassName="rounded-2xl"
+              fallbackLetter={player.nickname?.charAt(0)?.toUpperCase()}
+            />
             <div>
               <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {player.nickname}

@@ -1,5 +1,6 @@
 import { getUsers, User } from '@/services/userService';
 import Link from 'next/link';
+import { Avatar } from '@/components/ui/avatar';
 
 export default async function PlayersPage() {
   let players: User[] = [];
@@ -24,6 +25,14 @@ export default async function PlayersPage() {
             players.map((player) => (
               <Link href={`/players/${player.id}`} key={player.id} className="group">
                 <div className="block p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 text-center">
+                  <Avatar
+                    username={player.nickname}
+                    userId={player.id}
+                    size={64}
+                    className="rounded-full mx-auto mb-3"
+                    fallbackClassName="rounded-full bg-gradient-to-br from-blue-500 to-purple-600"
+                    fallbackLetter={player.nickname?.charAt(0)?.toUpperCase()}
+                  />
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{player.nickname}</h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">ID: {player.id}</p>
                 </div>
