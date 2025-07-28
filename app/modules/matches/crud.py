@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from sqlalchemy import func, text
 from . import models, schemas
 from .standard_score import calculate_standard_scores_for_match_game
 from typing import List, Optional
@@ -312,6 +314,9 @@ def create_match_score(db: Session, match_game_id: int, score: schemas.ScoreCrea
     # 自动计算该游戏的标准分
     calculate_standard_scores_for_match_game(db, match_game_id)
     
+    # 异步更新相关队伍的积分
+    update_team_scores_async([score.team_id])
+    
     return db_score
 
 def get_scores_for_match_game(db: Session, match_game_id: int):
@@ -323,8 +328,16 @@ def delete_score(db: Session, score_id: int):
     if not db_score:
         return False
     
+    # 记录要更新的队伍ID
+    team_id = db_score.match_team_id
+    
     db.delete(db_score)
     db.commit()
+    
+    # 异步更新队伍积分
+    if team_id:
+        update_team_scores_async([team_id])
+    
     return True
 
 # --- 统计相关 CRUD ---
@@ -371,3 +384,50 @@ def recalculate_match_standard_scores(db: Session, match_id: int) -> bool:
 def recalculate_game_standard_scores(db: Session, match_game_id: int) -> bool:
     """重新计算单个游戏的标准分"""
     return calculate_standard_scores_for_match_game(db, match_game_id)
+
+# --- 队伍积分更新函数 ---
+
+def update_team_scores_sync(team_ids: list[int]):
+    """同步更新指定队伍的积分（在独立的数据库会话中）"""
+    from app.core.db import SessionLocal
+    
+    db = SessionLocal()
+    try:
+        for team_id in team_ids:
+            # 计算队伍总积分和参与游戏数
+            result = db.execute(text("""
+                SELECT 
+                    COALESCE(SUM(s.points), 0) as total_score,
+                    COUNT(DISTINCT s.match_game_id) as games_played
+                FROM match_teams mt 
+                LEFT JOIN scores s ON mt.id = s.match_team_id 
+                WHERE mt.id = :team_id
+                GROUP BY mt.id
+            """), {"team_id": team_id})
+            
+            team_data = result.fetchone()
+            if team_data:
+                total_score, games_played = team_data
+                
+                # 更新队伍积分
+                db.execute(text("""
+                    UPDATE match_teams 
+                    SET total_score = :total_score, games_played = :games_played 
+                    WHERE id = :team_id
+                """), {
+                    'total_score': int(total_score or 0),
+                    'games_played': int(games_played or 0),
+                    'team_id': team_id
+                })
+        
+        db.commit()
+    except Exception as e:
+        print(f"更新队伍积分时出错: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+def update_team_scores_async(team_ids: list[int]):
+    """异步更新队伍积分，避免阻塞主线程"""
+    executor = ThreadPoolExecutor(max_workers=1)
+    executor.submit(update_team_scores_sync, team_ids)

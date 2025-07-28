@@ -116,8 +116,7 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
     );
   }
 
-  const currentMembers = members.filter((m: any) => m.role !== 'historical');
-  const historicalMembers = members.filter((m: any) => m.role === 'historical');
+  const currentMembers = members; // 显示所有成员
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-background">
@@ -216,35 +215,13 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
       {/* Content Section */}
       <section className="py-12">
         <div className="container mx-auto px-6">
-          {/* Team Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-3xl mx-auto">
-            <div className="group">
-              <div className="p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-muted/50 hover:border-primary/30 transition-all duration-300 text-center group-hover:scale-105">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">{currentMembers.length}</div>
-                <div className="text-sm text-muted-foreground">当前成员</div>
-              </div>
-            </div>
-            <div className="group">
-              <div className="p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-muted/50 hover:border-primary/30 transition-all duration-300 text-center group-hover:scale-105">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <Trophy className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">{team.total_score || 0}</div>
-                <div className="text-sm text-muted-foreground">队伍总积分</div>
-              </div>
-            </div>
-          </div>
-
           {/* Current Members */}
           {currentMembers.length > 0 && (
             <div className="mb-16 max-w-6xl mx-auto">
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <h2 className="text-2xl font-bold">当前队员</h2>
+                  <h2 className="text-2xl font-bold">队员列表</h2>
                   <Badge variant="secondary" className="ml-2">{currentMembers.length}</Badge>
                 </div>
               </div>
@@ -252,15 +229,9 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {currentMembers.map((membership: any) => {
                   const member = membership.user;
-                  const isCaptain = membership.role === 'captain';
                   return (
                     <Link key={membership.id} href={`/players/${member.id}`} className="group">
                       <Card className="h-full bg-card/50 backdrop-blur-sm border border-muted/50 hover:border-primary/40 hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02] relative overflow-hidden">
-                        {isCaptain && (
-                          <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center">
-                            <Crown className="w-3 h-3 text-white" />
-                          </div>
-                        )}
                         <CardHeader className="text-center pb-4">
                           <Avatar
                             username={member.nickname}
@@ -284,71 +255,6 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
                             <span className="text-muted-foreground">总积分</span>
                             <span className="font-semibold text-primary">{member.total_points || 0}</span>
                           </div>
-                          <div className="flex items-center justify-center">
-                            <Badge 
-                              variant={isCaptain ? "default" : membership.role === 'main' ? "secondary" : "outline"}
-                              className="text-xs px-2 py-1"
-                            >
-                              {isCaptain ? (
-                                <><Crown className="w-3 h-3 mr-1" />队长</>
-                              ) : membership.role === 'main' ? '主力队员' : 
-                                membership.role === 'substitute' ? '替补队员' : '队员'}
-                            </Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Historical Members */}
-          {historicalMembers.length > 0 && (
-            <div className="mb-16 max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 rounded-full bg-muted-foreground"></div>
-                  <h2 className="text-2xl font-bold text-muted-foreground">历史队员</h2>
-                  <Badge variant="outline" className="ml-2">{historicalMembers.length}</Badge>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {historicalMembers.map((membership: any) => {
-                  const member = membership.user;
-                  return (
-                    <Link key={membership.id} href={`/players/${member.id}`} className="group">
-                      <Card className="h-full bg-card/30 backdrop-blur-sm border border-muted/30 hover:border-muted/50 hover:bg-card/40 transition-all duration-300 group-hover:scale-[1.02] opacity-75 hover:opacity-90">
-                        <CardHeader className="text-center pb-4">
-                          <Avatar
-                            username={member.nickname}
-                            userId={member.id}
-                            size={56}
-                            className="rounded-2xl mx-auto mb-3 ring-2 ring-background group-hover:ring-muted/50 transition-all grayscale group-hover:grayscale-0"
-                            fallbackClassName="rounded-2xl bg-muted/30 group-hover:bg-muted/40 transition-colors"
-                            fallbackLetter={member.nickname?.charAt(0)?.toUpperCase()}
-                          />
-                          <CardTitle className="text-lg group-hover:text-foreground transition-colors line-clamp-1 text-muted-foreground">
-                            {member.nickname}
-                          </CardTitle>
-                          {member.display_name && (
-                            <CardDescription className="text-xs line-clamp-1">
-                              {member.display_name}
-                            </CardDescription>
-                          )}
-                        </CardHeader>
-                        <CardContent className="pt-0 space-y-3">
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-muted-foreground">总积分</span>
-                            <span className="font-medium text-muted-foreground">{member.total_points || 0}</span>
-                          </div>
-                          <div className="flex items-center justify-center">
-                            <Badge variant="secondary" className="text-xs px-2 py-1">
-                              历史成员
-                            </Badge>
-                          </div>
                         </CardContent>
                       </Card>
                     </Link>
@@ -359,7 +265,7 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
           )}
 
           {/* Empty State */}
-          {currentMembers.length === 0 && historicalMembers.length === 0 && (
+          {currentMembers.length === 0 && (
             <div className="text-center py-20 max-w-md mx-auto">
               <div className="p-8 rounded-3xl bg-muted/20 backdrop-blur-sm border border-muted/30">
                 <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-muted/30 flex items-center justify-center">
