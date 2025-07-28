@@ -257,3 +257,270 @@ def delete_user(db: Session, user_id: int):
     db.delete(db_user)
     db.commit()
     return True
+
+# --- 排行榜相关函数 ---
+
+def get_leaderboard(db: Session, skip: int = 0, limit: int = 100, game_code: str = None):
+    """
+    获取标准分排行榜
+    
+    Args:
+        db: 数据库会话
+        skip: 跳过数量
+        limit: 返回数量限制
+        game_code: 游戏代码，如果指定则按该游戏的平均标准分排序
+        
+    Returns:
+        List[Dict]: 排行榜数据
+    """
+    if game_code:
+        # 按指定游戏的平均标准分排行
+        return get_game_specific_leaderboard(db, game_code, skip, limit)
+    else:
+        # 按综合平均标准分排行
+        users = db.query(models.User).filter(
+            models.User.average_standard_score > 0
+        ).order_by(
+            desc(models.User.average_standard_score)
+        ).offset(skip).limit(limit).all()
+        
+        leaderboard = []
+        for idx, user in enumerate(users):
+            # 获取用户的游戏统计
+            game_stats = get_user_game_stats(db, user.id)
+            
+            leaderboard.append({
+                "rank": skip + idx + 1,
+                "user_id": user.id,
+                "nickname": user.nickname,
+                "display_name": user.display_name,
+                "average_standard_score": round(user.average_standard_score, 1),
+                "total_standard_score": round(user.total_standard_score, 1),
+                "game_level": user.game_level,
+                "level_progress": round(user.level_progress, 1),
+                "total_matches": user.total_matches,
+                "total_games_played": sum(stats.get('games_played', 0) for stats in game_stats.values()),
+                "best_game": get_user_best_game(game_stats),
+                "game_count": len([g for g in game_stats.values() if g.get('games_played', 0) > 0])
+            })
+        
+        return leaderboard
+
+def get_game_specific_leaderboard(db: Session, game_code: str, skip: int = 0, limit: int = 100):
+    """
+    获取指定游戏的排行榜
+    
+    Args:
+        db: 数据库会话
+        game_code: 游戏代码
+        skip: 跳过数量
+        limit: 返回数量限制
+        
+    Returns:
+        List[Dict]: 该游戏的排行榜数据
+    """
+    from app.modules.games import models as game_models
+    from app.modules.matches import models as match_models
+    
+    # 先获取游戏信息
+    game = db.query(game_models.Game).filter(game_models.Game.code == game_code).first()
+    if not game:
+        return []
+    
+    # 查询所有有该游戏分数的用户，按平均标准分排序
+    user_scores = db.query(
+        models.User.id,
+        models.User.nickname,
+        models.User.display_name,
+        func.avg(match_models.Score.standard_score).label('avg_standard_score'),
+        func.sum(match_models.Score.standard_score).label('total_standard_score'),
+        func.count(match_models.Score.id).label('games_played'),
+        func.sum(match_models.Score.points).label('total_raw_score')
+    ).join(
+        match_models.Score, models.User.id == match_models.Score.user_id
+    ).join(
+        match_models.MatchGame, match_models.Score.match_game_id == match_models.MatchGame.id
+    ).join(
+        game_models.Game, match_models.MatchGame.game_id == game_models.Game.id
+    ).filter(
+        game_models.Game.code == game_code,
+        match_models.Score.standard_score.isnot(None)
+    ).group_by(
+        models.User.id, models.User.nickname, models.User.display_name
+    ).order_by(
+        desc(func.avg(match_models.Score.standard_score))
+    ).offset(skip).limit(limit).all()
+    
+    leaderboard = []
+    for idx, user_score in enumerate(user_scores):
+        # 计算该游戏的等级
+        avg_score = float(user_score.avg_standard_score or 0)
+        if avg_score >= 900:
+            level = 'S'
+        elif avg_score >= 800:
+            level = 'A'
+        elif avg_score >= 600:
+            level = 'B'
+        elif avg_score >= 400:
+            level = 'C'
+        else:
+            level = 'D'
+        
+        # 计算等级进度
+        if avg_score >= 900:
+            progress = 100
+        elif avg_score >= 800:
+            progress = ((avg_score - 800) / 100) * 100
+        elif avg_score >= 600:
+            progress = ((avg_score - 600) / 200) * 100
+        elif avg_score >= 400:
+            progress = ((avg_score - 400) / 200) * 100
+        else:
+            progress = (avg_score / 400) * 100
+        
+        leaderboard.append({
+            "rank": skip + idx + 1,
+            "user_id": user_score.id,
+            "nickname": user_score.nickname,
+            "display_name": user_score.display_name,
+            "average_standard_score": round(avg_score, 1),
+            "total_standard_score": round(float(user_score.total_standard_score or 0), 1),
+            "game_level": level,
+            "level_progress": round(progress, 1),
+            "games_played": int(user_score.games_played or 0),
+            "total_raw_score": int(user_score.total_raw_score or 0),
+            "average_raw_score": round(float(user_score.total_raw_score or 0) / max(int(user_score.games_played or 1), 1), 1),
+            "game_code": game_code,
+            "game_name": game.name
+        })
+    
+    return leaderboard
+
+def get_user_game_stats(db: Session, user_id: int):
+    """获取用户的游戏统计数据"""
+    from app.modules.matches import models as match_models
+    
+    scores = db.query(match_models.Score).filter(match_models.Score.user_id == user_id).all()
+    
+    game_stats = {}
+    for score in scores:
+        if not score.match_game or not score.match_game.game:
+            continue
+            
+        game_code = score.match_game.game.code
+        if game_code not in game_stats:
+            game_stats[game_code] = {
+                "total_score": 0,
+                "total_standard_score": 0.0,
+                "games_played": 0,
+                "game_name": score.match_game.game.name
+            }
+        
+        game_stats[game_code]["total_score"] += score.points
+        game_stats[game_code]["total_standard_score"] += (score.standard_score or 0.0)
+        game_stats[game_code]["games_played"] += 1
+    
+    # 计算每个游戏的平均标准分
+    for game_code in game_stats:
+        if game_stats[game_code]["games_played"] > 0:
+            game_stats[game_code]["average_standard_score"] = round(
+                game_stats[game_code]["total_standard_score"] / game_stats[game_code]["games_played"], 2
+            )
+        else:
+            game_stats[game_code]["average_standard_score"] = 0.0
+    
+    return game_stats
+
+def get_user_best_game(game_stats):
+    """获取用户表现最好的游戏"""
+    if not game_stats:
+        return None
+    
+    best_game = None
+    best_score = 0
+    
+    for game_code, stats in game_stats.items():
+        avg_score = stats.get('average_standard_score', 0)
+        if avg_score > best_score:
+            best_score = avg_score
+            best_game = {
+                "game_code": game_code,
+                "game_name": stats.get('game_name', game_code),
+                "average_standard_score": avg_score,
+                "games_played": stats.get('games_played', 0)
+            }
+    
+    return best_game
+
+def get_level_distribution(db: Session):
+    """
+    获取等级分布统计
+    
+    Returns:
+        Dict: 等级分布数据
+    """
+    users = db.query(models.User).filter(
+        models.User.average_standard_score > 0
+    ).all()
+    
+    distribution = {'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0}
+    
+    for user in users:
+        level = user.game_level
+        distribution[level] += 1
+    
+    total_users = sum(distribution.values())
+    
+    # 计算百分比
+    distribution_with_percentage = {}
+    for level, count in distribution.items():
+        percentage = (count / total_users * 100) if total_users > 0 else 0
+        distribution_with_percentage[level] = {
+            "count": count,
+            "percentage": round(percentage, 1)
+        }
+    
+    return {
+        "distribution": distribution_with_percentage,
+        "total_users": total_users
+    }
+
+def get_available_games_for_leaderboard(db: Session):
+    """
+    获取有排行榜数据的游戏列表
+    
+    Returns:
+        List[Dict]: 游戏列表
+    """
+    from app.modules.games import models as game_models
+    from app.modules.matches import models as match_models
+    
+    # 查询有标准分数据的游戏
+    games_with_scores = db.query(
+        game_models.Game.id,
+        game_models.Game.name,
+        game_models.Game.code,
+        func.count(match_models.Score.id).label('total_scores'),
+        func.count(func.distinct(match_models.Score.user_id)).label('unique_players')
+    ).join(
+        match_models.MatchGame, game_models.Game.id == match_models.MatchGame.game_id
+    ).join(
+        match_models.Score, match_models.MatchGame.id == match_models.Score.match_game_id
+    ).filter(
+        match_models.Score.standard_score.isnot(None)
+    ).group_by(
+        game_models.Game.id, game_models.Game.name, game_models.Game.code
+    ).order_by(
+        desc(func.count(match_models.Score.id))
+    ).all()
+    
+    return [
+        {
+            "id": game.id,
+            "name": game.name,
+            "code": game.code,
+            "total_scores": int(game.total_scores),
+            "unique_players": int(game.unique_players)
+        }
+        for game in games_with_scores
+    ]

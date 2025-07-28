@@ -1,9 +1,19 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Competition Server API",
     description="API for managing competitions, teams, and players.",
     version="2.0.0",  # 升级版本号表示新的队伍系统
+)
+
+# 添加CORS中间件
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Next.js开发服务器
+    allow_credentials=True,
+    allow_methods=["*"],  # 允许所有HTTP方法，包括OPTIONS
+    allow_headers=["*"],  # 允许所有请求头
 )
 
 @app.get("/")

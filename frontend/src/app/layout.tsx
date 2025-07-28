@@ -64,6 +64,7 @@ export default function RootLayout({
                   <NavLink href="/matches">赛事</NavLink>
                   <NavLink href="/teams">队伍</NavLink>
                   <NavLink href="/players">选手</NavLink>
+                  <NavLink href="/leaderboard">排行榜</NavLink>
                   <NavLink href="/live">直播</NavLink>
                   <NavLink href="/admin">管理后台</NavLink>
                 </div>

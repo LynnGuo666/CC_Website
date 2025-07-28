@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Dict, Tuple
 from . import models
+from app.modules.users import models as user_models
 import logging
 
 logger = logging.getLogger(__name__)
@@ -128,7 +129,7 @@ class StandardScoreCalculator:
             bool: 是否成功更新
         """
         try:
-            user = self.db.query(models.User).filter(models.User.id == user_id).first()
+            user = self.db.query(user_models.User).filter(user_models.User.id == user_id).first()
             if not user:
                 return False
             
@@ -189,8 +190,8 @@ class StandardScoreCalculator:
             Dict[str, int]: {'S': count, 'A': count, 'B': count, 'C': count, 'D': count}
         """
         try:
-            users = self.db.query(models.User).filter(
-                models.User.average_standard_score > 0
+            users = self.db.query(user_models.User).filter(
+                user_models.User.average_standard_score > 0
             ).all()
             
             distribution = {'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0}

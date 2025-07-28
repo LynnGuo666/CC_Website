@@ -43,6 +43,16 @@ export default function Home() {
               </Button>
             </Link>
             
+            <Link href="/leaderboard">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="btn-hover glass min-w-[200px] h-14 text-lg font-semibold focus-ring border-yellow-400/20 hover:border-yellow-400/40 text-yellow-600 hover:text-yellow-500"
+              >
+                🏆 查看排行榜
+              </Button>
+            </Link>
+            
             <Link href="/teams">
               <Button 
                 variant="outline" 
