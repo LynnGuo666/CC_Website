@@ -144,7 +144,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
       <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
           {/* Player Stats - 只显示有数据的统计 */}
-          {(player.total_points > 0 || player.total_matches > 0 || player.average_standard_score > 0) && (
+          {(player.total_points > 0 || player.total_matches > 0 || (player.average_standard_score && player.average_standard_score > 0)) && (
             <div className="flex justify-center gap-6 mb-12">
               {player.total_points > 0 && (
                 <div className="text-center p-6 rounded-2xl glass card-hover">
@@ -158,7 +158,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                   <div className="text-muted-foreground">参与比赛</div>
                 </div>
               )}
-              {player.average_standard_score > 0 && (
+              {player.average_standard_score && player.average_standard_score > 0 && (
                 <div className="text-center p-6 rounded-2xl glass card-hover">
                   <div className="text-3xl font-bold text-green-600 mb-2">{player.average_standard_score.toFixed(1)}</div>
                   <div className="text-muted-foreground">平均标准分</div>

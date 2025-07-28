@@ -132,7 +132,10 @@ export default function RootLayout({
                       alt="Venti_Lynn" 
                       className="w-6 h-6 rounded-full border border-border/20"
                     />
-                    <span className="text-sm text-muted-foreground">Venti_Lynn</span>
+                    <div className="flex flex-col items-start">
+                      <span className="text-sm text-muted-foreground">Venti_Lynn</span>
+                      <span className="text-xs text-muted-foreground/60">开发者</span>
+                    </div>
                   </div>
                 </div>
                 <a 

@@ -29,6 +29,7 @@ export async function getMatches(): Promise<MatchList[]> {
   return await apiFetch<MatchList[]>('/matches', {
     method: 'GET',
     schema: MatchesApiResponseSchema,
+    cache: 'no-store' // 强制不缓存，确保数据实时性
   });
 }
 

@@ -107,6 +107,7 @@ export async function getLeaderboard(options: {
   return await apiFetch<LeaderboardResponse>(`/users/leaderboard?${params}`, {
     method: 'GET',
     schema: LeaderboardResponseSchema,
+    cache: 'no-store' // 强制不缓存，避免导航时的数据卖问题
   });
 }
 
@@ -118,6 +119,7 @@ export async function getLevelDistribution(): Promise<LevelDistribution> {
   return await apiFetch<LevelDistribution>('/users/leaderboard/level-distribution', {
     method: 'GET',
     schema: LevelDistributionSchema,
+    cache: 'no-store' // 强制不缓存
   });
 }
 
@@ -129,6 +131,7 @@ export async function getAvailableGamesForLeaderboard(): Promise<AvailableGamesR
   return await apiFetch<AvailableGamesResponse>('/users/leaderboard/games', {
     method: 'GET',
     schema: AvailableGamesResponseSchema,
+    cache: 'no-store' // 强制不缓存
   });
 }
 

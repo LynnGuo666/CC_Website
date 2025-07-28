@@ -9,6 +9,8 @@ import {
   getLevelStyle,
   getRankMedal,
   type LeaderboardPlayer,
+  type GlobalLeaderboardPlayer,
+  type GameLeaderboardPlayer,
   type LevelDistribution,
   type GameInfo
 } from '@/services/leaderboardService';
@@ -42,115 +44,62 @@ export default function LeaderboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 添加防抖和请求取消
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const mountedRef = useRef(true);
+  // 类型保护函数
+  const isGlobalPlayer = (player: LeaderboardPlayer): player is GlobalLeaderboardPlayer => {
+    return 'total_games_played' in player;
+  };
 
-  useEffect(() => {
-    // 防抖处理
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+  const isGamePlayer = (player: LeaderboardPlayer): player is GameLeaderboardPlayer => {
+    return 'games_played' in player && !('total_games_played' in player);
+  };
 
-    timeoutRef.current = setTimeout(() => {
-      loadData();
-    }, 300); // 300ms防抖
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [selectedGame]);
-
-  // 组件卸载时取消请求
-  useEffect(() => {
-    return () => {
-      mountedRef.current = false;
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
+  // 简化的数据加载
   const loadData = async () => {
     try {
-      // 取消之前的请求
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-
-      // 创建新的取消控制器
-      abortControllerRef.current = new AbortController();
-      const signal = abortControllerRef.current.signal;
-
       setLoading(true);
       setError(null);
 
-      // 优化：先尝试获取缓存的游戏列表，避免重复请求
-      let gamesData = availableGames;
-      if (availableGames.length === 0) {
-        try {
-          const gamesResponse = await getAvailableGamesForLeaderboard();
-          if (!signal.aborted) {
-            gamesData = gamesResponse.games;
-            setAvailableGames(gamesData);
-          }
-        } catch (err: any) {
-          if (!signal.aborted) {
-            console.error('Failed to load games:', err);
-          }
+      // 串行加载以避免竞态条件
+      // 1. 先加载游戏列表
+      const gamesData = await getAvailableGamesForLeaderboard();
+      setAvailableGames(gamesData.games);
+
+      // 2. 然后加载排行榜数据
+      const leaderboardData = await getLeaderboard({ 
+        limit: 50,
+        gameCode: selectedGame === 'all' ? undefined : selectedGame 
+      });
+      
+      const leaderboard = (leaderboardData as any).leaderboard || leaderboardData;
+      setLeaderboard(Array.isArray(leaderboard) ? leaderboard : []);
+
+      // 3. 最后加载等级分布（只在第一次加载时）
+      if (!levelDistribution) {
+        const distributionData = await getLevelDistribution();
+        if (distributionData && (distributionData as any).distribution) {
+          setLevelDistribution(distributionData as LevelDistribution);
         }
       }
 
-      // 然后并行获取排行榜和等级分布数据
-      const promises = [
-        getLeaderboard({ 
-          limit: 50,
-          gameCode: selectedGame === 'all' ? undefined : selectedGame 
-        }),
-        // 只在第一次加载时获取等级分布
-        levelDistribution ? Promise.resolve(levelDistribution) : getLevelDistribution()
-      ];
-
-      const [leaderboardData, distributionData] = await Promise.all(promises);
-
-      // 检查请求是否已被取消或组件已卸载
-      if (signal.aborted || !mountedRef.current) {
-        return;
-      }
-
-      // 处理排行榜数据
-      if (leaderboardData) {
-        const leaderboard = (leaderboardData as any).leaderboard || leaderboardData;
-        setLeaderboard(Array.isArray(leaderboard) ? leaderboard : []);
-      }
-
-      // 处理等级分布数据（只在第一次加载时）
-      if (!levelDistribution && distributionData && (distributionData as any).distribution) {
-        setLevelDistribution(distributionData as LevelDistribution);
-      }
     } catch (err: any) {
-      // 忽略取消的请求错误或组件已卸载的情况
-      if (err.name === 'AbortError' || abortControllerRef.current?.signal.aborted || !mountedRef.current) {
-        return;
-      }
-      
       console.error('Failed to load leaderboard data:', err);
-      if (mountedRef.current) {
-        setError(err.message || '加载排行榜数据失败');
-      }
+      setError(err.message || '加载排行榜数据失败');
     } finally {
-      // 只有在请求没有被取消且组件未卸载时才设置loading为false
-      if (!abortControllerRef.current?.signal.aborted && mountedRef.current) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
+
+  // 初始化数据加载
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // 游戏选择变化时重新加载排行榜
+  useEffect(() => {
+    if (availableGames.length > 0) {
+      loadData();
+    }
+  }, [selectedGame]);
 
   if (loading) {
     return (
@@ -400,23 +349,29 @@ export default function LeaderboardPage() {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="font-medium">
-                                {selectedGame === 'all' ? player.total_games_played : player.games_played}
+                                {selectedGame === 'all' 
+                                  ? (isGlobalPlayer(player) ? player.total_games_played : 0)
+                                  : (isGamePlayer(player) ? player.games_played : 0)
+                                }
                               </div>
                               <div className="text-xs text-muted-foreground">
-                                {selectedGame === 'all' ? `${player.game_count}种游戏` : '场次'}
+                                {selectedGame === 'all' 
+                                  ? `${isGlobalPlayer(player) ? player.game_count : 0}种游戏` 
+                                  : '场次'
+                                }
                               </div>
                             </TableCell>
                             {selectedGame !== 'all' && (
                               <TableCell className="text-right">
                                 <div className="font-medium">
-                                  {player.total_raw_score?.toLocaleString() || 0}
+                                  {isGamePlayer(player) ? player.total_raw_score?.toLocaleString() || 0 : 0}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  平均: {player.average_raw_score || 0}
+                                  平均: {isGamePlayer(player) ? player.average_raw_score || 0 : 0}
                                 </div>
                               </TableCell>
                             )}
-                            {selectedGame === 'all' && player.best_game && (
+                            {selectedGame === 'all' && isGlobalPlayer(player) && player.best_game && (
                               <TableCell>
                                 <div className="text-sm">
                                   <div className="font-medium">{player.best_game.game_name}</div>

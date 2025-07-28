@@ -9,6 +9,12 @@ export const UserSchema = z.object({
   total_matches: z.number(),
   total_wins: z.number(),
   total_points: z.number(),
+  total_standard_score: z.number().optional(),
+  average_standard_score: z.number().optional(),
+  win_rate: z.number().optional(),
+  average_score: z.number().optional(),
+  game_level: z.string().optional(),
+  level_progress: z.number().optional(),
   created_at: z.string(),
   last_active: z.string(),
 });
