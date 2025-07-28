@@ -1,8 +1,8 @@
 import apiFetch from './api';
 import { z } from 'zod';
 
-// 排行榜玩家数据Schema
-const LeaderboardPlayerSchema = z.object({
+// 基础玩家数据Schema
+const BasePlayerSchema = z.object({
   rank: z.number(),
   user_id: z.number(),
   nickname: z.string(),
@@ -10,8 +10,12 @@ const LeaderboardPlayerSchema = z.object({
   average_standard_score: z.number(),
   total_standard_score: z.number(),
   game_level: z.string(),
-  level_progress: z.number(),
-  total_matches: z.number().optional(),
+  level_progress: z.number()
+});
+
+// 全局排行榜玩家数据Schema
+const GlobalLeaderboardPlayerSchema = BasePlayerSchema.extend({
+  total_matches: z.number(),
   total_games_played: z.number(),
   best_game: z.object({
     game_code: z.string(),
@@ -19,13 +23,23 @@ const LeaderboardPlayerSchema = z.object({
     average_standard_score: z.number(),
     games_played: z.number()
   }).nullable(),
-  game_count: z.number().optional(),
-  // 游戏特定排行榜字段
-  total_raw_score: z.number().optional(),
-  average_raw_score: z.number().optional(),
-  game_code: z.string().optional(),
-  game_name: z.string().optional()
+  game_count: z.number()
 });
+
+// 游戏特定排行榜玩家数据Schema
+const GameLeaderboardPlayerSchema = BasePlayerSchema.extend({
+  games_played: z.number(),
+  total_raw_score: z.number(),
+  average_raw_score: z.number(),
+  game_code: z.string(),
+  game_name: z.string()
+});
+
+// 排行榜玩家数据Schema (联合类型)
+const LeaderboardPlayerSchema = z.union([
+  GlobalLeaderboardPlayerSchema,
+  GameLeaderboardPlayerSchema
+]);
 
 // 排行榜响应Schema
 const LeaderboardResponseSchema = z.object({
@@ -60,6 +74,9 @@ const AvailableGamesResponseSchema = z.object({
 });
 
 // TypeScript类型定义
+export type BasePlayer = z.infer<typeof BasePlayerSchema>;
+export type GlobalLeaderboardPlayer = z.infer<typeof GlobalLeaderboardPlayerSchema>;
+export type GameLeaderboardPlayer = z.infer<typeof GameLeaderboardPlayerSchema>;
 export type LeaderboardPlayer = z.infer<typeof LeaderboardPlayerSchema>;
 export type LeaderboardResponse = z.infer<typeof LeaderboardResponseSchema>;
 export type LevelDistribution = z.infer<typeof LevelDistributionSchema>;

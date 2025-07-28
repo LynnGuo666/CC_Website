@@ -41,22 +41,39 @@ def update_user_levels():
             current_rank = i + 1
             percentile = (current_rank / total_users) * 100
             
-            # 计算等级
-            if percentile <= 10:
+            # 计算等级 (基于排名百分比)
+            if current_rank <= max(1, total_users * 0.1):  # 前10%
                 level = 'S'
-                progress = ((10 - percentile) / 10) * 100
-            elif percentile <= 30:
+                # 在S级内的进度：排名越靠前，进度越高
+                s_users = max(1, int(total_users * 0.1))
+                progress = ((s_users - (current_rank - 1)) / s_users) * 100
+            elif current_rank <= max(1, total_users * 0.3):  # 前11%-30%
                 level = 'A'
-                progress = ((30 - percentile) / 20) * 100
-            elif percentile <= 60:
+                # 在A级内的进度
+                a_start = max(1, int(total_users * 0.1)) + 1
+                a_end = max(1, int(total_users * 0.3))
+                a_size = a_end - a_start + 1
+                progress = ((a_end - current_rank + 1) / a_size) * 100
+            elif current_rank <= max(1, total_users * 0.6):  # 前31%-60%
                 level = 'B'
-                progress = ((60 - percentile) / 30) * 100
-            elif percentile <= 90:
+                # 在B级内的进度
+                b_start = max(1, int(total_users * 0.3)) + 1
+                b_end = max(1, int(total_users * 0.6))
+                b_size = b_end - b_start + 1
+                progress = ((b_end - current_rank + 1) / b_size) * 100
+            elif current_rank <= max(1, total_users * 0.9):  # 前61%-90%
                 level = 'C'
-                progress = ((90 - percentile) / 30) * 100
-            else:
+                # 在C级内的进度
+                c_start = max(1, int(total_users * 0.6)) + 1
+                c_end = max(1, int(total_users * 0.9))
+                c_size = c_end - c_start + 1
+                progress = ((c_end - current_rank + 1) / c_size) * 100
+            else:  # 后10%
                 level = 'D'
-                progress = ((100 - percentile) / 10) * 100
+                # 在D级内的进度
+                d_start = max(1, int(total_users * 0.9)) + 1
+                d_size = total_users - d_start + 1
+                progress = ((total_users - current_rank + 1) / d_size) * 100
             
             level_counts[level] += 1
             

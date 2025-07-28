@@ -260,5 +260,13 @@ def calculate_standard_scores_for_match_game(db: Session, match_game_id: int) ->
         user_ids = list(set(score.user_id for score in scores))
         for user_id in user_ids:
             calculator.update_user_standard_score_stats(user_id)
+        
+        # 更新所有用户的等级
+        try:
+            from app.modules.users.crud import update_all_user_levels
+            updated_levels = update_all_user_levels(db)
+            logger.info(f"Updated levels for {updated_levels} users after match game update")
+        except Exception as e:
+            logger.error(f"Error updating user levels after match game update: {e}")
     
     return success

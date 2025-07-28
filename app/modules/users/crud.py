@@ -325,6 +325,23 @@ def get_game_specific_leaderboard(db: Session, game_code: str, skip: int = 0, li
     if not game:
         return []
     
+    # 首先获取该游戏的所有用户总数（用于计算排名百分比）
+    total_users_in_game = db.query(
+        func.count(func.distinct(models.User.id))
+    ).join(
+        match_models.Score, models.User.id == match_models.Score.user_id
+    ).join(
+        match_models.MatchGame, match_models.Score.match_game_id == match_models.MatchGame.id
+    ).join(
+        game_models.Game, match_models.MatchGame.game_id == game_models.Game.id
+    ).filter(
+        game_models.Game.code == game_code,
+        match_models.Score.standard_score.isnot(None)
+    ).scalar()
+    
+    if total_users_in_game == 0:
+        return []
+    
     # 查询所有有该游戏分数的用户，按平均标准分排序
     user_scores = db.query(
         models.User.id,
@@ -351,37 +368,48 @@ def get_game_specific_leaderboard(db: Session, game_code: str, skip: int = 0, li
     
     leaderboard = []
     for idx, user_score in enumerate(user_scores):
-        # 计算该游戏的等级
-        avg_score = float(user_score.avg_standard_score or 0)
-        if avg_score >= 900:
-            level = 'S'
-        elif avg_score >= 800:
-            level = 'A'
-        elif avg_score >= 600:
-            level = 'B'
-        elif avg_score >= 400:
-            level = 'C'
-        else:
-            level = 'D'
+        current_rank = skip + idx + 1  # 实际排名
         
-        # 计算等级进度
-        if avg_score >= 900:
-            progress = 100
-        elif avg_score >= 800:
-            progress = ((avg_score - 800) / 100) * 100
-        elif avg_score >= 600:
-            progress = ((avg_score - 600) / 200) * 100
-        elif avg_score >= 400:
-            progress = ((avg_score - 400) / 200) * 100
-        else:
-            progress = (avg_score / 400) * 100
+        # 基于排名百分比计算等级（游戏内排名）
+        if current_rank <= max(1, total_users_in_game * 0.1):  # 前10%
+            level = 'S'
+            # 在S级内的进度
+            s_users = max(1, int(total_users_in_game * 0.1))
+            progress = ((s_users - (current_rank - 1)) / s_users) * 100
+        elif current_rank <= max(1, total_users_in_game * 0.3):  # 前11%-30%
+            level = 'A'
+            # 在A级内的进度
+            a_start = max(1, int(total_users_in_game * 0.1)) + 1
+            a_end = max(1, int(total_users_in_game * 0.3))
+            a_size = a_end - a_start + 1
+            progress = ((a_end - current_rank + 1) / a_size) * 100
+        elif current_rank <= max(1, total_users_in_game * 0.6):  # 前31%-60%
+            level = 'B'
+            # 在B级内的进度
+            b_start = max(1, int(total_users_in_game * 0.3)) + 1
+            b_end = max(1, int(total_users_in_game * 0.6))
+            b_size = b_end - b_start + 1
+            progress = ((b_end - current_rank + 1) / b_size) * 100
+        elif current_rank <= max(1, total_users_in_game * 0.9):  # 前61%-90%
+            level = 'C'
+            # 在C级内的进度
+            c_start = max(1, int(total_users_in_game * 0.6)) + 1
+            c_end = max(1, int(total_users_in_game * 0.9))
+            c_size = c_end - c_start + 1
+            progress = ((c_end - current_rank + 1) / c_size) * 100
+        else:  # 后10%
+            level = 'D'
+            # 在D级内的进度
+            d_start = max(1, int(total_users_in_game * 0.9)) + 1
+            d_size = total_users_in_game - d_start + 1
+            progress = ((total_users_in_game - current_rank + 1) / d_size) * 100
         
         leaderboard.append({
-            "rank": skip + idx + 1,
+            "rank": current_rank,
             "user_id": user_score.id,
             "nickname": user_score.nickname,
             "display_name": user_score.display_name,
-            "average_standard_score": round(avg_score, 1),
+            "average_standard_score": round(float(user_score.avg_standard_score or 0), 1),
             "total_standard_score": round(float(user_score.total_standard_score or 0), 1),
             "game_level": level,
             "level_progress": round(progress, 1),
@@ -547,24 +575,40 @@ def update_all_user_levels(db: Session):
     # 批量更新用户等级
     for i, user in enumerate(all_users):
         current_rank = i + 1
-        percentile = (current_rank / total_users) * 100
         
-        # 计算等级
-        if percentile <= 10:
+        # 计算等级 (基于排名百分比)
+        if current_rank <= max(1, total_users * 0.1):  # 前10%
             level = 'S'
-            progress = ((10 - percentile) / 10) * 100
-        elif percentile <= 30:
+            # 在S级内的进度：排名越靠前，进度越高
+            s_users = max(1, int(total_users * 0.1))
+            progress = ((s_users - (current_rank - 1)) / s_users) * 100
+        elif current_rank <= max(1, total_users * 0.3):  # 前11%-30%
             level = 'A'
-            progress = ((30 - percentile) / 20) * 100
-        elif percentile <= 60:
+            # 在A级内的进度
+            a_start = max(1, int(total_users * 0.1)) + 1
+            a_end = max(1, int(total_users * 0.3))
+            a_size = a_end - a_start + 1
+            progress = ((a_end - current_rank + 1) / a_size) * 100
+        elif current_rank <= max(1, total_users * 0.6):  # 前31%-60%
             level = 'B'
-            progress = ((60 - percentile) / 30) * 100
-        elif percentile <= 90:
+            # 在B级内的进度
+            b_start = max(1, int(total_users * 0.3)) + 1
+            b_end = max(1, int(total_users * 0.6))
+            b_size = b_end - b_start + 1
+            progress = ((b_end - current_rank + 1) / b_size) * 100
+        elif current_rank <= max(1, total_users * 0.9):  # 前61%-90%
             level = 'C'
-            progress = ((90 - percentile) / 30) * 100
-        else:
+            # 在C级内的进度
+            c_start = max(1, int(total_users * 0.6)) + 1
+            c_end = max(1, int(total_users * 0.9))
+            c_size = c_end - c_start + 1
+            progress = ((c_end - current_rank + 1) / c_size) * 100
+        else:  # 后10%
             level = 'D'
-            progress = ((100 - percentile) / 10) * 100
+            # 在D级内的进度
+            d_start = max(1, int(total_users * 0.9)) + 1
+            d_size = total_users - d_start + 1
+            progress = ((total_users - current_rank + 1) / d_size) * 100
         
         # 更新用户等级和进度
         user.game_level = level
