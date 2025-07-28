@@ -36,6 +36,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
+      <head>
+        <script 
+          defer 
+          src="https://analysis.602007.xyz/script.js" 
+          data-website-id="60d590d4-0723-4dc2-be0d-fedc78499216"
+        ></script>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -65,8 +72,6 @@ export default function RootLayout({
                   <NavLink href="/teams">队伍</NavLink>
                   <NavLink href="/players">选手</NavLink>
                   <NavLink href="/leaderboard">排行榜</NavLink>
-                  <NavLink href="/live">直播</NavLink>
-                  <NavLink href="/admin">管理后台</NavLink>
                 </div>
               </div>
               
