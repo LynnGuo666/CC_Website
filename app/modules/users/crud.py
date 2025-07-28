@@ -12,6 +12,87 @@ def get_user(db: Session, user_id: int):
 def get_users(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.User).offset(skip).limit(limit).all()
 
+def get_user_game_level_and_progress(db: Session, user_id: int, game_code: str, avg_standard_score: float) -> tuple[str, float]:
+    """
+    基于游戏内排名计算用户在指定游戏中的等级和进度
+    
+    Args:
+        db: 数据库会话
+        user_id: 用户ID
+        game_code: 游戏代码
+        avg_standard_score: 用户在该游戏的平均标准分
+        
+    Returns:
+        tuple[str, float]: (等级, 进度百分比)
+    """
+    from app.modules.games import models as game_models
+    from app.modules.matches import models as match_models
+    
+    # 获取该游戏的所有用户，按平均标准分排序
+    all_users_in_game = db.query(
+        models.User.id,
+        func.avg(match_models.Score.standard_score).label('avg_standard_score')
+    ).join(
+        match_models.Score, models.User.id == match_models.Score.user_id
+    ).join(
+        match_models.MatchGame, match_models.Score.match_game_id == match_models.MatchGame.id
+    ).join(
+        game_models.Game, match_models.MatchGame.game_id == game_models.Game.id
+    ).filter(
+        game_models.Game.code == game_code,
+        match_models.Score.standard_score.isnot(None)
+    ).group_by(
+        models.User.id
+    ).order_by(
+        desc(func.avg(match_models.Score.standard_score))
+    ).all()
+    
+    if not all_users_in_game:
+        return 'D', 0.0
+    
+    total_users_in_game = len(all_users_in_game)
+    
+    # 找到当前用户在该游戏中的排名
+    current_rank = None
+    for i, (uid, score) in enumerate(all_users_in_game):
+        if uid == user_id:
+            current_rank = i + 1
+            break
+    
+    if current_rank is None:
+        return 'D', 0.0
+    
+    # 基于排名百分比计算等级（游戏内排名）
+    if current_rank <= max(1, total_users_in_game * 0.1):  # 前10%
+        level = 'S'
+        s_users = max(1, int(total_users_in_game * 0.1))
+        progress = ((s_users - (current_rank - 1)) / s_users) * 100
+    elif current_rank <= max(1, total_users_in_game * 0.3):  # 前11%-30%
+        level = 'A'
+        a_start = max(1, int(total_users_in_game * 0.1)) + 1
+        a_end = max(1, int(total_users_in_game * 0.3))
+        a_size = a_end - a_start + 1
+        progress = ((a_end - current_rank + 1) / a_size) * 100
+    elif current_rank <= max(1, total_users_in_game * 0.6):  # 前31%-60%
+        level = 'B'
+        b_start = max(1, int(total_users_in_game * 0.3)) + 1
+        b_end = max(1, int(total_users_in_game * 0.6))
+        b_size = b_end - b_start + 1
+        progress = ((b_end - current_rank + 1) / b_size) * 100
+    elif current_rank <= max(1, total_users_in_game * 0.9):  # 前61%-90%
+        level = 'C'
+        c_start = max(1, int(total_users_in_game * 0.6)) + 1
+        c_end = max(1, int(total_users_in_game * 0.9))
+        c_size = c_end - c_start + 1
+        progress = ((c_end - current_rank + 1) / c_size) * 100
+    else:  # 后10%
+        level = 'D'
+        d_start = max(1, int(total_users_in_game * 0.9)) + 1
+        d_size = total_users_in_game - d_start + 1
+        progress = ((total_users_in_game - current_rank + 1) / d_size) * 100
+    
+    return level, round(progress, 1)
+
 def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
     """获取玩家详细统计信息"""
     user = db.query(models.User).filter(models.User.id == user_id).first()
@@ -42,17 +123,14 @@ def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
                              game_scores[game_code]["games_played"]) if game_scores[game_code]["games_played"] > 0 else 0
         game_scores[game_code]["average_standard_score"] = round(avg_standard_score, 2)
         
-        # 计算该游戏的等级
-        if avg_standard_score >= 900:
-            game_scores[game_code]["level"] = 'S'
-        elif avg_standard_score >= 800:
-            game_scores[game_code]["level"] = 'A'
-        elif avg_standard_score >= 600:
-            game_scores[game_code]["level"] = 'B'
-        elif avg_standard_score >= 400:
-            game_scores[game_code]["level"] = 'C'
+        # 基于游戏内排名计算等级和进度
+        if avg_standard_score > 0:
+            level, progress = get_user_game_level_and_progress(db, user_id, game_code, avg_standard_score)
+            game_scores[game_code]["level"] = level
+            game_scores[game_code]["level_progress"] = progress
         else:
             game_scores[game_code]["level"] = 'D'
+            game_scores[game_code]["level_progress"] = 0.0
     
     # 查询比赛历史 - 基于新的MatchTeamMembership系统
     match_history = []

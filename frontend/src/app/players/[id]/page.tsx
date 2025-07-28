@@ -195,6 +195,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                     const avgScore = stats.games_played > 0 ? Math.round(stats.total_score / stats.games_played) : 0;
                     const avgStandardScore = stats.average_standard_score || 0;
                     const level = stats.level || 'D';
+                    const levelProgress = stats.level_progress || 0;
                     
                     const rating = (() => {
                       if (level === 'S') return { grade: 'S', color: 'bg-gradient-to-r from-yellow-400 to-yellow-600', textColor: 'text-yellow-600' };
@@ -204,7 +205,8 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                       return { grade: 'D', color: 'bg-gradient-to-r from-gray-400 to-gray-600', textColor: 'text-gray-600' };
                     })();
                     
-                    const progressValue = Math.min(Math.max((avgStandardScore - 400) / 500 * 100, 0), 100);
+                    // 使用后端提供的进度值
+                    const progressValue = Math.min(Math.max(levelProgress, 0), 100);
                     
                     return (
                       <Card key={gameName} className={`glass card-hover relative overflow-hidden ${index === 0 ? 'ring-2 ring-primary/20' : ''}`}>
@@ -249,18 +251,6 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                         </CardHeader>
                         
                         <CardContent className="space-y-4">
-                          {/* 标准分显示 */}
-                          <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
-                            <span className="text-sm font-medium text-muted-foreground">平均标准分</span>
-                            <span className="text-xl font-bold text-primary">{avgStandardScore.toFixed(1)}</span>
-                          </div>
-                          
-                          {/* 原始分数显示 */}
-                          <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
-                            <span className="text-sm font-medium text-muted-foreground">总原始得分</span>
-                            <span className="text-lg font-semibold text-secondary-foreground">{stats.total_score.toLocaleString()}</span>
-                          </div>
-                          
                           {/* 技能进度条 */}
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
@@ -277,22 +267,6 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                                   {progressValue.toFixed(0)}%
                                 </span>
                               </div>
-                            </div>
-                            <div className="flex justify-between text-xs text-muted-foreground">
-                              <span>初级 (400)</span>
-                              <span>专家 (900)</span>
-                            </div>
-                          </div>
-                          
-                          {/* 表现指标 */}
-                          <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border/50">
-                            <div className="text-center p-2 rounded bg-muted/20">
-                              <div className="text-lg font-bold text-blue-600">{avgScore}</div>
-                              <div className="text-xs text-muted-foreground">场均原始分</div>
-                            </div>
-                            <div className="text-center p-2 rounded bg-muted/20">
-                              <div className="text-lg font-bold text-green-600">{Math.round((stats.total_standard_score / (player.total_standard_score || 1)) * 100)}%</div>
-                              <div className="text-xs text-muted-foreground">标准分占比</div>
                             </div>
                           </div>
                         </CardContent>

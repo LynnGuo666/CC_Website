@@ -176,5 +176,9 @@ export const UserStatsSchema = z.object({
     total_score: z.number(),
     games_played: z.number(),
     game_name: z.string(),  // 添加游戏名称用于显示
+    total_standard_score: z.number().optional(),
+    average_standard_score: z.number().optional(),
+    level: z.string().optional(),
+    level_progress: z.number().optional(),
   })).default({}),
 });

@@ -115,11 +115,11 @@ export default function LeaderboardPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
         <div className="relative max-w-7xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              🏆 游戏等级分排行榜
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              🏆 游戏标准分排行榜
             </h1>
-            <p className="text-xl text-muted-foreground mb-6 max-w-3xl mx-auto">
-              基于15000分制标准分系统的公平竞技排行榜
+            <p className="text-sm text-muted-foreground/80 mb-6 max-w-4xl mx-auto border border-muted/20 bg-muted/10 rounded-lg p-3">
+              📊 本分数与评级根据往年得分计算并排名后得出，该数据并不严谨，仅供参考
             </p>
             
             {/* 游戏筛选器 */}
