@@ -4,6 +4,7 @@ from pydantic import BaseModel
 # 比赛项目的基础属性
 class GameBase(BaseModel):
     name: str
+    code: str
     description: str | None = None
 
 # 创建比赛项目时需要接收的属性

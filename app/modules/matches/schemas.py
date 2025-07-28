@@ -153,6 +153,7 @@ class MatchBase(BaseModel):
     max_teams: Optional[int] = None
     max_players_per_team: Optional[int] = 4
     allow_substitutes: Optional[bool] = True
+    winning_team_id: Optional[int] = None
 
 class MatchCreate(MatchBase):
     match_games: Optional[List[MatchGameCreate]] = None
@@ -167,6 +168,7 @@ class MatchUpdate(BaseModel):
     max_teams: Optional[int] = None
     max_players_per_team: Optional[int] = None
     allow_substitutes: Optional[bool] = None
+    winning_team_id: Optional[int] = None
 
 class Match(MatchBase):
     id: int

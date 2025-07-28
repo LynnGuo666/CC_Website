@@ -98,25 +98,6 @@ export default async function MatchesPage() {
 
           {!error && (
             <>
-              {/* Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-                <div className="text-center p-5 rounded-xl glass card-hover">
-                  <div className="text-2xl font-bold text-primary mb-1">{matches.length}</div>
-                  <div className="text-sm text-muted-foreground">总赛事数</div>
-                </div>
-                <div className="text-center p-5 rounded-xl glass card-hover">
-                  <div className="text-2xl font-bold text-green-500 mb-1">{ongoingMatches.length}</div>
-                  <div className="text-sm text-muted-foreground">进行中</div>
-                </div>
-                <div className="text-center p-5 rounded-xl glass card-hover">
-                  <div className="text-2xl font-bold text-accent mb-1">
-                    {/* 由于MatchList不包含participants，暂时显示总比赛数 */}
-                    {matches.length}
-                  </div>
-                  <div className="text-sm text-muted-foreground">已创建赛事</div>
-                </div>
-              </div>
-
               {/* Ongoing Matches */}
               {ongoingMatches.length > 0 && (
                 <div className="mb-16">

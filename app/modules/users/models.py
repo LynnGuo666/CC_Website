@@ -11,7 +11,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     nickname = Column(String, index=True, comment="玩家昵称")
     display_name = Column(String, nullable=True, comment="显示名称")
-    source = Column(String, comment="数据来源")
+    source = Column(String, nullable=True, comment="数据来源")
     
     # 玩家统计信息
     total_matches = Column(Integer, default=0, comment="参与比赛总数")

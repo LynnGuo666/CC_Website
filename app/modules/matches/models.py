@@ -36,13 +36,17 @@ class Match(Base):
     max_players_per_team = Column(Integer, default=4, comment="每队最大人数")
     allow_substitutes = Column(Boolean, default=True, comment="是否允许替补")
     
+    # 比赛结果
+    winning_team_id = Column(Integer, ForeignKey("match_teams.id"), nullable=True, comment="冠军队伍ID")
+    
     # 时间戳
     created_at = Column(DateTime, default=datetime.datetime.utcnow, comment="创建时间")
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, comment="更新时间")
 
     # 关联关系
-    teams = relationship("MatchTeam", back_populates="match", cascade="all, delete-orphan", lazy="select")
+    teams = relationship("MatchTeam", back_populates="match", cascade="all, delete-orphan", lazy="select", foreign_keys="MatchTeam.match_id")
     match_games = relationship("MatchGame", back_populates="match", cascade="all, delete-orphan", lazy="select")
+    winning_team = relationship("MatchTeam", foreign_keys=[winning_team_id], lazy="select")
 
     @property
     def can_start_live(self) -> bool:
@@ -76,7 +80,7 @@ class MatchTeam(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow, comment="创建时间")
     
     # 关联关系
-    match = relationship("Match", back_populates="teams", lazy="select")
+    match = relationship("Match", back_populates="teams", lazy="select", foreign_keys=[match_id])
     memberships = relationship("MatchTeamMembership", back_populates="team", cascade="all, delete-orphan", lazy="select")
     lineups = relationship("GameLineup", back_populates="team", cascade="all, delete-orphan", lazy="select")
     scores = relationship("Score", back_populates="team", lazy="select")

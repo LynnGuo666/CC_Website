@@ -12,11 +12,14 @@ def get_games(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Game).offset(skip).limit(limit).all()
 
 def create_game(db: Session, game: schemas.GameCreate):
-    """Get or Create a game."""
-    db_game = db.query(models.Game).filter(models.Game.name == game.name).first()
+    """Get or Create a game based on code."""
+    # 首先按code查找，如果存在就返回
+    db_game = db.query(models.Game).filter(models.Game.code == game.code).first()
     if db_game:
         return db_game
-    db_game = models.Game(name=game.name, description=game.description)
+    
+    # 如果不存在，创建新游戏
+    db_game = models.Game(name=game.name, code=game.code, description=game.description)
     db.add(db_game)
     db.commit()
     db.refresh(db_game)
@@ -29,6 +32,8 @@ def update_game(db: Session, game_id: int, game_update: schemas.GameCreate):
         return None
     
     db_game.name = game_update.name
+    if game_update.code is not None:
+        db_game.code = game_update.code
     if game_update.description is not None:
         db_game.description = game_update.description
     

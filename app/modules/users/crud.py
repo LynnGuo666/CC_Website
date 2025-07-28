@@ -21,22 +21,23 @@ def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
     # 查询玩家的得分记录来计算游戏统计
     scores = db.query(match_models.Score).filter(match_models.Score.user_id == user_id).all()
     
-    # 按游戏类型统计得分
+    # 按游戏类型统计得分 - 使用游戏代码而不是名称
     game_scores = {}
     for score in scores:
-        game_name = score.match_game.game.name
-        if game_name not in game_scores:
-            game_scores[game_name] = {
+        game_code = score.match_game.game.code
+        if game_code not in game_scores:
+            game_scores[game_code] = {
                 "total_score": 0,
-                "games_played": 0
+                "games_played": 0,
+                "game_name": score.match_game.game.name  # 保留游戏名称用于显示
             }
-        game_scores[game_name]["total_score"] += score.points
-        game_scores[game_name]["games_played"] += 1
+        game_scores[game_code]["total_score"] += score.points
+        game_scores[game_code]["games_played"] += 1
     
     # 查询比赛历史 - 基于新的MatchTeamMembership系统
     match_history = []
     user_matches = db.query(match_models.Match).join(
-        match_models.MatchTeam
+        match_models.MatchTeam, match_models.Match.id == match_models.MatchTeam.match_id
     ).join(
         match_models.MatchTeamMembership
     ).filter(
@@ -113,7 +114,7 @@ def get_user_match_history(db: Session, user_id: int, skip: int = 0, limit: int 
     """获取玩家历史比赛记录"""
     # 通过新的MatchTeamMembership查询用户参与的比赛
     user_matches = db.query(match_models.Match).join(
-        match_models.MatchTeam
+        match_models.MatchTeam, match_models.Match.id == match_models.MatchTeam.match_id
     ).join(
         match_models.MatchTeamMembership
     ).filter(
@@ -158,7 +159,7 @@ def get_user_team_history(db: Session, user_id: int) -> Optional[Dict[str, Any]]
     memberships = db.query(match_models.MatchTeamMembership).join(
         match_models.MatchTeam
     ).join(
-        match_models.Match
+        match_models.Match, match_models.MatchTeam.match_id == match_models.Match.id
     ).filter(
         match_models.MatchTeamMembership.user_id == user_id
     ).all()

@@ -39,6 +39,7 @@ export const MatchTeamSchema = z.object({
 export const GameSchema = z.object({
   id: z.number(),
   name: z.string(),
+  code: z.string(),
   description: z.string().nullable(),
 });
 
@@ -63,7 +64,6 @@ export const MatchGameSchema = z.object({
   game_order: z.number(),
   structure_type: z.string().nullable(),
   structure_details: z.record(z.string(), z.any()).nullable(),
-  is_live: z.boolean(),
   start_time: z.string().nullable(),
   end_time: z.string().nullable(),
   created_at: z.string(),
@@ -113,33 +113,6 @@ export const TeamSubScoreSchema = z.object({
   score: z.number(),
 });
 
-export const MatchGameLiveSchema = z.object({
-  match_game_id: z.number(),
-  game_name: z.string(),
-  structure_type: z.string(),
-  teams: z.array(TeamSubScoreSchema),
-});
-
-export const TeamTotalScoreSchema = z.object({
-  rank: z.number(),
-  team_id: z.number(),
-  team_name: z.string(),
-  total_points: z.number(),
-});
-
-export const LastEventSchema = z.object({
-  match_game_id: z.number(),
-  user_id: z.number(),
-  description: z.string(),
-});
-
-export const LiveUpdateSchema = z.object({
-  match_id: z.number(),
-  match_name: z.string(),
-  total_leaderboard: z.array(TeamTotalScoreSchema),
-  current_match_game: MatchGameLiveSchema,
-  last_event: LastEventSchema.nullable(),
-});
 
 // --- Create Schemas for API ---
 
@@ -202,5 +175,6 @@ export const UserStatsSchema = z.object({
   game_scores: z.record(z.string(), z.object({
     total_score: z.number(),
     games_played: z.number(),
+    game_name: z.string(),  // 添加游戏名称用于显示
   })).default({}),
 });
