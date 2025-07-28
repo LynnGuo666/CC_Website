@@ -1,6 +1,7 @@
 import apiFetch from './api';
 import { 
   MatchTeamSchema, 
+  MatchTeamWithMatchSchema,
   TeamMemberSchema, 
   GameLineupSchema, 
   MatchTeamCreateSchema, 
@@ -10,6 +11,7 @@ import { z } from 'zod';
 
 // Infer the TypeScript types from the schemas
 export type MatchTeam = z.infer<typeof MatchTeamSchema>;
+export type MatchTeamWithMatch = z.infer<typeof MatchTeamWithMatchSchema>;
 export type TeamMember = z.infer<typeof TeamMemberSchema>;
 export type GameLineup = z.infer<typeof GameLineupSchema>;
 export type MatchTeamCreate = z.infer<typeof MatchTeamCreateSchema>;
@@ -53,10 +55,10 @@ export async function getMatchTeams(matchId: number): Promise<MatchTeam[]> {
  * @param teamId 队伍ID
  * @returns 队伍详情
  */
-export async function getMatchTeam(teamId: number): Promise<MatchTeam> {
-  return await apiFetch<MatchTeam>(`/matches/teams/${teamId}`, {
+export async function getMatchTeam(teamId: number): Promise<MatchTeamWithMatch> {
+  return await apiFetch<MatchTeamWithMatch>(`/matches/teams/${teamId}`, {
     method: 'GET',
-    schema: MatchTeamSchema,
+    schema: MatchTeamWithMatchSchema,
   });
 }
 

@@ -96,6 +96,14 @@ class MatchTeam(MatchTeamBase):
     class Config:
         from_attributes = True
 
+# 包含比赛信息的队伍详情Schema
+class MatchTeamWithMatch(MatchTeam):
+    match_name: str
+    match_status: MatchStatus
+    
+    class Config:
+        from_attributes = True
+
 # --- 游戏阵容Schema ---
 
 class GameLineupBase(BaseModel):

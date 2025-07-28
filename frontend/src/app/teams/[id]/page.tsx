@@ -1,4 +1,4 @@
-import { getMatchTeam, MatchTeam, getTeamMembers } from '@/services/matchTeamService';
+import { getMatchTeam, MatchTeamWithMatch, getTeamMembers } from '@/services/matchTeamService';
 import { getUserById } from '@/services/userService';
 import Link from 'next/link';
 import {
@@ -17,7 +17,7 @@ type TeamDetailPageProps = {
 };
 
 export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
-  let team: MatchTeam | null = null;
+  let team: MatchTeamWithMatch | null = null;
   let members: any[] = [];
   let error: string | null = null;
 
@@ -135,6 +135,27 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
               <span>返回队伍列表</span>
             </Link>
 
+            {/* Match Info Banner */}
+            <div className="mb-8 p-4 rounded-2xl bg-primary/5 border border-primary/20 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Trophy className="w-5 h-5 text-primary" />
+                  <div>
+                    <h3 className="font-semibold text-primary">所属比赛</h3>
+                    <p className="text-sm text-muted-foreground">{team.match_name}</p>
+                  </div>
+                </div>
+                <Badge 
+                  variant={team.match_status === 'ongoing' ? 'default' : team.match_status === 'finished' ? 'secondary' : 'outline'}
+                  className="text-xs"
+                >
+                  {team.match_status === 'preparing' ? '筹备中' : 
+                   team.match_status === 'ongoing' ? '进行中' : 
+                   team.match_status === 'finished' ? '已结束' : '已取消'}
+                </Badge>
+              </div>
+            </div>
+
             {/* Team Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center space-y-6 md:space-y-0 md:space-x-8">
               {/* Team Avatar */}
@@ -196,7 +217,7 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
       <section className="py-12">
         <div className="container mx-auto px-6">
           {/* Team Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-3xl mx-auto">
             <div className="group">
               <div className="p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-muted/50 hover:border-primary/30 transition-all duration-300 text-center group-hover:scale-105">
                 <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
@@ -211,17 +232,8 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
                 <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                   <Trophy className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">{historicalMembers.length}</div>
-                <div className="text-sm text-muted-foreground">历史成员</div>
-              </div>
-            </div>
-            <div className="group">
-              <div className="p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-muted/50 hover:border-primary/30 transition-all duration-300 text-center group-hover:scale-105">
-                <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                  <Star className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                </div>
-                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-1">{currentMembers.length + historicalMembers.length}</div>
-                <div className="text-sm text-muted-foreground">总成员数</div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">{team.total_score || 0}</div>
+                <div className="text-sm text-muted-foreground">队伍总积分</div>
               </div>
             </div>
           </div>

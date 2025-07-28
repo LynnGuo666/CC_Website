@@ -98,13 +98,26 @@ def get_match_teams(match_id: int, db: Session = Depends(get_db)):
     """获取比赛的所有队伍"""
     return crud.get_match_teams(db, match_id=match_id)
 
-@router.get("/teams/{team_id}", response_model=schemas.MatchTeam)
+@router.get("/teams/{team_id}", response_model=schemas.MatchTeamWithMatch)
 def get_match_team(team_id: int, db: Session = Depends(get_db)):
     """获取单个比赛队伍详情"""
     db_team = crud.get_match_team(db, team_id=team_id)
     if db_team is None:
         raise HTTPException(status_code=404, detail="Team not found")
-    return db_team
+    
+    # 构造包含比赛信息的响应
+    team_dict = {
+        "id": db_team.id,
+        "match_id": db_team.match_id,
+        "name": db_team.name,
+        "color": db_team.color,
+        "total_score": db_team.total_score,
+        "games_played": db_team.games_played,
+        "created_at": db_team.created_at,
+        "match_name": db_team.match.name if db_team.match else "未知比赛",
+        "match_status": db_team.match.status if db_team.match else "preparing",
+    }
+    return team_dict
 
 @router.get("/teams/{team_id}/members", response_model=List[schemas.MatchTeamMembershipSchema])
 def get_team_members(team_id: int, db: Session = Depends(get_db)):

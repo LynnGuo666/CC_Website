@@ -35,6 +35,20 @@ export const MatchTeamSchema = z.object({
     memberships: z.array(MatchTeamMembershipSchema).optional(),
 });
 
+// MatchTeam with match information
+export const MatchTeamWithMatchSchema = z.object({
+    id: z.number(),
+    match_id: z.number(),
+    name: z.string(),
+    color: z.string().nullable(),
+    total_score: z.number(),
+    games_played: z.number(),
+    created_at: z.string(),
+    match_name: z.string(),
+    match_status: z.string(),
+    memberships: z.array(MatchTeamMembershipSchema).optional(),
+});
+
 // OpenAPI Schema: Game
 export const GameSchema = z.object({
   id: z.number(),
