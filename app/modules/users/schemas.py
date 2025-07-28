@@ -21,12 +21,16 @@ class User(UserBase):
     total_matches: int = 0
     total_wins: int = 0
     total_points: int = 0
+    total_standard_score: float = 0.0
+    average_standard_score: float = 0.0
     created_at: datetime.datetime
     last_active: datetime.datetime
     
     # 计算属性
     win_rate: float = 0.0
     average_score: float = 0.0
+    game_level: str = 'D'
+    level_progress: float = 0.0
 
     class Config:
         from_attributes = True

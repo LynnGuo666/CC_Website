@@ -381,3 +381,39 @@ def create_teams_batch(
         created_teams.append(created_team)
     
     return {"message": f"Created {len(created_teams)} teams successfully", "teams": created_teams}
+
+# --- 标准分管理接口 ---
+
+@router.post("/{match_id}/standard-scores/recalculate")
+def recalculate_match_standard_scores(
+    match_id: int, 
+    db: Session = Depends(get_db), 
+    api_key: str = Depends(get_api_key)
+):
+    """重新计算整个比赛的标准分"""
+    db_match = crud.get_match(db, match_id=match_id)
+    if not db_match:
+        raise HTTPException(status_code=404, detail="Match not found")
+    
+    success = crud.recalculate_match_standard_scores(db, match_id=match_id)
+    if success:
+        return {"message": f"Successfully recalculated standard scores for match {match_id}"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to recalculate standard scores")
+
+@router.post("/games/{match_game_id}/standard-scores/recalculate")
+def recalculate_game_standard_scores(
+    match_game_id: int, 
+    db: Session = Depends(get_db), 
+    api_key: str = Depends(get_api_key)
+):
+    """重新计算单个游戏的标准分"""
+    db_match_game = crud.get_match_game(db, match_game_id=match_game_id)
+    if not db_match_game:
+        raise HTTPException(status_code=404, detail="MatchGame not found")
+    
+    success = crud.recalculate_game_standard_scores(db, match_game_id=match_game_id)
+    if success:
+        return {"message": f"Successfully recalculated standard scores for game {match_game_id}"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to recalculate standard scores")

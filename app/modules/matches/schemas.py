@@ -34,6 +34,7 @@ class ScoreCreate(ScoreBase):
 class Score(ScoreBase):
     id: int
     match_game_id: int
+    standard_score: Optional[float] = None
     recorded_at: datetime
     
     class Config:

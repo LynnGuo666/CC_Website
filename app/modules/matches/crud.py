@@ -2,6 +2,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from . import models, schemas
+from .standard_score import calculate_standard_scores_for_match_game
 from typing import List, Optional
 
 # --- Match CRUD ---
@@ -307,6 +308,10 @@ def create_match_score(db: Session, match_game_id: int, score: schemas.ScoreCrea
     db.add(db_score)
     db.commit()
     db.refresh(db_score)
+    
+    # 自动计算该游戏的标准分
+    calculate_standard_scores_for_match_game(db, match_game_id)
+    
     return db_score
 
 def get_scores_for_match_game(db: Session, match_game_id: int):
@@ -355,3 +360,14 @@ def get_user_matches(db: Session, user_id: int):
     return db.query(models.Match).join(models.MatchTeam).join(models.MatchTeamMembership).filter(
         models.MatchTeamMembership.user_id == user_id
     ).distinct().all()
+
+# --- 标准分管理函数 ---
+
+def recalculate_match_standard_scores(db: Session, match_id: int) -> bool:
+    """重新计算整个比赛的标准分"""
+    from .standard_score import calculate_standard_scores_for_match
+    return calculate_standard_scores_for_match(db, match_id)
+
+def recalculate_game_standard_scores(db: Session, match_game_id: int) -> bool:
+    """重新计算单个游戏的标准分"""
+    return calculate_standard_scores_for_match_game(db, match_game_id)

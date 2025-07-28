@@ -144,7 +144,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
       <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
           {/* Player Stats - 只显示有数据的统计 */}
-          {(player.total_points > 0 || player.total_matches > 0) && (
+          {(player.total_points > 0 || player.total_matches > 0 || player.average_standard_score > 0) && (
             <div className="flex justify-center gap-6 mb-12">
               {player.total_points > 0 && (
                 <div className="text-center p-6 rounded-2xl glass card-hover">
@@ -156,6 +156,24 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                 <div className="text-center p-6 rounded-2xl glass card-hover">
                   <div className="text-3xl font-bold text-accent mb-2">{player.total_matches}</div>
                   <div className="text-muted-foreground">参与比赛</div>
+                </div>
+              )}
+              {player.average_standard_score > 0 && (
+                <div className="text-center p-6 rounded-2xl glass card-hover">
+                  <div className="text-3xl font-bold text-green-600 mb-2">{player.average_standard_score.toFixed(1)}</div>
+                  <div className="text-muted-foreground">平均标准分</div>
+                </div>
+              )}
+              {player.game_level && (
+                <div className="text-center p-6 rounded-2xl glass card-hover">
+                  <div className={`text-3xl font-bold mb-2 ${
+                    player.game_level === 'S' ? 'text-yellow-500' :
+                    player.game_level === 'A' ? 'text-green-500' :
+                    player.game_level === 'B' ? 'text-blue-500' :
+                    player.game_level === 'C' ? 'text-orange-500' :
+                    'text-gray-500'
+                  }`}>{player.game_level}</div>
+                  <div className="text-muted-foreground">综合等级</div>
                 </div>
               )}
             </div>
@@ -172,17 +190,21 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {Object.entries(gameScores)
-                  .sort(([,a], [,b]) => (b as any).total_score - (a as any).total_score) // 按总分排序
+                  .sort(([,a], [,b]) => ((b as any).average_standard_score || 0) - ((a as any).average_standard_score || 0)) // 按平均标准分排序
                   .map(([gameName, stats]: [string, any], index) => {
                     const avgScore = stats.games_played > 0 ? Math.round(stats.total_score / stats.games_played) : 0;
+                    const avgStandardScore = stats.average_standard_score || 0;
+                    const level = stats.level || 'D';
+                    
                     const rating = (() => {
-                      if (avgScore >= 700) return { grade: 'S', color: 'bg-gradient-to-r from-yellow-400 to-yellow-600', textColor: 'text-yellow-600' };
-                      if (avgScore >= 600) return { grade: 'A', color: 'bg-gradient-to-r from-green-400 to-green-600', textColor: 'text-green-600' };
-                      if (avgScore >= 500) return { grade: 'B', color: 'bg-gradient-to-r from-blue-400 to-blue-600', textColor: 'text-blue-600' };
-                      if (avgScore >= 400) return { grade: 'C', color: 'bg-gradient-to-r from-orange-400 to-orange-600', textColor: 'text-orange-600' };
+                      if (level === 'S') return { grade: 'S', color: 'bg-gradient-to-r from-yellow-400 to-yellow-600', textColor: 'text-yellow-600' };
+                      if (level === 'A') return { grade: 'A', color: 'bg-gradient-to-r from-green-400 to-green-600', textColor: 'text-green-600' };
+                      if (level === 'B') return { grade: 'B', color: 'bg-gradient-to-r from-blue-400 to-blue-600', textColor: 'text-blue-600' };
+                      if (level === 'C') return { grade: 'C', color: 'bg-gradient-to-r from-orange-400 to-orange-600', textColor: 'text-orange-600' };
                       return { grade: 'D', color: 'bg-gradient-to-r from-gray-400 to-gray-600', textColor: 'text-gray-600' };
                     })();
-                    const progressValue = Math.min(Math.max((avgScore - 400) / 500 * 100, 0), 100);
+                    
+                    const progressValue = Math.min(Math.max((avgStandardScore - 400) / 500 * 100, 0), 100);
                     
                     return (
                       <Card key={gameName} className={`glass card-hover relative overflow-hidden ${index === 0 ? 'ring-2 ring-primary/20' : ''}`}>
@@ -214,7 +236,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                   </svg>
-                                  {avgScore} 平均分
+                                  {avgStandardScore.toFixed(1)} 标准分
                                 </span>
                               </div>
                             </div>
@@ -227,10 +249,16 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                         </CardHeader>
                         
                         <CardContent className="space-y-4">
-                          {/* 总分显示 */}
+                          {/* 标准分显示 */}
                           <div className="flex justify-between items-center p-3 bg-muted/30 rounded-lg">
-                            <span className="text-sm font-medium text-muted-foreground">总得分</span>
-                            <span className="text-xl font-bold text-primary">{stats.total_score.toLocaleString()}</span>
+                            <span className="text-sm font-medium text-muted-foreground">平均标准分</span>
+                            <span className="text-xl font-bold text-primary">{avgStandardScore.toFixed(1)}</span>
+                          </div>
+                          
+                          {/* 原始分数显示 */}
+                          <div className="flex justify-between items-center p-3 bg-muted/20 rounded-lg">
+                            <span className="text-sm font-medium text-muted-foreground">总原始得分</span>
+                            <span className="text-lg font-semibold text-secondary-foreground">{stats.total_score.toLocaleString()}</span>
                           </div>
                           
                           {/* 技能进度条 */}
@@ -260,11 +288,11 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                           <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border/50">
                             <div className="text-center p-2 rounded bg-muted/20">
                               <div className="text-lg font-bold text-blue-600">{avgScore}</div>
-                              <div className="text-xs text-muted-foreground">场均</div>
+                              <div className="text-xs text-muted-foreground">场均原始分</div>
                             </div>
                             <div className="text-center p-2 rounded bg-muted/20">
-                              <div className="text-lg font-bold text-green-600">{Math.round((stats.total_score / (playerStats?.user?.total_points || 1)) * 100)}%</div>
-                              <div className="text-xs text-muted-foreground">占比</div>
+                              <div className="text-lg font-bold text-green-600">{Math.round((stats.total_standard_score / (player.total_standard_score || 1)) * 100)}%</div>
+                              <div className="text-xs text-muted-foreground">标准分占比</div>
                             </div>
                           </div>
                         </CardContent>
@@ -297,25 +325,18 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                   <div className="text-center p-4 rounded-lg bg-blue-500/5">
                     <div className="text-2xl font-bold text-blue-600 mb-1">
                       {Math.round(Object.values(gameScores).reduce((sum: number, stats: any) => {
-                        const avg = stats.games_played > 0 ? stats.total_score / stats.games_played : 0;
-                        return sum + avg;
+                        const avgStandardScore = stats.average_standard_score || 0;
+                        return sum + avgStandardScore;
                       }, 0) / Object.keys(gameScores).length) || 0}
                     </div>
-                    <div className="text-sm text-muted-foreground">综合平均分</div>
+                    <div className="text-sm text-muted-foreground">综合标准分</div>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-yellow-500/5">
                     <div className="text-2xl font-bold text-yellow-600 mb-1">
                       {(() => {
-                        const ratings = Object.values(gameScores).map((stats: any) => {
-                          const avgScore = stats.games_played > 0 ? Math.round(stats.total_score / stats.games_played) : 0;
-                          if (avgScore >= 700) return 'S';
-                          if (avgScore >= 600) return 'A';
-                          if (avgScore >= 500) return 'B';
-                          if (avgScore >= 400) return 'C';
-                          return 'D';
-                        });
-                        const counts = ratings.reduce((acc: any, rating) => {
-                          acc[rating] = (acc[rating] || 0) + 1;
+                        const levels = Object.values(gameScores).map((stats: any) => stats.level || 'D');
+                        const counts = levels.reduce((acc: any, level) => {
+                          acc[level] = (acc[level] || 0) + 1;
                           return acc;
                         }, {});
                         const mostCommon = Object.entries(counts).reduce((a: any, b: any) => counts[a[0]] > counts[b[0]] ? a : b);

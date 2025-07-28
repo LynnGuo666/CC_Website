@@ -28,11 +28,31 @@ def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
         if game_code not in game_scores:
             game_scores[game_code] = {
                 "total_score": 0,
+                "total_standard_score": 0.0,
                 "games_played": 0,
                 "game_name": score.match_game.game.name  # 保留游戏名称用于显示
             }
         game_scores[game_code]["total_score"] += score.points
+        game_scores[game_code]["total_standard_score"] += (score.standard_score or 0.0)
         game_scores[game_code]["games_played"] += 1
+    
+    # 计算每个游戏的平均标准分和等级
+    for game_code in game_scores:
+        avg_standard_score = (game_scores[game_code]["total_standard_score"] / 
+                             game_scores[game_code]["games_played"]) if game_scores[game_code]["games_played"] > 0 else 0
+        game_scores[game_code]["average_standard_score"] = round(avg_standard_score, 2)
+        
+        # 计算该游戏的等级
+        if avg_standard_score >= 900:
+            game_scores[game_code]["level"] = 'S'
+        elif avg_standard_score >= 800:
+            game_scores[game_code]["level"] = 'A'
+        elif avg_standard_score >= 600:
+            game_scores[game_code]["level"] = 'B'
+        elif avg_standard_score >= 400:
+            game_scores[game_code]["level"] = 'C'
+        else:
+            game_scores[game_code]["level"] = 'D'
     
     # 查询比赛历史 - 基于新的MatchTeamMembership系统
     match_history = []

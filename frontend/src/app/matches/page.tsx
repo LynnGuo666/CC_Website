@@ -203,10 +203,11 @@ function MatchCard({ match, priority = false }: { match: MatchList; priority?: b
               <span className="font-semibold">{match.max_teams || '未限制'}</span>
             </div>
             
-            <div className="flex items-center justify-between">
+            {/* 隐藏队员人数显示 */}
+            {/* <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">队员人数</span>
               <span className="font-semibold">{match.max_players_per_team} 人/队</span>
-            </div>
+            </div> */}
             
             {match.prize_pool && (
               <div className="flex items-center justify-between">

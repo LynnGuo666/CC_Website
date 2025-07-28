@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON, Enum, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON, Enum, Boolean, Float
 from sqlalchemy.orm import relationship
 import datetime
 import enum
@@ -179,7 +179,8 @@ class Score(Base):
     __tablename__ = "scores"
 
     id = Column(Integer, primary_key=True, index=True, comment="分数记录ID")
-    points = Column(Integer, comment="得分")
+    points = Column(Integer, comment="原始得分")
+    standard_score = Column(Float, nullable=True, comment="标准分（15000分制）")
     
     user_id = Column(Integer, ForeignKey("users.id"), comment="得分用户ID")
     match_team_id = Column(Integer, ForeignKey("match_teams.id"), comment="得分队伍ID") 

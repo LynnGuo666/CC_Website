@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Float
 from sqlalchemy.orm import relationship
 import datetime
 
@@ -17,6 +17,8 @@ class User(Base):
     total_matches = Column(Integer, default=0, comment="参与比赛总数")
     total_wins = Column(Integer, default=0, comment="获胜次数")
     total_points = Column(Integer, default=0, comment="总得分")
+    total_standard_score = Column(Float, default=0.0, comment="总标准分")
+    average_standard_score = Column(Float, default=0.0, comment="平均标准分")
     
     # 时间戳
     created_at = Column(DateTime, default=datetime.datetime.utcnow, comment="注册时间")
@@ -81,3 +83,35 @@ class User(Base):
                 game_scores[game_name]['total_score'] += score.points
                 game_scores[game_name]['games_played'] += 1
         return game_scores
+    
+    @property
+    def game_level(self):
+        """根据平均标准分计算游戏等级
+        等级分布：S-10% A-10% B-30% C-40% D-10%
+        """
+        avg_score = self.average_standard_score
+        if avg_score >= 900:  # S级：900+
+            return 'S'
+        elif avg_score >= 800:  # A级：800-899
+            return 'A'
+        elif avg_score >= 600:  # B级：600-799
+            return 'B'
+        elif avg_score >= 400:  # C级：400-599
+            return 'C'
+        else:  # D级：0-399
+            return 'D'
+    
+    @property
+    def level_progress(self):
+        """计算当前等级的进度百分比"""
+        avg_score = self.average_standard_score
+        if avg_score >= 900:
+            return 100  # S级已达到顶级
+        elif avg_score >= 800:
+            return ((avg_score - 800) / 100) * 100  # A级进度
+        elif avg_score >= 600:
+            return ((avg_score - 600) / 200) * 100  # B级进度
+        elif avg_score >= 400:
+            return ((avg_score - 400) / 200) * 100  # C级进度
+        else:
+            return (avg_score / 400) * 100  # D级进度
