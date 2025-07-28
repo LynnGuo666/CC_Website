@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
+import { Users, Trophy, Star, ArrowLeft, UserPlus, Crown } from 'lucide-react';
 
 type TeamDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -61,31 +62,56 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
 
   if (error) {
     return (
-      <main className="container mx-auto p-4">
-        <div className="p-6 rounded-2xl bg-destructive/10 border border-destructive/20 glass">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
-              <svg className="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
+      <main className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-background">
+        <div className="container mx-auto px-6 py-12">
+          <div className="max-w-md mx-auto">
+            <div className="p-8 rounded-3xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 backdrop-blur-sm">
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-red-900 dark:text-red-100">加载失败</h3>
+                  <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
+                </div>
+              </div>
+              <Link 
+                href="/teams" 
+                className="inline-flex items-center space-x-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>返回队伍列表</span>
+              </Link>
             </div>
-            <p className="text-destructive font-medium">{error}</p>
           </div>
         </div>
-        <Link href="/teams" className="text-primary hover:underline mt-4 inline-block">
-          ← 返回队伍列表
-        </Link>
       </main>
     );
   }
 
   if (!team) {
     return (
-      <main className="container mx-auto p-4">
-        <p className="text-muted-foreground">未找到该队伍。</p>
-        <Link href="/teams" className="text-primary hover:underline mt-4 inline-block">
-          ← 返回队伍列表
-        </Link>
+      <main className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-background">
+        <div className="container mx-auto px-6 py-12">
+          <div className="max-w-md mx-auto text-center">
+            <div className="p-8 rounded-3xl bg-muted/30 backdrop-blur-sm border border-muted/50">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted/50 flex items-center justify-center">
+                <Users className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">队伍未找到</h3>
+              <p className="text-muted-foreground text-sm mb-6">指定的队伍不存在或已被删除</p>
+              <Link 
+                href="/teams"
+                className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-medium"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>返回队伍列表</span>
+              </Link>
+            </div>
+          </div>
+        </div>
       </main>
     );
   }
@@ -94,35 +120,70 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
   const historicalMembers = members.filter((m: any) => m.role === 'historical');
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Header */}
-      <section className="relative py-20 px-6 bg-gradient-to-br from-background via-muted/20 to-background">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
-        <div className="relative max-w-4xl mx-auto">
-          <div className="flex items-center space-x-8 mb-6">
-            <div
-              className="w-32 h-32 rounded-2xl border-4 border-white/20 shadow-2xl glass flex items-center justify-center"
-              style={{ backgroundColor: team.color || '#3b82f6' }}
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-background">
+      {/* Modern Hero Header */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5"></div>
+        <div className="relative container mx-auto px-6 py-16">
+          <div className="max-w-4xl mx-auto">
+            {/* Back Button */}
+            <Link 
+              href="/teams"
+              className="inline-flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors mb-8 group"
             >
-              <span className="text-4xl font-bold text-white">
-                {team.name.charAt(0)}
-              </span>
-            </div>
-            <div>
-              <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                {team.name}
-              </h1>
-              <div className="flex items-center space-x-4">
-                <Badge variant="secondary" className="text-lg px-4 py-2">
-                  队伍ID: {team.id}
-                </Badge>
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+              <span>返回队伍列表</span>
+            </Link>
+
+            {/* Team Header */}
+            <div className="flex flex-col md:flex-row items-start md:items-center space-y-6 md:space-y-0 md:space-x-8">
+              {/* Team Avatar */}
+              <div className="relative">
+                <div
+                  className="w-24 h-24 md:w-32 md:h-32 rounded-3xl shadow-2xl border-4 border-white/20 backdrop-blur-sm flex items-center justify-center relative overflow-hidden"
+                  style={{ backgroundColor: team.color || '#3b82f6' }}
+                >
+                  <span className="text-3xl md:text-4xl font-bold text-white drop-shadow-lg">
+                    {team.name.charAt(0)}
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+                </div>
                 {team.color && (
-                  <div className="flex items-center space-x-2">
+                  <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-background shadow-lg" 
+                       style={{ backgroundColor: team.color }}>
+                  </div>
+                )}
+              </div>
+
+              {/* Team Info */}
+              <div className="flex-1">
+                <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+                  {team.name}
+                </h1>
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <Badge variant="secondary" className="text-sm px-3 py-1 rounded-full">
+                    ID: {team.id}
+                  </Badge>
+                  {team.total_score !== undefined && (
+                    <Badge variant="outline" className="text-sm px-3 py-1 rounded-full">
+                      <Trophy className="w-3 h-3 mr-1" />
+                      {team.total_score} 分
+                    </Badge>
+                  )}
+                  {team.games_played !== undefined && (
+                    <Badge variant="outline" className="text-sm px-3 py-1 rounded-full">
+                      <Star className="w-3 h-3 mr-1" />
+                      {team.games_played} 场比赛
+                    </Badge>
+                  )}
+                </div>
+                {team.color && (
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <div 
-                      className="w-6 h-6 rounded-full border-2 border-white/50"
+                      className="w-4 h-4 rounded-full border border-muted-foreground/20"
                       style={{ backgroundColor: team.color }}
                     ></div>
-                    <span className="text-muted-foreground">队伍颜色</span>
+                    <span>队伍主题色</span>
                   </div>
                 )}
               </div>
@@ -132,154 +193,185 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
       </section>
 
       {/* Content Section */}
-      <section className="py-12 px-6">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-12">
+        <div className="container mx-auto px-6">
           {/* Team Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <div className="text-center p-6 rounded-2xl glass card-hover">
-              <div className="text-3xl font-bold text-primary mb-2">{currentMembers.length}</div>
-              <div className="text-muted-foreground">当前成员</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-4xl mx-auto">
+            <div className="group">
+              <div className="p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-muted/50 hover:border-primary/30 transition-all duration-300 text-center group-hover:scale-105">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <Users className="w-6 h-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1">{currentMembers.length}</div>
+                <div className="text-sm text-muted-foreground">当前成员</div>
+              </div>
             </div>
-            <div className="text-center p-6 rounded-2xl glass card-hover">
-              <div className="text-3xl font-bold text-accent mb-2">{historicalMembers.length}</div>
-              <div className="text-muted-foreground">历史成员</div>
+            <div className="group">
+              <div className="p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-muted/50 hover:border-primary/30 transition-all duration-300 text-center group-hover:scale-105">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <Trophy className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">{historicalMembers.length}</div>
+                <div className="text-sm text-muted-foreground">历史成员</div>
+              </div>
             </div>
-            <div className="text-center p-6 rounded-2xl glass card-hover">
-              <div className="text-3xl font-bold text-orange-500 mb-2">{currentMembers.length + historicalMembers.length}</div>
-              <div className="text-muted-foreground">总成员数</div>
+            <div className="group">
+              <div className="p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-muted/50 hover:border-primary/30 transition-all duration-300 text-center group-hover:scale-105">
+                <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                  <Star className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-1">{currentMembers.length + historicalMembers.length}</div>
+                <div className="text-sm text-muted-foreground">总成员数</div>
+              </div>
             </div>
           </div>
 
           {/* Current Members */}
           {currentMembers.length > 0 && (
-            <div className="mb-16">
-              <div className="flex items-center mb-8">
-                <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse mr-3"></div>
-                <h2 className="text-2xl font-bold">当前队员</h2>
+            <div className="mb-16 max-w-6xl mx-auto">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  <h2 className="text-2xl font-bold">当前队员</h2>
+                  <Badge variant="secondary" className="ml-2">{currentMembers.length}</Badge>
+                </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {currentMembers.map((membership: any) => {
                   const member = membership.user;
+                  const isCaptain = membership.role === 'captain';
                   return (
-                  <Link key={membership.id} href={`/players/${member.id}`} className="group">
-                    <Card className="h-full glass card-hover border-primary/10 hover:border-primary/30 transition-all duration-300">
-                      <CardHeader className="text-center">
-                        <Avatar
-                          username={member.nickname}
-                          userId={member.id}
-                          size={64}
-                          className="rounded-full mx-auto mb-3"
-                          fallbackClassName="rounded-full bg-primary/20"
-                          fallbackLetter={member.nickname?.charAt(0)?.toUpperCase()}
-                        />
-                        <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                          {member.nickname}
-                        </CardTitle>
-                        {member.display_name && (
-                          <CardDescription>
-                            {member.display_name}
-                          </CardDescription>
+                    <Link key={membership.id} href={`/players/${member.id}`} className="group">
+                      <Card className="h-full bg-card/50 backdrop-blur-sm border border-muted/50 hover:border-primary/40 hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02] relative overflow-hidden">
+                        {isCaptain && (
+                          <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center">
+                            <Crown className="w-3 h-3 text-white" />
+                          </div>
                         )}
-                      </CardHeader>
-                      <CardContent className="text-center space-y-2">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-muted-foreground">总积分</span>
-                          <span className="font-semibold text-primary">{member.total_points || 0}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-muted-foreground">角色</span>
-                          <span className="font-semibold text-blue-500">
-                            {membership.role === 'main' ? '主力' : 
-                             membership.role === 'substitute' ? '替补' : 
-                             membership.role === 'captain' ? '队长' : '队员'}
-                          </span>
-                        </div>
-                        <Badge variant="outline" className="w-full justify-center">
-                          现役队员
-                        </Badge>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                );})}
+                        <CardHeader className="text-center pb-4">
+                          <Avatar
+                            username={member.nickname}
+                            userId={member.id}
+                            size={56}
+                            className="rounded-2xl mx-auto mb-3 ring-2 ring-background group-hover:ring-primary/30 transition-all"
+                            fallbackClassName="rounded-2xl bg-primary/20 group-hover:bg-primary/30 transition-colors"
+                            fallbackLetter={member.nickname?.charAt(0)?.toUpperCase()}
+                          />
+                          <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-1">
+                            {member.nickname}
+                          </CardTitle>
+                          {member.display_name && (
+                            <CardDescription className="text-xs line-clamp-1">
+                              {member.display_name}
+                            </CardDescription>
+                          )}
+                        </CardHeader>
+                        <CardContent className="pt-0 space-y-3">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">总积分</span>
+                            <span className="font-semibold text-primary">{member.total_points || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-center">
+                            <Badge 
+                              variant={isCaptain ? "default" : membership.role === 'main' ? "secondary" : "outline"}
+                              className="text-xs px-2 py-1"
+                            >
+                              {isCaptain ? (
+                                <><Crown className="w-3 h-3 mr-1" />队长</>
+                              ) : membership.role === 'main' ? '主力队员' : 
+                                membership.role === 'substitute' ? '替补队员' : '队员'}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}
 
           {/* Historical Members */}
           {historicalMembers.length > 0 && (
-            <div className="mb-16">
-              <h2 className="text-2xl font-bold mb-8">历史队员</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="mb-16 max-w-6xl mx-auto">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center space-x-3">
+                  <div className="w-2 h-2 rounded-full bg-muted-foreground"></div>
+                  <h2 className="text-2xl font-bold text-muted-foreground">历史队员</h2>
+                  <Badge variant="outline" className="ml-2">{historicalMembers.length}</Badge>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {historicalMembers.map((membership: any) => {
                   const member = membership.user;
                   return (
-                  <Link key={membership.id} href={`/players/${member.id}`} className="group">
-                    <Card className="h-full glass card-hover border-muted/20 hover:border-muted/40 transition-all duration-300 opacity-80">
-                      <CardHeader className="text-center">
-                        <Avatar
-                          username={member.nickname}
-                          userId={member.id}
-                          size={64}
-                          className="rounded-full mx-auto mb-3"
-                          fallbackClassName="rounded-full bg-muted/20"
-                          fallbackLetter={member.nickname?.charAt(0)?.toUpperCase()}
-                        />
-                        <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                          {member.nickname}
-                        </CardTitle>
-                        {member.display_name && (
-                          <CardDescription>
-                            {member.display_name}
-                          </CardDescription>
-                        )}
-                      </CardHeader>
-                      <CardContent className="text-center space-y-2">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-muted-foreground">总积分</span>
-                          <span className="font-semibold">{member.total_points || 0}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-muted-foreground">角色</span>
-                          <span className="font-semibold">
-                            {membership.role === 'main' ? '主力' : 
-                             membership.role === 'substitute' ? '替补' : 
-                             membership.role === 'captain' ? '队长' : '队员'}
-                          </span>
-                        </div>
-                        <Badge variant="secondary" className="w-full justify-center">
-                          历史队员
-                        </Badge>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                );})}
+                    <Link key={membership.id} href={`/players/${member.id}`} className="group">
+                      <Card className="h-full bg-card/30 backdrop-blur-sm border border-muted/30 hover:border-muted/50 hover:bg-card/40 transition-all duration-300 group-hover:scale-[1.02] opacity-75 hover:opacity-90">
+                        <CardHeader className="text-center pb-4">
+                          <Avatar
+                            username={member.nickname}
+                            userId={member.id}
+                            size={56}
+                            className="rounded-2xl mx-auto mb-3 ring-2 ring-background group-hover:ring-muted/50 transition-all grayscale group-hover:grayscale-0"
+                            fallbackClassName="rounded-2xl bg-muted/30 group-hover:bg-muted/40 transition-colors"
+                            fallbackLetter={member.nickname?.charAt(0)?.toUpperCase()}
+                          />
+                          <CardTitle className="text-lg group-hover:text-foreground transition-colors line-clamp-1 text-muted-foreground">
+                            {member.nickname}
+                          </CardTitle>
+                          {member.display_name && (
+                            <CardDescription className="text-xs line-clamp-1">
+                              {member.display_name}
+                            </CardDescription>
+                          )}
+                        </CardHeader>
+                        <CardContent className="pt-0 space-y-3">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">总积分</span>
+                            <span className="font-medium text-muted-foreground">{member.total_points || 0}</span>
+                          </div>
+                          <div className="flex items-center justify-center">
+                            <Badge variant="secondary" className="text-xs px-2 py-1">
+                              历史成员
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}
 
           {/* Empty State */}
           {currentMembers.length === 0 && historicalMembers.length === 0 && (
-            <div className="text-center py-20">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-muted/50 flex items-center justify-center">
-                <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                </svg>
+            <div className="text-center py-20 max-w-md mx-auto">
+              <div className="p-8 rounded-3xl bg-muted/20 backdrop-blur-sm border border-muted/30">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-muted/30 flex items-center justify-center">
+                  <UserPlus className="w-10 h-10 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold mb-3">暂无队员</h3>
+                <p className="text-muted-foreground text-sm mb-6">
+                  该队伍目前没有成员记录，可能是新建的队伍或者数据尚未同步
+                </p>
+                <div className="w-full h-1 bg-muted/30 rounded-full overflow-hidden">
+                  <div className="w-0 h-full bg-primary/50 rounded-full animate-pulse"></div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">暂无队员</h3>
-              <p className="text-muted-foreground mb-6">该队伍目前没有成员记录</p>
             </div>
           )}
 
           {/* Navigation */}
-          <div className="flex justify-center">
+          <div className="flex justify-center pt-12">
             <Link 
               href="/teams"
-              className="inline-flex items-center px-6 py-3 rounded-2xl glass card-hover border-primary/20 hover:border-primary/40 transition-all"
+              className="inline-flex items-center space-x-3 px-6 py-3 rounded-2xl bg-card/50 backdrop-blur-sm border border-muted/50 hover:border-primary/40 hover:bg-card/70 transition-all duration-300 group"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
-              </svg>
-              返回队伍列表
+              <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              <span className="font-medium">返回队伍列表</span>
             </Link>
           </div>
         </div>

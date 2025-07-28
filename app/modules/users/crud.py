@@ -95,118 +95,141 @@ def get_user_game_level_and_progress(db: Session, user_id: int, game_code: str, 
 
 def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
     """获取玩家详细统计信息"""
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
+    try:
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+        if not user:
+            return None
+        
+        # 查询玩家的得分记录来计算游戏统计
+        scores = db.query(match_models.Score).filter(match_models.Score.user_id == user_id).all()
+        
+        # 按游戏类型统计得分 - 使用游戏代码而不是名称
+        game_scores = {}
+        for score in scores:
+            if not score.match_game or not score.match_game.game:
+                continue
+                
+            game_code = score.match_game.game.code
+            if game_code not in game_scores:
+                game_scores[game_code] = {
+                    "total_score": 0,
+                    "total_standard_score": 0.0,
+                    "games_played": 0,
+                    "game_name": score.match_game.game.name  # 保留游戏名称用于显示
+                }
+            game_scores[game_code]["total_score"] += score.points
+            game_scores[game_code]["total_standard_score"] += (score.standard_score or 0.0)
+            game_scores[game_code]["games_played"] += 1
+        
+        # 计算每个游戏的平均标准分和等级
+        for game_code in game_scores:
+            avg_standard_score = (game_scores[game_code]["total_standard_score"] / 
+                                 game_scores[game_code]["games_played"]) if game_scores[game_code]["games_played"] > 0 else 0
+            game_scores[game_code]["average_standard_score"] = round(avg_standard_score, 2)
+            
+            # 基于游戏内排名计算等级和进度
+            if avg_standard_score > 0:
+                level, progress = get_user_game_level_and_progress(db, user_id, game_code, avg_standard_score)
+                game_scores[game_code]["level"] = level
+                game_scores[game_code]["level_progress"] = progress
+            else:
+                game_scores[game_code]["level"] = 'D'
+                game_scores[game_code]["level_progress"] = 0.0
+        
+        # 查询比赛历史 - 基于新的MatchTeamMembership系统
+        match_history = []
+        try:
+            user_matches = db.query(match_models.Match).join(
+                match_models.MatchTeam, match_models.Match.id == match_models.MatchTeam.match_id
+            ).join(
+                match_models.MatchTeamMembership,
+                match_models.MatchTeam.id == match_models.MatchTeamMembership.match_team_id
+            ).filter(
+                match_models.MatchTeamMembership.user_id == user_id
+            ).distinct().limit(10).all()  # 限制数量避免过多查询
+            
+            for match in user_matches:
+                try:
+                    # 计算该玩家在这场比赛中的总得分
+                    match_scores = db.query(func.sum(match_models.Score.points)).filter(
+                        match_models.Score.user_id == user_id,
+                        match_models.Score.match_game_id.in_(
+                            [mg.id for mg in match.match_games]
+                        )
+                    ).scalar() or 0
+                    
+                    # 计算参与的游戏数
+                    games_played = db.query(func.count(func.distinct(match_models.Score.match_game_id))).filter(
+                        match_models.Score.user_id == user_id,
+                        match_models.Score.match_game_id.in_(
+                            [mg.id for mg in match.match_games]
+                        )
+                    ).scalar() or 0
+                    
+                    # 获取队伍名称 - 基于新的MatchTeamMembership
+                    team_membership = db.query(match_models.MatchTeamMembership).join(
+                        match_models.MatchTeam
+                    ).filter(
+                        match_models.MatchTeamMembership.user_id == user_id,
+                        match_models.MatchTeam.match_id == match.id
+                    ).first()
+                    
+                    team_name = team_membership.team.name if team_membership else "未知队伍"
+                    
+                    match_history.append({
+                        "match_id": match.id,
+                        "match_name": match.name,
+                        "total_points": int(match_scores),
+                        "games_played": int(games_played),
+                        "team_name": team_name
+                    })
+                except Exception as match_error:
+                    print(f"Error processing match {match.id}: {match_error}")
+                    continue
+        except Exception as matches_error:
+            print(f"Error querying matches: {matches_error}")
+        
+        # 查询最近得分记录
+        recent_scores_data = []
+        try:
+            recent_scores = db.query(match_models.Score).filter(
+                match_models.Score.user_id == user_id
+            ).order_by(desc(match_models.Score.recorded_at)).limit(10).all()
+            
+            for score in recent_scores:
+                try:
+                    recent_scores_data.append({
+                        "points": score.points,
+                        "game_name": score.match_game.game.name if score.match_game and score.match_game.game else "未知游戏",
+                        "team_name": score.team.name if score.team else "未知队伍",
+                        "recorded_at": score.recorded_at.isoformat() if score.recorded_at else None
+                    })
+                except Exception as score_error:
+                    print(f"Error processing score: {score_error}")
+                    continue
+        except Exception as scores_error:
+            print(f"Error querying recent scores: {scores_error}")
+        
+        return {
+            "user": {
+                "id": user.id,
+                "nickname": user.nickname,
+                "display_name": user.display_name,
+                "total_points": user.total_points,
+                "win_rate": user.win_rate,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "last_active": user.last_active.isoformat() if user.last_active else None,
+            },
+            "current_team": None,  # 使用下面的 get_user_team_history 函数
+            "historical_teams": [],  # 使用下面的 get_user_team_history 函数
+            "match_history": match_history,
+            "recent_scores": recent_scores_data,
+            "game_scores": game_scores
+        }
+    except Exception as e:
+        # 记录错误但不抛出，避免影响整个请求
+        print(f"Error in get_user_stats: {e}")
         return None
-    
-    # 查询玩家的得分记录来计算游戏统计
-    scores = db.query(match_models.Score).filter(match_models.Score.user_id == user_id).all()
-    
-    # 按游戏类型统计得分 - 使用游戏代码而不是名称
-    game_scores = {}
-    for score in scores:
-        game_code = score.match_game.game.code
-        if game_code not in game_scores:
-            game_scores[game_code] = {
-                "total_score": 0,
-                "total_standard_score": 0.0,
-                "games_played": 0,
-                "game_name": score.match_game.game.name  # 保留游戏名称用于显示
-            }
-        game_scores[game_code]["total_score"] += score.points
-        game_scores[game_code]["total_standard_score"] += (score.standard_score or 0.0)
-        game_scores[game_code]["games_played"] += 1
-    
-    # 计算每个游戏的平均标准分和等级
-    for game_code in game_scores:
-        avg_standard_score = (game_scores[game_code]["total_standard_score"] / 
-                             game_scores[game_code]["games_played"]) if game_scores[game_code]["games_played"] > 0 else 0
-        game_scores[game_code]["average_standard_score"] = round(avg_standard_score, 2)
-        
-        # 基于游戏内排名计算等级和进度
-        if avg_standard_score > 0:
-            level, progress = get_user_game_level_and_progress(db, user_id, game_code, avg_standard_score)
-            game_scores[game_code]["level"] = level
-            game_scores[game_code]["level_progress"] = progress
-        else:
-            game_scores[game_code]["level"] = 'D'
-            game_scores[game_code]["level_progress"] = 0.0
-    
-    # 查询比赛历史 - 基于新的MatchTeamMembership系统
-    match_history = []
-    user_matches = db.query(match_models.Match).join(
-        match_models.MatchTeam, match_models.Match.id == match_models.MatchTeam.match_id
-    ).join(
-        match_models.MatchTeamMembership
-    ).filter(
-        match_models.MatchTeamMembership.user_id == user_id
-    ).distinct().all()
-    
-    for match in user_matches:
-        # 计算该玩家在这场比赛中的总得分
-        match_scores = db.query(func.sum(match_models.Score.points)).filter(
-            match_models.Score.user_id == user_id,
-            match_models.Score.match_game_id.in_(
-                [mg.id for mg in match.match_games]
-            )
-        ).scalar() or 0
-        
-        # 计算参与的游戏数
-        games_played = db.query(func.count(func.distinct(match_models.Score.match_game_id))).filter(
-            match_models.Score.user_id == user_id,
-            match_models.Score.match_game_id.in_(
-                [mg.id for mg in match.match_games]
-            )
-        ).scalar() or 0
-        
-        # 获取队伍名称 - 基于新的MatchTeamMembership
-        team_membership = db.query(match_models.MatchTeamMembership).join(
-            match_models.MatchTeam
-        ).filter(
-            match_models.MatchTeamMembership.user_id == user_id,
-            match_models.MatchTeam.match_id == match.id
-        ).first()
-        
-        team_name = team_membership.team.name if team_membership else "未知队伍"
-        
-        match_history.append({
-            "match_id": match.id,
-            "match_name": match.name,
-            "total_points": int(match_scores),
-            "games_played": int(games_played),
-            "team_name": team_name
-        })
-    
-    # 查询最近得分记录
-    recent_scores = db.query(match_models.Score).filter(
-        match_models.Score.user_id == user_id
-    ).order_by(desc(match_models.Score.recorded_at)).limit(10).all()
-    
-    recent_scores_data = []
-    for score in recent_scores:
-        recent_scores_data.append({
-            "points": score.points,
-            "game_name": score.match_game.game.name,
-            "team_name": score.team.name,
-            "recorded_at": score.recorded_at.isoformat()
-        })
-    
-    return {
-        "user": {
-            "id": user.id,
-            "nickname": user.nickname,
-            "display_name": user.display_name,
-            "total_points": user.total_points,
-            "win_rate": user.win_rate,
-            "created_at": user.created_at.isoformat() if user.created_at else None,
-            "last_active": user.last_active.isoformat() if user.last_active else None,
-        },
-        "current_team": None,  # 使用下面的 get_user_team_history 函数
-        "historical_teams": [],  # 使用下面的 get_user_team_history 函数
-        "match_history": match_history,
-        "recent_scores": recent_scores_data,
-        "game_scores": game_scores
-    }
 
 def get_user_match_history(db: Session, user_id: int, skip: int = 0, limit: int = 50):
     """获取玩家历史比赛记录"""

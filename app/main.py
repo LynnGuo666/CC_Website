@@ -1,11 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.middleware import DatabaseConnectionMiddleware
+
 app = FastAPI(
     title="Competition Server API",
     description="API for managing competitions, teams, and players.",
     version="2.0.0",  # 升级版本号表示新的队伍系统
 )
+
+# 添加数据库连接池监控中间件
+app.add_middleware(DatabaseConnectionMiddleware)
 
 # 添加CORS中间件
 app.add_middleware(

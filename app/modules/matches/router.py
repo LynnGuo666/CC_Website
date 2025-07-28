@@ -3,20 +3,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from app.core.db import SessionLocal
+from app.core.deps import get_db
 from . import crud, models, schemas
 from app.modules.users import crud as users_crud
 from app.core.security import get_api_key
 
 router = APIRouter()
-
-# 数据库会话依赖
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 # --- 比赛接口 ---
 
