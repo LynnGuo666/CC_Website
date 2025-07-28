@@ -16,6 +16,13 @@ def get_matches(db: Session, skip: int = 0, limit: int = 100, status: schemas.Ma
     query = db.query(models.Match)
     if status:
         query = query.filter(models.Match.status == status)
+    
+    # 按开赛时间倒序排序：有开赛时间的在前，按时间倒序；没有开赛时间的在后，按创建时间降序
+    query = query.order_by(
+        models.Match.start_time.desc().nulls_last(),
+        models.Match.created_at.desc()
+    )
+    
     return query.offset(skip).limit(limit).all()
 
 def create_match(db: Session, match: schemas.MatchCreate):

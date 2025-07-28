@@ -60,10 +60,24 @@ export default async function MatchesPage() {
     error = '无法加载赛事列表。后端服务是否正在运行？';
   }
 
-  // 按状态分组比赛
-  const ongoingMatches = matches.filter(m => m.status === 'ongoing');
-  const preparingMatches = matches.filter(m => m.status === 'preparing');
-  const finishedMatches = matches.filter(m => m.status === 'finished');
+  // 按状态分组比赛，并在各分组内按开赛时间倒序排序
+  const sortMatchesByStartTime = (matches: MatchList[]) => {
+    return matches.sort((a, b) => {
+      // 如果都有开赛时间，按时间倒序排序（最新的在前）
+      if (a.start_time && b.start_time) {
+        return new Date(b.start_time).getTime() - new Date(a.start_time).getTime();
+      }
+      // 有开赛时间的排在前面
+      if (a.start_time && !b.start_time) return -1;
+      if (!a.start_time && b.start_time) return 1;
+      // 都没有开赛时间，按创建时间降序排序
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  };
+
+  const ongoingMatches = sortMatchesByStartTime(matches.filter(m => m.status === 'ongoing'));
+  const preparingMatches = sortMatchesByStartTime(matches.filter(m => m.status === 'preparing'));
+  const finishedMatches = sortMatchesByStartTime(matches.filter(m => m.status === 'finished'));
   
   return (
     <div className="min-h-screen">
@@ -198,16 +212,39 @@ function MatchCard({ match, priority = false }: { match: MatchList; priority?: b
         
         <CardContent className="flex-1 pb-4">
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">最大队伍数</span>
-              <span className="font-semibold">{match.max_teams || '未限制'}</span>
-            </div>
-            
-            {/* 隐藏队员人数显示 */}
-            {/* <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">队员人数</span>
-              <span className="font-semibold">{match.max_players_per_team} 人/队</span>
-            </div> */}
+            {/* 显示开赛和结束时间 */}
+            {(match.start_time || match.end_time) && (
+              <div className="space-y-2 p-3 rounded-lg bg-muted/30">
+                {match.start_time && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">开赛时间</span>
+                    <span className="font-semibold text-sm">
+                      {new Date(match.start_time).toLocaleString('zh-CN', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                )}
+                {match.end_time && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">结束时间</span>
+                    <span className="font-semibold text-sm">
+                      {new Date(match.end_time).toLocaleString('zh-CN', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
             
             {match.prize_pool && (
               <div className="flex items-center justify-between">
