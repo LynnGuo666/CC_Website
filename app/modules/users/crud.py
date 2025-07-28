@@ -280,9 +280,7 @@ def get_leaderboard(db: Session, skip: int = 0, limit: int = 100, game_code: str
         # 按综合平均标准分排行
         users = db.query(models.User).filter(
             models.User.average_standard_score > 0
-        ).order_by(
-            desc(models.User.average_standard_score)
-        ).offset(skip).limit(limit).all()
+        ).order_by(desc(models.User.average_standard_score)).offset(skip).limit(limit).all()
         
         leaderboard = []
         for idx, user in enumerate(users):
@@ -296,8 +294,8 @@ def get_leaderboard(db: Session, skip: int = 0, limit: int = 100, game_code: str
                 "display_name": user.display_name,
                 "average_standard_score": round(user.average_standard_score, 1),
                 "total_standard_score": round(user.total_standard_score, 1),
-                "game_level": user.game_level,
-                "level_progress": round(user.level_progress, 1),
+                "game_level": user.game_level,  # 直接从数据库读取
+                "level_progress": round(user.level_progress, 1),  # 直接从数据库读取
                 "total_matches": user.total_matches,
                 "total_games_played": sum(stats.get('games_played', 0) for stats in game_stats.values()),
                 "best_game": get_user_best_game(game_stats),
@@ -459,15 +457,21 @@ def get_level_distribution(db: Session):
     Returns:
         Dict: 等级分布数据
     """
-    users = db.query(models.User).filter(
+    # 直接统计数据库中的等级字段
+    level_counts = db.query(
+        models.User.game_level,
+        func.count(models.User.id).label('count')
+    ).filter(
         models.User.average_standard_score > 0
-    ).all()
+    ).group_by(models.User.game_level).all()
     
+    # 初始化分布字典
     distribution = {'S': 0, 'A': 0, 'B': 0, 'C': 0, 'D': 0}
     
-    for user in users:
-        level = user.game_level
-        distribution[level] += 1
+    # 填充实际数据
+    for level, count in level_counts:
+        if level in distribution:
+            distribution[level] = count
     
     total_users = sum(distribution.values())
     
@@ -524,3 +528,51 @@ def get_available_games_for_leaderboard(db: Session):
         }
         for game in games_with_scores
     ]
+
+def update_all_user_levels(db: Session):
+    """
+    更新所有用户的等级和进度信息
+    这个函数应该在标准分更新后调用
+    """
+    # 获取所有有标准分的用户，按平均标准分降序排列
+    all_users = db.query(models.User).filter(
+        models.User.average_standard_score > 0
+    ).order_by(desc(models.User.average_standard_score)).all()
+    
+    total_users = len(all_users)
+    
+    if total_users == 0:
+        return 0
+    
+    # 批量更新用户等级
+    for i, user in enumerate(all_users):
+        current_rank = i + 1
+        percentile = (current_rank / total_users) * 100
+        
+        # 计算等级
+        if percentile <= 10:
+            level = 'S'
+            progress = ((10 - percentile) / 10) * 100
+        elif percentile <= 30:
+            level = 'A'
+            progress = ((30 - percentile) / 20) * 100
+        elif percentile <= 60:
+            level = 'B'
+            progress = ((60 - percentile) / 30) * 100
+        elif percentile <= 90:
+            level = 'C'
+            progress = ((90 - percentile) / 30) * 100
+        else:
+            level = 'D'
+            progress = ((100 - percentile) / 10) * 100
+        
+        # 更新用户等级和进度
+        user.game_level = level
+        user.level_progress = round(progress, 1)
+    
+    try:
+        db.commit()
+        return total_users
+    except Exception as e:
+        db.rollback()
+        raise e

@@ -21,7 +21,6 @@ const LeaderboardPlayerSchema = z.object({
   }).nullable(),
   game_count: z.number().optional(),
   // 游戏特定排行榜字段
-  games_played: z.number().optional(),
   total_raw_score: z.number().optional(),
   average_raw_score: z.number().optional(),
   game_code: z.string().optional(),

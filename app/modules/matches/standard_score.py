@@ -176,6 +176,15 @@ class StandardScoreCalculator:
                     success_count += 1
             
             logger.info(f"Updated standard score stats for {success_count}/{len(user_ids)} users")
+            
+            # 更新完标准分统计后，重新计算所有用户的等级
+            try:
+                from app.modules.users.crud import update_all_user_levels
+                updated_levels = update_all_user_levels(self.db)
+                logger.info(f"Updated levels for {updated_levels} users")
+            except Exception as e:
+                logger.error(f"Error updating user levels: {e}")
+            
             return success_count
             
         except Exception as e:

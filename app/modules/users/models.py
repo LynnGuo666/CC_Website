@@ -20,6 +20,10 @@ class User(Base):
     total_standard_score = Column(Float, default=0.0, comment="总标准分")
     average_standard_score = Column(Float, default=0.0, comment="平均标准分")
     
+    # 等级信息（预计算存储）
+    game_level = Column(String, default='D', comment="游戏等级")
+    level_progress = Column(Float, default=0.0, comment="等级进度百分比")
+    
     # 时间戳
     created_at = Column(DateTime, default=datetime.datetime.utcnow, comment="注册时间")
     last_active = Column(DateTime, default=datetime.datetime.utcnow, comment="最后活跃时间")
@@ -83,101 +87,3 @@ class User(Base):
                 game_scores[game_name]['total_score'] += score.points
                 game_scores[game_name]['games_played'] += 1
         return game_scores
-    
-    @property
-    def game_level(self):
-        """根据排名百分比计算游戏等级
-        S级：前10% A级：前30% B级：前60% C级：前90% D级：后10%
-        """
-        from sqlalchemy.orm import Session
-        from app.core.db import SessionLocal
-        
-        # 获取数据库会话
-        db = SessionLocal()
-        try:
-            # 获取所有有标准分的用户，按平均标准分降序排列
-            all_users = db.query(User).filter(
-                User.average_standard_score > 0
-            ).order_by(User.average_standard_score.desc()).all()
-            
-            if not all_users:
-                return 'D'
-            
-            total_users = len(all_users)
-            
-            # 找到当前用户在排行榜中的位置
-            current_rank = None
-            for i, user in enumerate(all_users):
-                if user.id == self.id:
-                    current_rank = i + 1  # 排名从1开始
-                    break
-            
-            if current_rank is None:
-                return 'D'
-            
-            # 根据排名百分比计算等级
-            percentile = (current_rank / total_users) * 100
-            
-            if percentile <= 10:  # 前10%
-                return 'S'
-            elif percentile <= 30:  # 前30%
-                return 'A'
-            elif percentile <= 60:  # 前60%
-                return 'B'
-            elif percentile <= 90:  # 前90%
-                return 'C'
-            else:  # 后10%
-                return 'D'
-                
-        finally:
-            db.close()
-    
-    @property
-    def level_progress(self):
-        """计算当前等级的进度百分比"""
-        from sqlalchemy.orm import Session
-        from app.core.db import SessionLocal
-        
-        db = SessionLocal()
-        try:
-            # 获取所有有标准分的用户，按平均标准分降序排列
-            all_users = db.query(User).filter(
-                User.average_standard_score > 0
-            ).order_by(User.average_standard_score.desc()).all()
-            
-            if not all_users:
-                return 0.0
-            
-            total_users = len(all_users)
-            
-            # 找到当前用户在排行榜中的位置
-            current_rank = None
-            for i, user in enumerate(all_users):
-                if user.id == self.id:
-                    current_rank = i + 1
-                    break
-            
-            if current_rank is None:
-                return 0.0
-            
-            percentile = (current_rank / total_users) * 100
-            
-            # 根据等级计算进度（进度表示在当前等级内的位置）
-            if percentile <= 10:  # S级（前10%）
-                # 在S级内的相对位置：排名越靠前，进度越高
-                return ((10 - percentile) / 10) * 100
-            elif percentile <= 30:  # A级（前30%，但排除前10%）
-                # 在A级内的相对位置：从第10%到第30%
-                return ((30 - percentile) / 20) * 100
-            elif percentile <= 60:  # B级（前60%，但排除前30%）
-                # 在B级内的相对位置：从第30%到第60%
-                return ((60 - percentile) / 30) * 100
-            elif percentile <= 90:  # C级（前90%，但排除前60%）
-                # 在C级内的相对位置：从第60%到第90%
-                return ((90 - percentile) / 30) * 100
-            else:  # D级（后10%）
-                # 在D级内的相对位置：从第90%到第100%
-                return ((100 - percentile) / 10) * 100
-                
-        finally:
-            db.close()
