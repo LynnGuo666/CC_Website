@@ -450,6 +450,9 @@ def update_team_scores_sync(team_ids: list[int]):
                     'team_id': team_id
                 })
         
+        # 在查询排名之前，将分数更新刷入数据库会话
+        db.flush()
+
         # 更新该比赛所有队伍的排名
         if team_ids:
             # 获取第一个队伍的比赛ID

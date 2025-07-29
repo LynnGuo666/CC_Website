@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from 'react';
 import { getMatches, MatchList } from '@/services/matchService';
 import Link from 'next/link';
 import {
@@ -50,15 +53,24 @@ const getStatusInfo = (status: string) => {
   }
 };
 
-export default async function MatchesPage() {
-  let matches: MatchList[] = [];
-  let error: string | null = null;
+export default function MatchesPage() {
+  const [matches, setMatches] = useState<MatchList[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  try {
-    matches = await getMatches();
-  } catch (e) {
-    error = '无法加载赛事列表。后端服务是否正在运行？';
-  }
+  useEffect(() => {
+    async function fetchMatches() {
+      try {
+        const data = await getMatches();
+        setMatches(data);
+      } catch (e) {
+        setError('无法加载赛事列表。后端服务是否正在运行？');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMatches();
+  }, []);
 
   // 按状态分组比赛，并在各分组内按开赛时间倒序排序
   const sortMatchesByStartTime = (matches: MatchList[]) => {
@@ -97,7 +109,17 @@ export default async function MatchesPage() {
       {/* Content Section */}
       <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
-          {error && (
+          {loading ? (
+            <div className="text-center py-20">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-muted/50 flex items-center justify-center animate-pulse">
+                <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+              </div>
+              <h3 className="text-2xl font-semibold mb-2">正在加载赛事...</h3>
+              <p className="text-muted-foreground">请稍候</p>
+            </div>
+          ) : error ? (
             <div className="mb-8 p-6 rounded-2xl bg-destructive/10 border border-destructive/20 glass">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
@@ -108,9 +130,7 @@ export default async function MatchesPage() {
                 <p className="text-destructive font-medium">{error}</p>
               </div>
             </div>
-          )}
-
-          {!error && (
+          ) : (
             <>
               {/* Ongoing Matches */}
               {ongoingMatches.length > 0 && (
