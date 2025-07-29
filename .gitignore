@@ -91,3 +91,4 @@ node_modules/
 # Temporary files
 *.tmp
 *.temp
+/import/
