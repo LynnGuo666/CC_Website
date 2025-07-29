@@ -187,7 +187,7 @@ export default function Home() {
               </CardHeader>
               <CardContent className="flex-1 flex flex-col">
                 <p className="text-muted-foreground leading-relaxed mb-6 flex-1">
-                  成立于 2024 年，以建设世界，建立社区为目标，探索各个世界。
+                  INF 是一个新生的 Minecraft 社区，目前活跃在2025年7月初开放的 island 筑境。以"为远道而来的旅人提供任其挥洒的画卷"为愿景，致力于营造和谐稳定的交友与游玩环境。
                 </p>
                 <div className="mt-auto">
                   <Button asChild variant="outline" className="w-full border-purple-500/50 text-purple-500 hover:bg-purple-500/10">
