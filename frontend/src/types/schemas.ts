@@ -37,6 +37,7 @@ export const MatchTeamSchema = z.object({
     color: z.string().nullable(),
     total_score: z.number(),
     games_played: z.number(),
+    team_rank: z.number().nullable(),
     created_at: z.string(),
     memberships: z.array(MatchTeamMembershipSchema).optional(),
 });

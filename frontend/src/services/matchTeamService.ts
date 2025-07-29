@@ -1,8 +1,7 @@
 import apiFetch from './api';
 import { 
-  MatchTeamSchema, 
-  MatchTeamWithMatchSchema,
-  TeamMemberSchema, 
+  MatchTeamSchema,
+  TeamMemberSchema,
   GameLineupSchema, 
   MatchTeamCreateSchema, 
   TeamMemberCreateSchema 
@@ -11,6 +10,11 @@ import { z } from 'zod';
 
 // Infer the TypeScript types from the schemas
 export type MatchTeam = z.infer<typeof MatchTeamSchema>;
+export const MatchTeamWithMatchSchema = MatchTeamSchema.extend({
+  match_name: z.string(),
+  match_status: z.string(),
+});
+
 export type MatchTeamWithMatch = z.infer<typeof MatchTeamWithMatchSchema>;
 export type TeamMember = z.infer<typeof TeamMemberSchema>;
 export type GameLineup = z.infer<typeof GameLineupSchema>;

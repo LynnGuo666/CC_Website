@@ -5,7 +5,9 @@ import { z } from 'zod';
 
 // 兼容性：使用MatchTeam作为Team的别名
 export const TeamSchema = MatchTeamSchema;
-export const TeamWithMembersSchema = MatchTeamSchema;
+import { MatchTeamWithMatchSchema } from './matchTeamService';
+
+export const TeamWithMembersSchema = MatchTeamWithMatchSchema;
 export const TeamStatsSchema = z.object({
   team_id: z.number(),
   team_name: z.string(),

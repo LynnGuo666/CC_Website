@@ -15,72 +15,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-type TeamTotalScore = {
-  id: number;
-  name: string;
-  color: string | null;
-  total_points: number;
-  games_played: number;
-  average_score: number;
-  best_game_score: number;
-  best_game_name: string;
-};
-
-// Enhanced function to calculate comprehensive team statistics
-function calculateTeamStats(teams: MatchTeam[], matchGames: any[]): TeamTotalScore[] {
-  const teamStats: Record<number, TeamTotalScore> = {};
-
-  // Initialize team stats using the teams data
-  for (const team of teams) {
-    teamStats[team.id] = {
-      id: team.id,
-      name: team.name,
-      color: team.color,
-      total_points: 0,
-      games_played: 0,
-      average_score: 0,
-      best_game_score: 0,
-      best_game_name: '',
-    };
-  }
-
-  // Calculate stats from scores
-  for (const game of matchGames) {
-    const gameTeamScores: Record<number, number> = {};
-    
-    // Calculate team totals for this game
-    for (const score of game.scores) {
-      if (!gameTeamScores[score.team_id]) {
-        gameTeamScores[score.team_id] = 0;
-      }
-      gameTeamScores[score.team_id] += score.points;
-    }
-
-    // Update team stats
-    for (const [teamId, gameScore] of Object.entries(gameTeamScores)) {
-      const id = parseInt(teamId);
-      if (teamStats[id]) {
-        teamStats[id].total_points += gameScore;
-        teamStats[id].games_played += 1;
-        
-        // Track best game performance
-        if (gameScore > teamStats[id].best_game_score) {
-          teamStats[id].best_game_score = gameScore;
-          teamStats[id].best_game_name = game.game.name;
-        }
-      }
-    }
-  }
-
-  // Calculate averages
-  Object.values(teamStats).forEach(team => {
-    if (team.games_played > 0) {
-      team.average_score = Math.round(team.total_points / team.games_played);
-    }
-  });
-
-  return Object.values(teamStats).sort((a, b) => b.total_points - a.total_points);
-}
 
 // Function to get status badge styling
 function getStatusBadge(status: string) {
@@ -117,7 +51,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   let teams: MatchTeam[] = [];
   let matchGames: any[] = []; // 包含游戏和分数信息的完整数据
   let error: string | null = null;
-  let teamStats: TeamTotalScore[] = [];
+  let teamStats: MatchTeam[] = [];
 
   try {
     const { id } = await params;
@@ -163,9 +97,8 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
     
     matchGames = enrichedGames;
     
-    if (match && teams.length > 0 && matchGames.length > 0) {
-      teamStats = calculateTeamStats(teams, matchGames);
-    }
+    // 直接使用从后端获取的、已排序的队伍数据
+    teamStats = teamsData.sort((a, b) => (a.team_rank || Infinity) - (b.team_rank || Infinity));
   } catch (e: any) {
     console.error(e);
     error = e.message || '加载赛事详情失败。';
@@ -250,7 +183,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  最高 {teamStats[0]?.total_points || 0} 分
+                  最高 {teamStats[0]?.total_score || 0} 分
                 </Badge>
                 
                 {/* Champion Badge */}
@@ -261,7 +194,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                     </svg>
                     总冠军: {
                       match.winning_team_id 
-                        ? (teamStats.find(t => t.id === match.winning_team_id)?.name || '未知队伍')
+                        ? (teams.find(t => t.id === match.winning_team_id)?.name || '未知队伍')
                         : (teamStats[0]?.name || '未知队伍')
                     }
                   </Badge>
@@ -321,26 +254,16 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                                 <div>
                                   <h3 className="font-semibold text-sm">{team.name}</h3>
                                   <p className="text-xs text-muted-foreground">
-                                    平均 {team.average_score} 分 • {team.games_played} 场
+                                    {team.games_played} 场比赛
                                   </p>
                                 </div>
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="text-lg font-bold">{team.total_points}</div>
+                              <div className="text-lg font-bold">{team.total_score}</div>
                               <div className="text-xs text-muted-foreground">总积分</div>
                             </div>
                           </div>
-                          {team.best_game_name && (
-                            <div className="mt-2 pt-2 border-t border-border/50">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">最佳表现</span>
-                                <span className="font-medium">
-                                  {team.best_game_name}: {team.best_game_score}分
-                                </span>
-                              </div>
-                            </div>
-                          )}
                         </div>
                       ))}
                     </div>

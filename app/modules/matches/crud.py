@@ -62,7 +62,8 @@ def create_match(db: Session, match: schemas.MatchCreate):
                 game_id=match_game_data.game_id,
                 game_order=getattr(match_game_data, 'game_order', 1),
                 structure_type=match_game_data.structure_type,
-                structure_details=match_game_data.structure_details
+                structure_details=match_game_data.structure_details,
+                multiplier=match_game_data.multiplier
             )
             db.add(db_match_game)
     
@@ -404,6 +405,8 @@ def recalculate_match_standard_scores(db: Session, match_id: int) -> bool:
         if team_ids:
             # 使用同步方法确保计算立即完成
             update_team_scores_sync(team_ids)
+            # 再次显式调用排名更新，确保万无一失
+            update_team_rankings(db, match_id)
             
     return True
 
