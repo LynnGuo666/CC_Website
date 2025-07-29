@@ -202,19 +202,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
               </div>
             </div>
 
-            {/* Action Buttons - Only show live view for non-archived matches */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-6 lg:mt-0">
-              {!match.is_archived && (
-                <Button asChild size="lg" className="glass card-hover">
-                  <Link href={`/live/${match.id}`}>
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    实时视图
-                  </Link>
-                </Button>
-              )}
-            </div>
+            {/* Action Buttons - Live view button removed */}
           </div>
         </div>
       </section>
