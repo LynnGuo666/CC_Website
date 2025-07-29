@@ -80,7 +80,7 @@ export default function Home() {
                   </div>
                   
                   {/* 顶部装饰线 */}
-                  <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+                  <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/30 dark:via-white/10 to-transparent"></div>
                   
                   {/* 底部装饰线 */}
                   <div className="absolute bottom-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
