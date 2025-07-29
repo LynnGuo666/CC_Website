@@ -12,7 +12,7 @@ export type MatchGame = z.infer<typeof MatchGameSchema>;
  * @returns A promise that resolves to an array of matches.
  */
 export async function getMatches(): Promise<MatchList[]> {
-  return await apiFetch<MatchList[]>('/api/matches/', {
+  return await apiFetch<MatchList[]>('/api/matches', {
     method: 'GET',
     schema: MatchesApiResponseSchema,
     cache: 'no-store' // 强制不缓存，确保数据实时性
@@ -84,7 +84,7 @@ export async function getMatchGameScores(matchGameId: number) {
  * @returns A promise that resolves to game info.
  */
 export async function getGameById(gameId: number) {
-  return await apiFetch(`/games/${gameId}`, {
+  return await apiFetch(`/api/games/${gameId}`, {
     method: 'GET',
     schema: z.any(), // 暂时使用any
   });

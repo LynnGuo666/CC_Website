@@ -395,19 +395,20 @@ def recalculate_game_standard_scores(db: Session, match_game_id: int) -> bool:
 # --- 队伍积分更新函数 ---
 
 def update_team_scores_sync(team_ids: list[int]):
-    """同步更新指定队伍的积分（在独立的数据库会话中）"""
+    """同步更新指定队伍的积分（在独立的数据库会话中），考虑游戏倍率"""
     from app.core.db import SessionLocal
     
     db = SessionLocal()
     try:
         for team_id in team_ids:
-            # 计算队伍总积分和参与游戏数
+            # 计算队伍总积分和参与游戏数，考虑游戏倍率
             result = db.execute(text("""
                 SELECT 
-                    COALESCE(SUM(s.points), 0) as total_score,
+                    COALESCE(SUM(s.points * mg.multiplier), 0) as total_score,
                     COUNT(DISTINCT s.match_game_id) as games_played
                 FROM match_teams mt 
                 LEFT JOIN scores s ON mt.id = s.match_team_id 
+                LEFT JOIN match_games mg ON s.match_game_id = mg.id
                 WHERE mt.id = :team_id
                 GROUP BY mt.id
             """), {"team_id": team_id})
@@ -427,12 +428,44 @@ def update_team_scores_sync(team_ids: list[int]):
                     'team_id': team_id
                 })
         
+        # 更新该比赛所有队伍的排名
+        if team_ids:
+            # 获取第一个队伍的比赛ID
+            match_result = db.execute(text("""
+                SELECT match_id FROM match_teams WHERE id = :team_id
+            """), {"team_id": team_ids[0]})
+            match_row = match_result.fetchone()
+            if match_row:
+                match_id = match_row[0]
+                update_team_rankings(db, match_id)
+        
         db.commit()
     except Exception as e:
         print(f"更新队伍积分时出错: {e}")
         db.rollback()
     finally:
         db.close()
+
+
+def update_team_rankings(db, match_id: int):
+    """更新指定比赛的队伍排名"""
+    # 获取所有队伍按积分排序
+    teams_result = db.execute(text("""
+        SELECT id, total_score
+        FROM match_teams 
+        WHERE match_id = :match_id
+        ORDER BY total_score DESC
+    """), {"match_id": match_id})
+    
+    teams = teams_result.fetchall()
+    
+    # 更新排名
+    for rank, (team_id, total_score) in enumerate(teams, 1):
+        db.execute(text("""
+            UPDATE match_teams 
+            SET team_rank = :rank 
+            WHERE id = :team_id
+        """), {"rank": rank, "team_id": team_id})
 
 def update_team_scores_async(team_ids: list[int]):
     """异步更新队伍积分，避免阻塞主线程"""

@@ -91,6 +91,7 @@ class MatchTeam(MatchTeamBase):
     match_id: int
     total_score: int = 0
     games_played: int = 0
+    team_rank: Optional[int] = None
     created_at: datetime
     
     class Config:
@@ -130,6 +131,7 @@ class MatchGameBase(BaseModel):
     game_order: Optional[int] = 1
     structure_type: Optional[str] = None
     structure_details: Optional[Dict[str, Any]] = None
+    multiplier: Optional[float] = 1.0
 
 class MatchGameCreate(MatchGameBase):
     pass
@@ -145,6 +147,7 @@ class MatchGame(MatchGameBase):
     is_live: bool = False
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
+    multiplier: float = 1.0
     created_at: datetime
     
     class Config:

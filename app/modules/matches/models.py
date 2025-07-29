@@ -75,6 +75,7 @@ class MatchTeam(Base):
     # 队伍统计
     total_score = Column(Integer, default=0, comment="队伍总积分")
     games_played = Column(Integer, default=0, comment="已参与游戏数")
+    team_rank = Column(Integer, nullable=True, comment="队伍排名")
     
     # 时间戳
     created_at = Column(DateTime, default=datetime.datetime.utcnow, comment="创建时间")
@@ -139,6 +140,7 @@ class MatchGame(Base):
     game_order = Column(Integer, default=1, comment="比赛顺序")
     structure_type = Column(String, comment="对战结构类型")
     structure_details = Column(JSON, comment="对战结构详情")
+    multiplier = Column(Float, default=1.0, comment="游戏积分倍率")
     
     # 赛程状态
     is_live = Column(Boolean, default=False, comment="是否正在直播")
