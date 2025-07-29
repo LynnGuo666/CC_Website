@@ -35,7 +35,7 @@ const TeamsApiResponseSchema = z.array(TeamSchema);
  * @returns A promise that resolves to an array of teams.
  */
 export async function getTeams(): Promise<Team[]> {
-  return await apiFetch<Team[]>('/teams', {
+  return await apiFetch<Team[]>('/api/teams/', {
     method: 'GET',
     schema: TeamsApiResponseSchema,
   });
@@ -56,7 +56,7 @@ export async function getTeamById(id: number): Promise<TeamWithMembers> {
  * @returns A promise that resolves to team statistics.
  */
 export async function getTeamStats(id: number): Promise<TeamStats> {
-  return await apiFetch<TeamStats>(`/teams/${id}/stats`, {
+  return await apiFetch<TeamStats>(`/api/teams/${id}/stats`, {
     method: 'GET',
     schema: TeamStatsSchema,
   });
@@ -71,7 +71,7 @@ export async function createTeam(teamData: TeamCreate): Promise<Team> {
   // Validate the data with our schema before sending
   const validatedData = TeamCreateSchema.parse(teamData);
   
-  return await apiFetch<Team>('/teams', {
+  return await apiFetch<Team>('/api/teams/', {
     method: 'POST',
     body: validatedData,
     schema: TeamSchema,
@@ -85,7 +85,7 @@ export async function createTeam(teamData: TeamCreate): Promise<Team> {
  * @returns A promise that resolves to the team membership object.
  */
 export async function addTeamMember(teamId: number, userId: number): Promise<any> {
-  return await apiFetch<any>(`/teams/${teamId}/members/${userId}`, {
+  return await apiFetch<any>(`/api/teams/${teamId}/members/${userId}`, {
     method: 'POST',
     schema: z.any(), // Using any for now since we don't have the exact schema
   });
@@ -98,7 +98,7 @@ export async function addTeamMember(teamId: number, userId: number): Promise<any
  * @returns A promise that resolves to the team membership object.
  */
 export async function removeTeamMember(teamId: number, userId: number): Promise<any> {
-  return await apiFetch<any>(`/teams/${teamId}/members/${userId}`, {
+  return await apiFetch<any>(`/api/teams/${teamId}/members/${userId}`, {
     method: 'DELETE',
     schema: z.any(), // Using any for now since we don't have the exact schema
   });
@@ -111,7 +111,7 @@ export async function removeTeamMember(teamId: number, userId: number): Promise<
  * @returns A promise that resolves to the team members list.
  */
 export async function getTeamMembers(teamId: number, includeHistorical: boolean = false): Promise<any[]> {
-  return await apiFetch<any[]>(`/teams/${teamId}/members?include_historical=${includeHistorical}`, {
+  return await apiFetch<any[]>(`/api/teams/${teamId}/members?include_historical=${includeHistorical}`, {
     method: 'GET',
     schema: z.array(z.any()),
   });
@@ -125,7 +125,7 @@ export async function getTeamMembers(teamId: number, includeHistorical: boolean 
  * @returns A promise that resolves to team match history.
  */
 export async function getTeamMatchHistory(teamId: number, skip: number = 0, limit: number = 50): Promise<any[]> {
-  return await apiFetch<any[]>(`/teams/${teamId}/matches?skip=${skip}&limit=${limit}`, {
+  return await apiFetch<any[]>(`/api/teams/${teamId}/matches?skip=${skip}&limit=${limit}`, {
     method: 'GET',
     schema: z.array(z.any()),
   });

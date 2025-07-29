@@ -11,7 +11,7 @@ const GamesApiResponseSchema = z.array(GameSchema);
  * @returns A promise that resolves to an array of games.
  */
 export async function getGames(): Promise<Game[]> {
-  return await apiFetch<Game[]>('/games', {
+  return await apiFetch<Game[]>('/api/games/', {
     method: 'GET',
     schema: GamesApiResponseSchema,
   });

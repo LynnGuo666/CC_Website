@@ -3,8 +3,8 @@ import { getMatches } from '@/services/matchService';
 import { getMatchTeams, getTeamMemberCounts } from '@/services/matchTeamService';
 
 export default async function TeamsPage() {
-  let matches = [];
-  let allTeams = [];
+  let matches: any[] = [];
+  let allTeams: any[] = [];
   let teamsByMatch: Record<string, any[]> = {};
   let error: string | null = null;
 

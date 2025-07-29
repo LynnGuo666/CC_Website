@@ -20,7 +20,7 @@ const UsersApiResponseSchema = z.array(UserSchema);
  * @returns A promise that resolves to an array of users.
  */
 export async function getUsers(): Promise<User[]> {
-  return await apiFetch<User[]>('/users', {
+  return await apiFetch<User[]>('/api/users/', {
     method: 'GET',
     schema: UsersApiResponseSchema,
   });
@@ -34,7 +34,7 @@ export async function getUsers(): Promise<User[]> {
 export async function createUser(userData: UserCreate): Promise<User> {
   const validatedData = UserCreateSchema.parse(userData);
 
-  return await apiFetch<User>('/users', {
+  return await apiFetch<User>('/api/users/', {
     method: 'POST',
     body: validatedData,
     schema: UserSchema,
@@ -47,7 +47,7 @@ export async function createUser(userData: UserCreate): Promise<User> {
  * @returns A promise that resolves to a single user object.
  */
 export async function getUserById(id: number): Promise<User> {
-  return await apiFetch<User>(`/users/${id}`, {
+  return await apiFetch<User>(`/api/users/${id}`, {
     method: 'GET',
     schema: UserSchema,
   });
@@ -59,7 +59,7 @@ export async function getUserById(id: number): Promise<User> {
  * @returns A promise that resolves to user statistics.
  */
 export async function getUserStats(id: number): Promise<UserStats> {
-  return await apiFetch<UserStats>(`/users/${id}/stats`, {
+  return await apiFetch<UserStats>(`/api/users/${id}/stats`, {
     method: 'GET',
     schema: UserStatsSchema,
   });
@@ -73,7 +73,7 @@ export async function getUserStats(id: number): Promise<UserStats> {
  * @returns A promise that resolves to user match history.
  */
 export async function getUserMatchHistory(id: number, skip: number = 0, limit: number = 50): Promise<any[]> {
-  return await apiFetch<any[]>(`/users/${id}/matches?skip=${skip}&limit=${limit}`, {
+  return await apiFetch<any[]>(`/api/users/${id}/matches?skip=${skip}&limit=${limit}`, {
     method: 'GET',
     schema: z.array(z.any()),
   });
@@ -85,7 +85,7 @@ export async function getUserMatchHistory(id: number, skip: number = 0, limit: n
  * @returns A promise that resolves to user team history.
  */
 export async function getUserTeamHistory(id: number): Promise<{current_team: any, historical_teams: any[]}> {
-  return await apiFetch<{current_team: any, historical_teams: any[]}>(`/users/${id}/teams`, {
+  return await apiFetch<{current_team: any, historical_teams: any[]}>(`/api/users/${id}/teams`, {
     method: 'GET',
     schema: z.object({
       current_team: z.any().nullable(),

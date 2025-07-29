@@ -104,7 +104,7 @@ export async function getLeaderboard(options: {
     params.append('game_code', gameCode);
   }
   
-  return await apiFetch<LeaderboardResponse>(`/users/leaderboard?${params}`, {
+  return await apiFetch<LeaderboardResponse>(`/api/users/leaderboard?${params}`, {
     method: 'GET',
     schema: LeaderboardResponseSchema,
     cache: 'no-store' // 强制不缓存，避免导航时的数据卖问题
@@ -116,7 +116,7 @@ export async function getLeaderboard(options: {
  * @returns 等级分布数据
  */
 export async function getLevelDistribution(): Promise<LevelDistribution> {
-  return await apiFetch<LevelDistribution>('/users/leaderboard/level-distribution', {
+  return await apiFetch<LevelDistribution>('/api/users/leaderboard/level-distribution', {
     method: 'GET',
     schema: LevelDistributionSchema,
     cache: 'no-store' // 强制不缓存
@@ -128,7 +128,7 @@ export async function getLevelDistribution(): Promise<LevelDistribution> {
  * @returns 游戏列表
  */
 export async function getAvailableGamesForLeaderboard(): Promise<AvailableGamesResponse> {
-  return await apiFetch<AvailableGamesResponse>('/users/leaderboard/games', {
+  return await apiFetch<AvailableGamesResponse>('/api/users/leaderboard/games', {
     method: 'GET',
     schema: AvailableGamesResponseSchema,
     cache: 'no-store' // 强制不缓存

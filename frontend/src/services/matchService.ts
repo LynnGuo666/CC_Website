@@ -7,26 +7,12 @@ export type Match = z.infer<typeof MatchSchema>;
 export type MatchList = z.infer<typeof MatchListSchema>;
 export type MatchGame = z.infer<typeof MatchGameSchema>;
 
-const MatchGameCreateSchema = z.object({
-  game_id: z.number(),
-  structure_type: z.string().min(1),
-  structure_details: z.record(z.string(), z.any()),
-});
-
-const MatchCreateSchema = z.object({
-  name: z.string().min(1, "赛事名称不能为空"),
-  participant_team_ids: z.array(z.number()).optional(),
-  match_games: z.array(MatchGameCreateSchema).optional(),
-});
-
-export type MatchCreate = z.infer<typeof MatchCreateSchema>;
-
 /**
  * 获取所有比赛的列表
  * @returns A promise that resolves to an array of matches.
  */
 export async function getMatches(): Promise<MatchList[]> {
-  return await apiFetch<MatchList[]>('/matches', {
+  return await apiFetch<MatchList[]>('/api/matches/', {
     method: 'GET',
     schema: MatchesApiResponseSchema,
     cache: 'no-store' // 强制不缓存，确保数据实时性
@@ -39,7 +25,7 @@ export async function getMatches(): Promise<MatchList[]> {
  * @returns A promise that resolves to a single match object.
  */
 export async function getMatchById(id: number): Promise<Match> {
-  return await apiFetch<Match>(`/matches/${id}`, {
+  return await apiFetch<Match>(`/api/matches/${id}`, {
     method: 'GET',
     schema: MatchSchema,
   });
@@ -51,7 +37,7 @@ export async function getMatchById(id: number): Promise<Match> {
  * @returns A promise that resolves to an array of match games.
  */
 export async function getMatchGames(matchId: number): Promise<MatchGame[]> {
-  return await apiFetch<MatchGame[]>(`/matches/${matchId}/games`, {
+  return await apiFetch<MatchGame[]>(`/api/matches/${matchId}/games`, {
     method: 'GET',
     schema: z.array(MatchGameSchema),
   });
@@ -63,7 +49,7 @@ export async function getMatchGames(matchId: number): Promise<MatchGame[]> {
  * @returns A promise that resolves to an array of scores with user data.
  */
 export async function getMatchGameScores(matchGameId: number) {
-  const scores = await apiFetch(`/matches/games/${matchGameId}/scores`, {
+  const scores = await apiFetch<any[]>(`/api/matches/games/${matchGameId}/scores`, {
     method: 'GET',
     schema: z.array(z.any()), // 暂时使用any
   });
@@ -73,11 +59,11 @@ export async function getMatchGameScores(matchGameId: number) {
   const users = await Promise.all(
     userIds.map(async (userId) => {
       try {
-        const user = await apiFetch(`/users/${userId}`, {
+        const user = await apiFetch(`/api/users/${userId}`, {
           method: 'GET',
           schema: z.any(),
         });
-        return { id: userId, ...user };
+        return { id: userId, ...(user as object) };
       } catch (err) {
         console.warn(`Failed to fetch user ${userId}:`, err);
         return { id: userId, nickname: `用户 ${userId}` };
@@ -88,7 +74,7 @@ export async function getMatchGameScores(matchGameId: number) {
   // 将用户数据附加到分数上
   return scores.map((score: any) => ({
     ...score,
-    user: users.find(u => u.id === score.user_id) || { id: score.user_id, nickname: `用户 ${score.user_id}` },
+    user: users.find((u: any) => u.id === score.user_id) || { id: score.user_id, nickname: `用户 ${score.user_id}` },
   }));
 }
 
@@ -103,3 +89,4 @@ export async function getGameById(gameId: number) {
     schema: z.any(), // 暂时使用any
   });
 }
+

@@ -27,7 +27,7 @@ type TeamTotalScore = {
 };
 
 // Enhanced function to calculate comprehensive team statistics
-function calculateTeamStats(teams: MatchTeam[], matchGames: MatchGame[]): TeamTotalScore[] {
+function calculateTeamStats(teams: MatchTeam[], matchGames: any[]): TeamTotalScore[] {
   const teamStats: Record<number, TeamTotalScore> = {};
 
   // Initialize team stats using the teams data

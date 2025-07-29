@@ -31,7 +31,7 @@ const GameLineupsApiResponseSchema = z.array(GameLineupSchema);
 export async function createMatchTeam(matchId: number, teamData: MatchTeamCreate): Promise<MatchTeam> {
   const validatedData = MatchTeamCreateSchema.parse(teamData);
   
-  return await apiFetch<MatchTeam>(`/matches/${matchId}/teams`, {
+  return await apiFetch<MatchTeam>(`/api/matches/${matchId}/teams`, {
     method: 'POST',
     body: validatedData,
     schema: MatchTeamSchema,
@@ -44,7 +44,7 @@ export async function createMatchTeam(matchId: number, teamData: MatchTeamCreate
  * @returns 队伍列表
  */
 export async function getMatchTeams(matchId: number): Promise<MatchTeam[]> {
-  return await apiFetch<MatchTeam[]>(`/matches/${matchId}/teams`, {
+  return await apiFetch<MatchTeam[]>(`/api/matches/${matchId}/teams`, {
     method: 'GET',
     schema: MatchTeamsApiResponseSchema,
   });
@@ -56,7 +56,7 @@ export async function getMatchTeams(matchId: number): Promise<MatchTeam[]> {
  * @returns 队伍详情
  */
 export async function getMatchTeam(teamId: number): Promise<MatchTeamWithMatch> {
-  return await apiFetch<MatchTeamWithMatch>(`/matches/teams/${teamId}`, {
+  return await apiFetch<MatchTeamWithMatch>(`/api/matches/teams/${teamId}`, {
     method: 'GET',
     schema: MatchTeamWithMatchSchema,
   });
@@ -69,7 +69,7 @@ export async function getMatchTeam(teamId: number): Promise<MatchTeamWithMatch> 
  * @returns 更新后的队伍
  */
 export async function updateMatchTeam(teamId: number, teamData: Partial<MatchTeamCreate>): Promise<MatchTeam> {
-  return await apiFetch<MatchTeam>(`/matches/teams/${teamId}`, {
+  return await apiFetch<MatchTeam>(`/api/matches/teams/${teamId}`, {
     method: 'PUT',
     body: teamData,
     schema: MatchTeamSchema,
@@ -82,7 +82,7 @@ export async function updateMatchTeam(teamId: number, teamData: Partial<MatchTea
  * @returns 删除结果
  */
 export async function deleteMatchTeam(teamId: number): Promise<{ message: string }> {
-  return await apiFetch<{ message: string }>(`/matches/teams/${teamId}`, {
+  return await apiFetch<{ message: string }>(`/api/matches/teams/${teamId}`, {
     method: 'DELETE',
     schema: z.object({ message: z.string() }),
   });
@@ -97,7 +97,7 @@ export async function deleteMatchTeam(teamId: number): Promise<{ message: string
 export async function addTeamMember(teamId: number, memberData: TeamMemberCreate): Promise<TeamMember> {
   const validatedData = TeamMemberCreateSchema.parse(memberData);
   
-  return await apiFetch<TeamMember>(`/matches/teams/${teamId}/members`, {
+  return await apiFetch<TeamMember>(`/api/matches/teams/${teamId}/members`, {
     method: 'POST',
     body: validatedData,
     schema: TeamMemberSchema,
@@ -111,7 +111,7 @@ export async function addTeamMember(teamId: number, memberData: TeamMemberCreate
  * @returns 移除结果
  */
 export async function removeTeamMember(teamId: number, userId: number): Promise<{ message: string }> {
-  return await apiFetch<{ message: string }>(`/matches/teams/${teamId}/members/${userId}`, {
+  return await apiFetch<{ message: string }>(`/api/matches/teams/${teamId}/members/${userId}`, {
     method: 'DELETE',
     schema: z.object({ message: z.string() }),
   });
@@ -125,7 +125,7 @@ export async function removeTeamMember(teamId: number, userId: number): Promise<
  * @returns 更新后的队员信息
  */
 export async function updateMemberRole(teamId: number, userId: number, role: string): Promise<TeamMember> {
-  return await apiFetch<TeamMember>(`/matches/teams/${teamId}/members/${userId}/role`, {
+  return await apiFetch<TeamMember>(`/api/matches/teams/${teamId}/members/${userId}/role`, {
     method: 'PUT',
     body: { role },
     schema: TeamMemberSchema,
@@ -143,7 +143,7 @@ export async function setGameLineups(
   teamLineups: Record<number, number[]>, 
   substituteInfo?: Record<string, string>
 ): Promise<{ message: string }> {
-  return await apiFetch<{ message: string }>(`/matches/games/${matchGameId}/lineups`, {
+  return await apiFetch<{ message: string }>(`/api/matches/games/${matchGameId}/lineups`, {
     method: 'POST',
     body: {
       team_lineups: teamLineups,
@@ -161,8 +161,8 @@ export async function setGameLineups(
  */
 export async function getGameLineups(matchGameId: number, teamId?: number): Promise<GameLineup[]> {
   const url = teamId 
-    ? `/matches/games/${matchGameId}/lineups?team_id=${teamId}`
-    : `/matches/games/${matchGameId}/lineups`;
+    ? `/api/matches/games/${matchGameId}/lineups?team_id=${teamId}`
+    : `/api/matches/games/${matchGameId}/lineups`;
     
   return await apiFetch<GameLineup[]>(url, {
     method: 'GET',
@@ -180,7 +180,7 @@ export async function createTeamsBatch(matchId: number, teams: MatchTeamCreate[]
   message: string;
   teams: MatchTeam[];
 }> {
-  return await apiFetch<{ message: string; teams: MatchTeam[] }>(`/matches/${matchId}/teams/batch`, {
+  return await apiFetch<{ message: string; teams: MatchTeam[] }>(`/api/matches/${matchId}/teams/batch`, {
     method: 'POST',
     body: { teams },
     schema: z.object({
@@ -197,7 +197,7 @@ export async function createTeamsBatch(matchId: number, teams: MatchTeamCreate[]
  * @returns 用户的队伍列表
  */
 export async function getUserTeamsInMatch(matchId: number, userId: number): Promise<MatchTeam[]> {
-  return await apiFetch<MatchTeam[]>(`/matches/users/${userId}/teams?match_id=${matchId}`, {
+  return await apiFetch<MatchTeam[]>(`/api/matches/users/${userId}/teams?match_id=${matchId}`, {
     method: 'GET',
     schema: MatchTeamsApiResponseSchema,
   });
@@ -211,7 +211,7 @@ export async function getUserTeamsInMatch(matchId: number, userId: number): Prom
 export async function getTeamMemberCount(teamId: number): Promise<number> {
   try {
     // 尝试使用成员统计接口（如果存在）
-    const response = await apiFetch<{ count: number }>(`/matches/teams/${teamId}/members/count`, {
+    const response = await apiFetch<{ count: number }>(`/api/matches/teams/${teamId}/members/count`, {
       method: 'GET',
       schema: z.object({ count: z.number() }),
     });
@@ -219,7 +219,7 @@ export async function getTeamMemberCount(teamId: number): Promise<number> {
   } catch (error) {
     // 如果没有专门的计数接口，获取全部成员然后计数
     try {
-      const members = await apiFetch<TeamMember[]>(`/matches/teams/${teamId}/members`, {
+      const members = await apiFetch<TeamMember[]>(`/api/matches/teams/${teamId}/members`, {
         method: 'GET',
         schema: z.array(TeamMemberSchema),
       });
@@ -255,7 +255,7 @@ export async function getTeamMemberCounts(teamIds: number[]): Promise<Record<num
  * @returns 队伍成员列表
  */
 export async function getTeamMembers(teamId: number): Promise<TeamMember[]> {
-  return await apiFetch<TeamMember[]>(`/matches/teams/${teamId}/members`, {
+  return await apiFetch<TeamMember[]>(`/api/matches/teams/${teamId}/members`, {
     method: 'GET',
     schema: z.array(TeamMemberSchema),
   });

@@ -1,16 +1,41 @@
+"use client";
+
 import { getUsers, User } from '@/services/userService';
 import Link from 'next/link';
 import { Avatar } from '@/components/ui/avatar';
+import { useState, useEffect } from 'react';
 
-export default async function PlayersPage() {
-  let players: User[] = [];
-  let error: string | null = null;
+export default function PlayersPage() {
+  const [players, setPlayers] = useState<User[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  try {
-    players = await getUsers();
-  } catch (e) {
-    console.error(e);
-    error = '无法加载选手列表。后端服务是否正在运行？';
+  useEffect(() => {
+    const loadPlayers = async () => {
+      try {
+        console.log('尝试获取用户数据...');
+        const data = await getUsers();
+        console.log(`成功获取 ${data.length} 个用户`);
+        setPlayers(data);
+        setError(null);
+      } catch (e) {
+        console.error('获取用户数据失败:', e);
+        setError(`无法加载选手列表。错误: ${e instanceof Error ? e.message : String(e)}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPlayers();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <h1 className="text-3xl font-bold mb-6">所有选手</h1>
+        <p className="text-gray-500">加载中...</p>
+      </div>
+    );
   }
 
   return (
