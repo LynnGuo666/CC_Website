@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // --- 基础配置 ---
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || ''; // 在 .env.local 中配置
 
 type FetchOptions = {
