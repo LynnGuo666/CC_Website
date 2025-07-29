@@ -12,7 +12,7 @@ export type MatchGame = z.infer<typeof MatchGameSchema>;
  * @returns A promise that resolves to an array of matches.
  */
 export async function getMatches(): Promise<MatchList[]> {
-  return await apiFetch<MatchList[]>('/api/matches', {
+  return await apiFetch<MatchList[]>('/api/matches/', {
     method: 'GET',
     schema: MatchesApiResponseSchema,
     cache: 'no-store' // 强制不缓存，确保数据实时性
