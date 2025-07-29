@@ -87,6 +87,13 @@ class MatchTeam(Base):
     scores = relationship("Score", back_populates="team", lazy="select")
 
     @property
+    def is_champion(self) -> bool:
+        """判断该队伍是否是所在比赛的冠军"""
+        if not self.match:
+            return False
+        return self.match.winning_team_id == self.id
+
+    @property
     def main_players(self):
         """获取主力队员"""
         return [m.user for m in self.memberships if m.role == MemberRole.MAIN]

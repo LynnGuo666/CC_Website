@@ -384,9 +384,28 @@ def get_user_matches(db: Session, user_id: int):
 # --- 标准分管理函数 ---
 
 def recalculate_match_standard_scores(db: Session, match_id: int) -> bool:
-    """重新计算整个比赛的标准分"""
+    """
+    强制重新计算整个比赛的所有分数和排名：
+    1. 重新计算所有个人标准分（不应用倍率）。
+    2. 重新计算所有队伍总分（应用倍率）和排名。
+    3. 重新计算所有用户的统计数据。
+    """
     from .standard_score import calculate_standard_scores_for_match
-    return calculate_standard_scores_for_match(db, match_id)
+    
+    # 步骤1: 重新计算所有个人标准分 (此函数内部不使用倍率)
+    success = calculate_standard_scores_for_match(db, match_id)
+    if not success:
+        return False
+        
+    # 步骤2: 强制重新计算所有队伍的总分和排名 (此函数内部使用倍率)
+    db_match = get_match(db, match_id)
+    if db_match:
+        team_ids = [team.id for team in db_match.teams]
+        if team_ids:
+            # 使用同步方法确保计算立即完成
+            update_team_scores_sync(team_ids)
+            
+    return True
 
 def recalculate_game_standard_scores(db: Session, match_game_id: int) -> bool:
     """重新计算单个游戏的标准分"""
@@ -403,10 +422,10 @@ def update_team_scores_sync(team_ids: list[int]):
         for team_id in team_ids:
             # 计算队伍总积分和参与游戏数，考虑游戏倍率
             result = db.execute(text("""
-                SELECT 
-                    COALESCE(SUM(s.points * mg.multiplier), 0) as total_score,
+                SELECT
+                    COALESCE(SUM(s.points * COALESCE(mg.multiplier, 1.0)), 0) as total_score,
                     COUNT(DISTINCT s.match_game_id) as games_played
-                FROM match_teams mt 
+                FROM match_teams mt
                 LEFT JOIN scores s ON mt.id = s.match_team_id 
                 LEFT JOIN match_games mg ON s.match_game_id = mg.id
                 WHERE mt.id = :team_id
