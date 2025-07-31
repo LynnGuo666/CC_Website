@@ -1,5 +1,7 @@
 # 比赛服务器后端 API
 
+[![CodeTime Badge](https://shields.jannchie.com/endpoint?style=flat-square&color=222&url=https%3A%2F%2Fapi.codetime.dev%2Fv3%2Fusers%2Fshield%3Fuid%3D31631%26project%3DCC_Backend)](https://codetime.dev)
+
 这是一个基于 FastAPI 构建的高度模块化的比赛服务器后端项目。它为管理用户、队伍、比赛项目、具体比赛及其分数提供了完整的 RESTful API 接口。
 
 ## ✨ 功能特性
