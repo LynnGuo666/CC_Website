@@ -10,10 +10,10 @@ class ConfigService {
     try {
       // 这里可以从 API 获取配置，现在先返回默认值
       return {
-        notification_text: "🏆 S2CC夏季锦标赛正在进行中",
-        notification_link: "https://live-cc.ziip.space/",
-        handbook_text: "在线观赛",
-        handbook_url: "https://live-cc.ziip.space/"
+        notification_text: "🏆 S2CC夏季锦标赛已结束，下次再见！",
+        notification_link: "/matches/4",
+        handbook_text: "查看数据",
+        handbook_url: "/matches/4"
       };
     } catch (error) {
       console.error('Failed to fetch site config:', error);
