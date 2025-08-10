@@ -136,7 +136,7 @@ def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
                 game_scores[game_code]["level"] = 'D'
                 game_scores[game_code]["level_progress"] = 0.0
         
-        # 查询比赛历史 - 基于新的MatchTeamMembership系统
+        # 查询比赛历史 - 改为按队伍分组，避免同一比赛不同队的分数被合并
         match_history = []
         try:
             user_matches = db.query(match_models.Match).join(
@@ -147,42 +147,49 @@ def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
             ).filter(
                 match_models.MatchTeamMembership.user_id == user_id
             ).distinct().limit(10).all()  # 限制数量避免过多查询
-            
+
             for match in user_matches:
                 try:
-                    # 计算该玩家在这场比赛中的总得分
-                    match_scores = db.query(func.sum(match_models.Score.points)).filter(
+                    match_game_ids = [mg.id for mg in match.match_games]
+                    if not match_game_ids:
+                        continue
+
+                    # 找到该用户在这场比赛中产生分数的所有队伍ID
+                    team_ids = db.query(match_models.Score.match_team_id).filter(
                         match_models.Score.user_id == user_id,
-                        match_models.Score.match_game_id.in_(
-                            [mg.id for mg in match.match_games]
-                        )
-                    ).scalar() or 0
-                    
-                    # 计算参与的游戏数
-                    games_played = db.query(func.count(func.distinct(match_models.Score.match_game_id))).filter(
-                        match_models.Score.user_id == user_id,
-                        match_models.Score.match_game_id.in_(
-                            [mg.id for mg in match.match_games]
-                        )
-                    ).scalar() or 0
-                    
-                    # 获取队伍名称 - 基于新的MatchTeamMembership
-                    team_membership = db.query(match_models.MatchTeamMembership).join(
-                        match_models.MatchTeam
-                    ).filter(
-                        match_models.MatchTeamMembership.user_id == user_id,
-                        match_models.MatchTeam.match_id == match.id
-                    ).first()
-                    
-                    team_name = team_membership.team.name if team_membership else "未知队伍"
-                    
-                    match_history.append({
-                        "match_id": match.id,
-                        "match_name": match.name,
-                        "total_points": int(match_scores),
-                        "games_played": int(games_played),
-                        "team_name": team_name
-                    })
+                        match_models.Score.match_game_id.in_(match_game_ids)
+                    ).distinct().all()
+                    team_ids = [tid[0] for tid in team_ids if tid[0] is not None]
+
+                    # 若没有找到队伍ID，跳过该比赛
+                    if not team_ids:
+                        continue
+
+                    for team_id in team_ids:
+                        # 计算该玩家在这场比赛、且属于该队伍时的得分与参赛场次
+                        team_points = db.query(func.sum(match_models.Score.points)).filter(
+                            match_models.Score.user_id == user_id,
+                            match_models.Score.match_game_id.in_(match_game_ids),
+                            match_models.Score.match_team_id == team_id
+                        ).scalar() or 0
+
+                        team_games_played = db.query(func.count(func.distinct(match_models.Score.match_game_id))).filter(
+                            match_models.Score.user_id == user_id,
+                            match_models.Score.match_game_id.in_(match_game_ids),
+                            match_models.Score.match_team_id == team_id
+                        ).scalar() or 0
+
+                        team_name = db.query(match_models.MatchTeam.name).filter(
+                            match_models.MatchTeam.id == team_id
+                        ).scalar() or "未知队伍"
+
+                        match_history.append({
+                            "match_id": match.id,
+                            "match_name": match.name,
+                            "total_points": int(team_points),
+                            "games_played": int(team_games_played),
+                            "team_name": team_name
+                        })
                 except Exception as match_error:
                     print(f"Error processing match {match.id}: {match_error}")
                     continue
@@ -232,8 +239,7 @@ def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
         return None
 
 def get_user_match_history(db: Session, user_id: int, skip: int = 0, limit: int = 50):
-    """获取玩家历史比赛记录"""
-    # 通过新的MatchTeamMembership查询用户参与的比赛
+    """获取玩家历史比赛记录（按队伍分组）"""
     user_matches = db.query(match_models.Match).join(
         match_models.MatchTeam, match_models.Match.id == match_models.MatchTeam.match_id
     ).join(
@@ -241,33 +247,47 @@ def get_user_match_history(db: Session, user_id: int, skip: int = 0, limit: int 
     ).filter(
         match_models.MatchTeamMembership.user_id == user_id
     ).order_by(desc(match_models.Match.created_at)).offset(skip).limit(limit).distinct().all()
-    
+
     match_history = []
     for match in user_matches:
-        # 计算该玩家在这场比赛中的统计数据
-        match_scores = db.query(func.sum(match_models.Score.points)).filter(
+        match_game_ids = [mg.id for mg in match.match_games]
+        if not match_game_ids:
+            continue
+
+        # 找到该用户在这场比赛中产生分数的所有队伍ID
+        team_ids = db.query(match_models.Score.match_team_id).filter(
             match_models.Score.user_id == user_id,
-            match_models.Score.match_game_id.in_(
-                [mg.id for mg in match.match_games]
-            )
-        ).scalar() or 0
-        
-        games_played = db.query(func.count(func.distinct(match_models.Score.match_game_id))).filter(
-            match_models.Score.user_id == user_id,
-            match_models.Score.match_game_id.in_(
-                [mg.id for mg in match.match_games]
-            )
-        ).scalar() or 0
-        
-        match_history.append({
-            "match_id": match.id,
-            "match_name": match.name,
-            "status": match.status.value,
-            "total_points": int(match_scores),
-            "games_played": int(games_played),
-            "created_at": match.created_at.isoformat()
-        })
-    
+            match_models.Score.match_game_id.in_(match_game_ids)
+        ).distinct().all()
+        team_ids = [tid[0] for tid in team_ids if tid[0] is not None]
+
+        for team_id in team_ids:
+            match_scores = db.query(func.sum(match_models.Score.points)).filter(
+                match_models.Score.user_id == user_id,
+                match_models.Score.match_game_id.in_(match_game_ids),
+                match_models.Score.match_team_id == team_id
+            ).scalar() or 0
+
+            games_played = db.query(func.count(func.distinct(match_models.Score.match_game_id))).filter(
+                match_models.Score.user_id == user_id,
+                match_models.Score.match_game_id.in_(match_game_ids),
+                match_models.Score.match_team_id == team_id
+            ).scalar() or 0
+
+            team_name = db.query(match_models.MatchTeam.name).filter(
+                match_models.MatchTeam.id == team_id
+            ).scalar() or "未知队伍"
+
+            match_history.append({
+                "match_id": match.id,
+                "match_name": match.name,
+                "status": match.status.value,
+                "total_points": int(match_scores),
+                "games_played": int(games_played),
+                "created_at": match.created_at.isoformat(),
+                "team_name": team_name
+            })
+
     return match_history
 
 def get_user_team_history(db: Session, user_id: int) -> Optional[Dict[str, Any]]:

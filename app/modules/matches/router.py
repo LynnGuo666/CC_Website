@@ -284,16 +284,8 @@ def set_game_lineups(
     if not db_match_game:
         raise HTTPException(status_code=404, detail="MatchGame not found")
     
-    # 为每个队伍设置阵容
-    for team_id, player_ids in lineup_setting.team_lineups.items():
-        crud.set_game_lineup(
-            db=db, 
-            match_game_id=match_game_id, 
-            team_id=team_id, 
-            player_ids=player_ids,
-            substitute_info=lineup_setting.substitute_info
-        )
-    
+    # 一次性设置整个赛程的阵容（函数内部会清空并重建阵容，同时做唯一性校验）
+    crud.set_game_lineups(db=db, match_game_id=match_game_id, lineup_setting=lineup_setting)
     return {"message": "Lineups set successfully"}
 
 @router.get("/games/{match_game_id}/lineups", response_model=List[schemas.GameLineup])
