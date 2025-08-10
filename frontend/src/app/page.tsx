@@ -25,9 +25,9 @@ export default function Home() {
 
   // 使用配置或默认值
   const notificationText = config?.notification_text || "🏆 S2CC夏季锦标赛正在进行中";
-  const notificationLink = config?.notification_link || "/matches";
-  const handbookText = config?.handbook_text || "访问秩序册";
-  const handbookUrl = config?.handbook_url || "https://docs.qq.com/doc/DU2NTV3BsR0hwbWNn";
+  const notificationLink = config?.notification_link || "https://live-cc.ziip.space/";
+  const handbookText = config?.handbook_text || "在线观赛";
+  const handbookUrl = config?.handbook_url || "https://live-cc.ziip.space/";
 
   return (
     <div className="relative">

@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON, Enum, Boolean, Float
 from sqlalchemy.orm import relationship

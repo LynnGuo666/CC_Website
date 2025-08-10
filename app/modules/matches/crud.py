@@ -6,6 +6,7 @@ from sqlalchemy import func, text
 from . import models, schemas
 from .standard_score import calculate_standard_scores_for_match_game
 from typing import List, Optional
+from fastapi import HTTPException
 
 # --- Match CRUD ---
 
@@ -277,24 +278,54 @@ def delete_match_game(db: Session, match_game_id: int):
 
 # --- GameLineup CRUD ---
 
-def set_game_lineup(db: Session, match_game_id: int, team_id: int, player_ids: List[int], substitute_info: dict = None):
-    """设置某个游戏的出战阵容"""
-    # 清除该队伍在这个游戏的现有阵容
-    db.query(models.GameLineup).filter(
-        models.GameLineup.match_game_id == match_game_id,
-        models.GameLineup.match_team_id == team_id
-    ).delete()
+def set_game_lineups(db: Session, match_game_id: int, lineup_setting: schemas.LineupSetting):
+    """设置一个游戏所有队伍的出战阵容，并验证选手唯一性"""
     
-    # 添加新阵容
-    for i, user_id in enumerate(player_ids):
-        lineup = models.GameLineup(
-            match_game_id=match_game_id,
-            match_team_id=team_id,
-            user_id=user_id,
-            is_starting=True,
-            substitute_reason=substitute_info.get(str(user_id)) if substitute_info else None
-        )
-        db.add(lineup)
+    match_game = get_match_game(db, match_game_id)
+    if not match_game:
+        raise ValueError(f"MatchGame with id {match_game_id} not found")
+
+    # 1. 清除该游戏的所有现有阵容
+    db.query(models.GameLineup).filter(
+        models.GameLineup.match_game_id == match_game_id
+    ).delete(synchronize_session='fetch')
+
+    player_in_lineup = set()
+    new_lineups = []
+
+    # 2. 遍历所有队伍的阵容设置
+    for team_id_str, player_ids in lineup_setting.team_lineups.items():
+        team_id = int(team_id_str)
+        
+        team = db.query(models.MatchTeam).filter(models.MatchTeam.id == team_id).first()
+        if not team or team.match_id != match_game.match_id:
+             raise HTTPException(
+                status_code=400,
+                detail=f"Team with ID {team_id} not found or does not belong to this match."
+            )
+
+        for user_id in player_ids:
+            # 3. 验证选手是否已在其他队伍的阵容中
+            if user_id in player_in_lineup:
+                db.rollback()
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Player {user_id} is already in a lineup for this game."
+                )
+            player_in_lineup.add(user_id)
+            
+            # 4. 创建新的阵容对象
+            new_lineups.append(models.GameLineup(
+                match_game_id=match_game_id,
+                match_team_id=team_id,
+                user_id=user_id,
+                is_starting=True,
+                substitute_reason=lineup_setting.substitute_info.get(str(user_id)) if lineup_setting.substitute_info else None
+            ))
+
+    # 5. 批量添加新阵容
+    if new_lineups:
+        db.add_all(new_lineups)
     
     db.commit()
 
@@ -308,10 +339,31 @@ def get_game_lineup(db: Session, match_game_id: int, team_id: int = None):
 # --- Score CRUD ---
 
 def create_match_score(db: Session, match_game_id: int, score: schemas.ScoreCreate):
+    """为指定赛程创建一条分数记录, 并根据阵容信息自动校正队伍ID"""
+    # 查找选手在该游戏中的阵容记录，以确定其所属队伍
+    lineup_entry = db.query(models.GameLineup).filter(
+        models.GameLineup.match_game_id == match_game_id,
+        models.GameLineup.user_id == score.user_id
+    ).first()
+
+    if not lineup_entry:
+        raise HTTPException(
+            status_code=400,
+            detail=f"User with ID {score.user_id} is not in the lineup for game {match_game_id}. Cannot record score."
+        )
+
+    # 使用阵容中记录的正确队伍ID
+    correct_team_id = lineup_entry.match_team_id
+
+    # 如果请求中的team_id与阵容不符，可以记录一个警告
+    if score.team_id != correct_team_id:
+        print(f"WARNING: Score submission for user {score.user_id} in game {match_game_id} "
+              f"had incorrect team_id {score.team_id}. Using correct team_id {correct_team_id} from lineup.")
+
     db_score = models.Score(
         points=score.points,
         user_id=score.user_id,
-        match_team_id=score.team_id,  # 现在使用match_team_id
+        match_team_id=correct_team_id,  # 使用正确的队伍ID
         match_game_id=match_game_id,
         event_data=score.event_data
     )
@@ -323,7 +375,7 @@ def create_match_score(db: Session, match_game_id: int, score: schemas.ScoreCrea
     calculate_standard_scores_for_match_game(db, match_game_id)
     
     # 异步更新相关队伍的积分
-    update_team_scores_async([score.team_id])
+    update_team_scores_async([correct_team_id])
     
     return db_score
 
