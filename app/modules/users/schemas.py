@@ -49,4 +49,6 @@ class UserStats(BaseModel):
     historical_teams: List[dict] = []
     match_history: List[dict] = []
     recent_scores: List[dict] = []
+    # 标准分时间线（用于折线图/变化展示）
+    score_timeline: List[dict] = []
     game_scores: dict = {}  # 按游戏类型统计得分

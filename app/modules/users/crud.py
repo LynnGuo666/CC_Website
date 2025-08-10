@@ -227,6 +227,9 @@ def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
                 "created_at": user.created_at.isoformat() if user.created_at else None,
                 "last_active": user.last_active.isoformat() if user.last_active else None,
             },
+            # 新增：按时间序列的标准分趋势（用于前端画折线图）
+            # 格式：[{"match_id": x, "match_name": y, "timestamp": iso, "avg_standard_score": v, "rank_change": d_rank, "score_delta": d_score}]
+            "score_timeline": get_user_score_timeline(db, user.id),
             "current_team": None,  # 使用下面的 get_user_team_history 函数
             "historical_teams": [],  # 使用下面的 get_user_team_history 函数
             "match_history": match_history,
@@ -289,6 +292,70 @@ def get_user_match_history(db: Session, user_id: int, skip: int = 0, limit: int 
             })
 
     return match_history
+
+def get_user_score_timeline(db: Session, user_id: int):
+    """生成用户跨比赛的标准分时间序列，并计算相邻两站的排名变化和标准分增量。
+    规则：以每场比赛所有赛程的平均标准分为该站成绩，再与上一站对比输出 rank_change 与 score_delta。
+    """
+    from app.modules.matches import models as match_models
+    # 获取用户参与过的所有比赛，按时间升序
+    matches = db.query(match_models.Match).join(
+        match_models.MatchTeam, match_models.Match.id == match_models.MatchTeam.match_id
+    ).join(
+        match_models.MatchTeamMembership,
+        match_models.MatchTeam.id == match_models.MatchTeamMembership.match_team_id
+    ).filter(
+        match_models.MatchTeamMembership.user_id == user_id
+    ).order_by(match_models.Match.start_time.asc().nulls_last(), match_models.Match.created_at.asc()).all()
+
+    timeline = []
+    prev_avg = None
+    prev_rank = None
+    for m in matches:
+        match_game_ids = [mg.id for mg in m.match_games]
+        if not match_game_ids:
+            continue
+        # 本站用户平均标准分
+        avg_score = db.query(func.avg(match_models.Score.standard_score)).filter(
+            match_models.Score.user_id == user_id,
+            match_models.Score.match_game_id.in_(match_game_ids),
+            match_models.Score.standard_score.isnot(None)
+        ).scalar() or 0.0
+
+        # 计算本站全部选手排行中的名次（按平均标准分）
+        ranks = db.query(
+            match_models.Score.user_id,
+            func.avg(match_models.Score.standard_score).label('avg_s')
+        ).filter(
+            match_models.Score.match_game_id.in_(match_game_ids),
+            match_models.Score.standard_score.isnot(None)
+        ).group_by(match_models.Score.user_id).order_by(func.avg(match_models.Score.standard_score).desc()).all()
+
+        # 找到当前用户在本站的名次
+        current_rank = None
+        for i, (uid, _) in enumerate(ranks, start=1):
+            if uid == user_id:
+                current_rank = i
+                break
+
+        # 计算变化
+        score_delta = None if prev_avg is None else round(float(avg_score) - float(prev_avg), 2)
+        rank_change = None if prev_rank is None or current_rank is None else (prev_rank - current_rank)
+
+        timeline.append({
+            "match_id": m.id,
+            "match_name": m.name,
+            "timestamp": (m.start_time or m.created_at).isoformat() if (m.start_time or m.created_at) else None,
+            "avg_standard_score": round(float(avg_score), 2),
+            "rank": current_rank,
+            "rank_change": rank_change,
+            "score_delta": score_delta,
+        })
+
+        prev_avg = avg_score
+        prev_rank = current_rank
+
+    return timeline
 
 def get_user_team_history(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
     """获取玩家队伍历史 - 新版本基于比赛队伍"""

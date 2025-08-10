@@ -193,6 +193,16 @@ export const UserStatsSchema = z.object({
     team_name: z.string(),
     recorded_at: z.string(),
   })).default([]),
+  // 按站成绩时间线（用于折线图与变化显示）
+  score_timeline: z.array(z.object({
+    match_id: z.number(),
+    match_name: z.string(),
+    timestamp: z.string().nullable(),
+    avg_standard_score: z.number(),
+    rank: z.number().nullable(),
+    rank_change: z.number().nullable(),
+    score_delta: z.number().nullable(),
+  })).default([]),
   game_scores: z.record(z.string(), z.object({
     total_score: z.number(),
     games_played: z.number(),

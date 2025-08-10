@@ -91,6 +91,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
 
   const gameScores = playerStats?.game_scores || {};
   const matchHistory = playerStats?.match_history || [];
+  const scoreTimeline = playerStats?.score_timeline || [];
   const currentTeam = teamHistory?.current_team;
   const historicalTeams = teamHistory?.historical_teams || [];
 
@@ -295,6 +296,63 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                     ))}
                   </TableBody>
                 </Table>
+              </Card>
+            </div>
+          )}
+
+          {/* Score Timeline (Line Chart) */}
+          {scoreTimeline.length > 0 && (
+            <div className="mb-16">
+              <h2 className="text-2xl font-bold mb-8">标准分趋势</h2>
+              <Card className="glass p-6">
+                <div className="w-full overflow-x-auto">
+                  <div className="min-w-[640px]">
+                    <div className="h-40 relative">
+                      {/* 简易折线图 (纯CSS/SVG) */}
+                      {(() => {
+                        const points = scoreTimeline.map((pt: any, idx: number) => ({
+                          x: (idx / Math.max(scoreTimeline.length - 1, 1)) * 100,
+                          y: 100 - (pt.avg_standard_score / Math.max(...scoreTimeline.map((p: any) => p.avg_standard_score || 1))) * 100,
+                        }));
+                        const poly = points.map(p => `${p.x},${p.y}`).join(' ');
+                        return (
+                          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+                            <polyline points={poly} fill="none" stroke="currentColor" strokeWidth="1" className="text-primary" />
+                            {points.map((p, i) => (
+                              <circle key={i} cx={p.x} cy={p.y} r="1.2" className="text-primary" fill="currentColor" />
+                            ))}
+                          </svg>
+                        );
+                      })()}
+                    </div>
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {scoreTimeline.map((pt: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between text-sm p-2 rounded-md border border-border/40">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{pt.match_name}</span>
+                            <span className="text-muted-foreground">{pt.timestamp ? new Date(pt.timestamp).toLocaleDateString() : ''}</span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <span className="font-mono">{pt.avg_standard_score.toFixed(1)} 分</span>
+                            {typeof pt.rank === 'number' && (
+                              <span className="text-xs text-muted-foreground">第 {pt.rank} 名</span>
+                            )}
+                            {typeof pt.rank_change === 'number' && (
+                              <Badge variant={pt.rank_change > 0 ? 'secondary' : pt.rank_change < 0 ? 'destructive' : 'outline'}>
+                                {pt.rank_change > 0 ? `↑ +${pt.rank_change}` : pt.rank_change < 0 ? `↓ ${pt.rank_change}` : '—'}
+                              </Badge>
+                            )}
+                            {typeof pt.score_delta === 'number' && (
+                              <Badge variant={pt.score_delta >= 0 ? 'secondary' : 'destructive'}>
+                                {pt.score_delta >= 0 ? `+${pt.score_delta.toFixed(1)}` : pt.score_delta.toFixed(1)} 分
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </Card>
             </div>
           )}

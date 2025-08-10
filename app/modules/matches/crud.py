@@ -414,6 +414,73 @@ def get_match_stats(db: Session, match_id: int):
         "total_games": len(db_match.match_games)
     }
 
+def get_match_leaderboard(db: Session, match_id: int, limit: int = 100) -> List[dict]:
+    """获取指定比赛内的标准分排行榜（仅统计该比赛的所有赛程）。"""
+    # 先取出该比赛的所有赛程ID
+    match_game_ids = [mg.id for mg in get_match_games_by_match(db, match_id) or []]
+    if not match_game_ids:
+        return []
+
+    # 计算该比赛中每位玩家的总标准分、平均标准分和参与场次
+    rows = db.query(
+        models.Score.user_id.label('user_id'),
+        func.avg(models.Score.standard_score).label('avg_standard_score'),
+        func.sum(models.Score.standard_score).label('total_standard_score'),
+        func.count(models.Score.id).label('games_played')
+    ).filter(
+        models.Score.standard_score.isnot(None),
+        models.Score.match_game_id.in_(match_game_ids)
+    ).group_by(
+        models.Score.user_id
+    ).order_by(
+        func.avg(models.Score.standard_score).desc()
+    ).limit(limit).all()
+
+    leaderboard = []
+    for rank, r in enumerate(rows, start=1):
+        leaderboard.append({
+            "rank": rank,
+            "user_id": int(r.user_id),
+            "average_standard_score": float(r.avg_standard_score or 0),
+            "total_standard_score": float(r.total_standard_score or 0),
+            "games_played": int(r.games_played or 0),
+        })
+    return leaderboard
+
+def get_multi_match_leaderboard(db: Session, match_ids: List[int], limit: int = 100) -> List[dict]:
+    """获取多场比赛合并的标准分排行榜。"""
+    if not match_ids:
+        return []
+    # 获取这些比赛的所有赛程ID
+    match_game_ids = [mg.id for mid in match_ids for mg in (get_match_games_by_match(db, mid) or [])]
+    if not match_game_ids:
+        return []
+
+    rows = db.query(
+        models.Score.user_id.label('user_id'),
+        func.avg(models.Score.standard_score).label('avg_standard_score'),
+        func.sum(models.Score.standard_score).label('total_standard_score'),
+        func.count(models.Score.id).label('games_played')
+    ).filter(
+        models.Score.standard_score.isnot(None),
+        models.Score.match_game_id.in_(match_game_ids)
+    ).group_by(
+        models.Score.user_id
+    ).order_by(
+        func.avg(models.Score.standard_score).desc()
+    ).limit(limit).all()
+
+    leaderboard = []
+    for rank, r in enumerate(rows, start=1):
+        leaderboard.append({
+            "rank": rank,
+            "user_id": int(r.user_id),
+            "average_standard_score": float(r.avg_standard_score or 0),
+            "total_standard_score": float(r.total_standard_score or 0),
+            "games_played": int(r.games_played or 0),
+        })
+    return leaderboard
+
 def get_archived_matches(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Match).filter(
         models.Match.status.in_([models.MatchStatus.FINISHED, models.MatchStatus.CANCELLED])
