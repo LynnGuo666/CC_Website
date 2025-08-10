@@ -19,8 +19,12 @@ const UsersApiResponseSchema = z.array(UserSchema);
  * 获取所有用户的列表
  * @returns A promise that resolves to an array of users.
  */
-export async function getUsers(): Promise<User[]> {
-  return await apiFetch<User[]>('/api/users/', {
+export async function getUsers(params?: { skip?: number; limit?: number }): Promise<User[]> {
+  const qs = new URLSearchParams();
+  if (params?.skip !== undefined) qs.set('skip', String(params.skip));
+  if (params?.limit !== undefined) qs.set('limit', String(params.limit));
+  const url = `/api/users/${qs.toString() ? `?${qs.toString()}` : ''}`;
+  return await apiFetch<User[]>(url, {
     method: 'GET',
     schema: UsersApiResponseSchema,
   });

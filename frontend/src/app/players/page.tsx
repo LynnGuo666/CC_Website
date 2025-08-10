@@ -10,14 +10,17 @@ export default function PlayersPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [visibleCount, setVisibleCount] = useState<number>(100);
+  const [totalFromApi, setTotalFromApi] = useState<number | null>(null);
 
   useEffect(() => {
     const loadPlayers = async () => {
       try {
         console.log('尝试获取用户数据...');
-        const data = await getUsers();
+        // 先请求较大上限，统计返回条数
+        const data = await getUsers({ skip: 0, limit: 10000 });
         console.log(`成功获取 ${data.length} 个用户`);
         setPlayers(data);
+        setTotalFromApi(data.length);
         setError(null);
       } catch (e) {
         console.error('获取用户数据失败:', e);
@@ -45,9 +48,11 @@ export default function PlayersPage() {
       <section className="relative py-12 px-6 bg-gradient-to-br from-background via-muted/20 to-background">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
         <div className="relative max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col items-center text-center gap-2">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">所有选手</h1>
-            <div className="text-sm text-muted-foreground">共 {players.length} 位</div>
+            <div className="text-sm text-muted-foreground">
+              显示 {Math.min(visibleCount, players.length)} / {totalFromApi ?? players.length} 位（默认前100位）
+            </div>
           </div>
         </div>
       </section>
@@ -80,14 +85,26 @@ export default function PlayersPage() {
           </div>
         )}
 
-        {players.length > visibleCount && (
+        {(players.length > visibleCount || visibleCount > 100) && (
           <div className="flex justify-center mt-8">
-            <button
-              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-              onClick={() => setVisibleCount((c) => c + 100)}
-            >
-              加载更多（+100）
-            </button>
+            <div className="flex items-center gap-3">
+              {players.length > visibleCount && (
+                <button
+                  className="px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  onClick={() => setVisibleCount((c) => c + 100)}
+                >
+                  加载更多（+100）
+                </button>
+              )}
+              {visibleCount > 100 && (
+                <button
+                  className="px-4 py-2 rounded-xl border border-muted/50 hover:bg-muted/20 transition-colors"
+                  onClick={() => setVisibleCount(100)}
+                >
+                  收起到前100位
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
