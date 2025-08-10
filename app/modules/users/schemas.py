@@ -51,4 +51,6 @@ class UserStats(BaseModel):
     recent_scores: List[dict] = []
     # 标准分时间线（用于折线图/变化展示）
     score_timeline: List[dict] = []
+    # 按游戏的标准分时间线
+    score_timeline_by_game: dict = {}
     game_scores: dict = {}  # 按游戏类型统计得分

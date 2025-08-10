@@ -230,6 +230,8 @@ def get_user_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
             # 新增：按时间序列的标准分趋势（用于前端画折线图）
             # 格式：[{"match_id": x, "match_name": y, "timestamp": iso, "avg_standard_score": v, "rank_change": d_rank, "score_delta": d_score}]
             "score_timeline": get_user_score_timeline(db, user.id),
+            # 新增：按游戏分类的趋势数据
+            "score_timeline_by_game": get_user_score_timeline_by_game(db, user.id),
             "current_team": None,  # 使用下面的 get_user_team_history 函数
             "historical_teams": [],  # 使用下面的 get_user_team_history 函数
             "match_history": match_history,
@@ -356,6 +358,91 @@ def get_user_score_timeline(db: Session, user_id: int):
         prev_rank = current_rank
 
     return timeline
+
+def get_user_score_timeline_by_game(db: Session, user_id: int):
+    """生成用户分游戏的标准分时间序列。
+    返回 { game_code: [{ match_id, match_name, timestamp, avg_standard_score, rank, rank_change, score_delta, game_name }] }
+    """
+    from app.modules.matches import models as match_models
+    from app.modules.games import models as game_models
+
+    # 找出该用户有分数的所有游戏（code、name）
+    game_rows = db.query(
+        game_models.Game.code.label('code'),
+        game_models.Game.name.label('name')
+    ).join(
+        match_models.MatchGame, match_models.MatchGame.game_id == game_models.Game.id
+    ).join(
+        match_models.Score, match_models.Score.match_game_id == match_models.MatchGame.id
+    ).filter(
+        match_models.Score.user_id == user_id,
+        match_models.Score.standard_score.isnot(None)
+    ).distinct().all()
+
+    result: Dict[str, Any] = {}
+
+    for code, name in game_rows:
+        # 用户参与过该游戏的所有比赛（按时间升序）
+        matches = db.query(match_models.Match).join(
+            match_models.MatchGame, match_models.Match.id == match_models.MatchGame.match_id
+        ).join(
+            match_models.Score, match_models.Score.match_game_id == match_models.MatchGame.id
+        ).filter(
+            match_models.Score.user_id == user_id,
+            match_models.MatchGame.game.has(code=code)
+        ).order_by(match_models.Match.start_time.asc().nulls_last(), match_models.Match.created_at.asc()).distinct().all()
+
+        prev_avg = None
+        prev_rank = None
+        timeline_items = []
+        for m in matches:
+            # 该比赛中，该游戏的赛程ID集合（通常一个）
+            mg_ids = [mg.id for mg in m.match_games if mg.game and mg.game.code == code]
+            if not mg_ids:
+                continue
+
+            # 本站该游戏下的平均标准分
+            avg_score = db.query(func.avg(match_models.Score.standard_score)).filter(
+                match_models.Score.user_id == user_id,
+                match_models.Score.match_game_id.in_(mg_ids),
+                match_models.Score.standard_score.isnot(None)
+            ).scalar() or 0.0
+
+            # 站内该游戏的名次（按平均标准分）
+            ranks = db.query(
+                match_models.Score.user_id,
+                func.avg(match_models.Score.standard_score).label('avg_s')
+            ).filter(
+                match_models.Score.match_game_id.in_(mg_ids),
+                match_models.Score.standard_score.isnot(None)
+            ).group_by(match_models.Score.user_id).order_by(func.avg(match_models.Score.standard_score).desc()).all()
+
+            current_rank = None
+            for i, (uid, _) in enumerate(ranks, start=1):
+                if uid == user_id:
+                    current_rank = i
+                    break
+
+            score_delta = None if prev_avg is None else round(float(avg_score) - float(prev_avg), 2)
+            rank_change = None if prev_rank is None or current_rank is None else (prev_rank - current_rank)
+
+            timeline_items.append({
+                "match_id": m.id,
+                "match_name": m.name,
+                "timestamp": (m.start_time or m.created_at).isoformat() if (m.start_time or m.created_at) else None,
+                "avg_standard_score": round(float(avg_score), 2),
+                "rank": current_rank,
+                "rank_change": rank_change,
+                "score_delta": score_delta,
+                "game_name": name,
+            })
+
+            prev_avg = avg_score
+            prev_rank = current_rank
+
+        result[code] = timeline_items
+
+    return result
 
 def get_user_team_history(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
     """获取玩家队伍历史 - 新版本基于比赛队伍"""

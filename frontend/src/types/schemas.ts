@@ -203,6 +203,20 @@ export const UserStatsSchema = z.object({
     rank_change: z.number().nullable(),
     score_delta: z.number().nullable(),
   })).default([]),
+  // 分游戏的时间线：{ [game_code]: TimelineItem[] }
+  score_timeline_by_game: z.record(
+    z.string(),
+    z.array(z.object({
+      match_id: z.number(),
+      match_name: z.string(),
+      timestamp: z.string().nullable(),
+      avg_standard_score: z.number(),
+      rank: z.number().nullable(),
+      rank_change: z.number().nullable(),
+      score_delta: z.number().nullable(),
+      game_name: z.string().optional(),
+    }))
+  ).default({}),
   game_scores: z.record(z.string(), z.object({
     total_score: z.number(),
     games_played: z.number(),
