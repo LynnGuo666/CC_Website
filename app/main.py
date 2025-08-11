@@ -26,6 +26,8 @@ app.add_middleware(
         "https://cc-mc-website.vercel.app",
         "https://api-cc.lynn6.top",
         "https://cc.lynn6.top",
+        "https://championship.midnight.school",
+        "https://cc.midnight.school"
     ],
     allow_credentials=True,
     allow_methods=["*"],  # 允许所有HTTP方法，包括OPTIONS
