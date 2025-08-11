@@ -25,6 +25,7 @@ app.add_middleware(
         "https://cc.ziip.space",
         "https://cc-mc-website.vercel.app",
         "https://api-cc.lynn6.top",
+        "https://cc.lynn6.top",
     ],
     allow_credentials=True,
     allow_methods=["*"],  # 允许所有HTTP方法，包括OPTIONS
