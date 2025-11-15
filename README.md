@@ -50,12 +50,22 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. 初始化数据库
-在首次运行前，你需要创建数据库和所有数据表。运行我们提供的脚本：
+### 4. 初始化数据库（使用 Alembic 迁移）
+项目现在使用 Alembic 维护数据库结构。首次启动或切换到新的数据库文件时，请先执行迁移：
+```bash
+# 推荐使用项目自带的虚拟环境
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# 运行迁移（会自动创建表）
+alembic upgrade head
+```
+也可以直接运行我们提供的脚本，它会调用相同的迁移流程：
 ```bash
 python create_db.py
 ```
-这会在项目根目录下生成一个 `test.db` 文件。
+> ⚠️ 如果你的项目根目录已经存在旧的 `test.db`，请先备份/删除旧文件，再运行迁移；否则会因为“表已存在”而失败。
 
 ### 5. 启动服务
 使用 `uvicorn` ASGI 服务器来启动应用：

@@ -1,18 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { MainNav } from "@/components/main-nav";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "联合锦标赛",
@@ -35,7 +24,7 @@ export default function RootLayout({
         ></script>
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased bg-background text-foreground"
       >
         <ThemeProvider
           attribute="class"
@@ -43,75 +32,52 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-        <MainNav />
-        
-        {/* Main content with proper spacing */}
-        <main className="pt-16 min-h-screen bg-background">
-          <div className="relative">
-            {children}
-          </div>
-        </main>
-        
-        {/* Apple-style footer */}
-        <footer className="border-t border-border/50 bg-background/80 backdrop-blur-apple">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              
-              {/* Brand Section */}
-              <div className="text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start space-x-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-apple flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">TH</span>
-                  </div>
-                  <span className="text-lg font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                    联合锦标赛
-                  </span>
+          <MainNav />
+          
+          <main className="min-h-screen">
+            <div className="relative">
+              {children}
+            </div>
+          </main>
+          
+          <footer className="glass-panel mx-auto mt-24 mb-12 max-w-6xl px-6 py-10 text-sm text-muted-foreground">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl gradient-apple text-white font-bold flex items-center justify-center shadow-lg">
+                  TH
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  TRIALHAMMER x RIA x INF
-                </p>
-              </div>
-
-              {/* Copyright Section */}
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  © 2023-2025 联合锦标赛
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  保留所有权利
-                </p>
-              </div>
-
-              {/* Developer Section */}
-              <div className="text-center md:text-right">
-                <div className="flex items-center justify-center md:justify-end space-x-3 mb-2">
-                  <div className="flex items-center space-x-2">
-                    <img 
-                      src="https://mc-heads.net/avatar/Venti_Lynn/64" 
-                      alt="Venti_Lynn" 
-                      className="w-6 h-6 rounded-full border border-border/20"
-                    />
-                    <div className="flex flex-col items-start">
-                      <span className="text-sm text-muted-foreground">Venti_Lynn</span>
-                      <span className="text-xs text-muted-foreground/60">开发者</span>
-                    </div>
-                  </div>
+                <div>
+                  <p className="text-base font-semibold text-foreground">联合锦标赛</p>
+                  <p className="text-xs text-muted-foreground">TRIALHAMMER x RIA x INF</p>
                 </div>
-                <a 
-                  href="https://github.com/LynnGuo666" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center space-x-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path fillRule="evenodd" d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-                  </svg>
-                  <span>@LynnGuo666</span>
-                </a>
+              </div>
+              <div className="flex flex-col gap-1 text-center md:text-left">
+                <span>© 2023-2025 联合锦标赛</span>
+                <span className="text-xs">保留所有权利</span>
+              </div>
+              <div className="flex items-center gap-3 justify-center md:justify-end">
+                <img 
+                  src="https://mc-heads.net/avatar/Venti_Lynn/64" 
+                  alt="Venti_Lynn" 
+                  className="w-10 h-10 rounded-2xl border border-white/30 shadow-md"
+                />
+                <div className="text-left">
+                  <p className="font-medium text-foreground">Venti_Lynn</p>
+                  <a 
+                    href="https://github.com/LynnGuo666" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                      <path fillRule="evenodd" d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    <span>@LynnGuo666</span>
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
-        </footer>
+          </footer>
         </ThemeProvider>
       </body>
     </html>

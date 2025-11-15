@@ -43,7 +43,7 @@ export function ThemeToggle() {
           <span className="sr-only">切换主题</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="glass border-border/50">
+      <DropdownMenuContent align="end" className="glass-panel glass-spectrum border-border/50">
         <DropdownMenuItem onClick={() => setTheme("light")} className="cursor-pointer">
           <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="5"></circle>

@@ -3,6 +3,13 @@
 import React, { useMemo, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 type TimelineItem = {
   match_id: number
@@ -52,25 +59,24 @@ export default function ScoreTimeline({ scoreTimeline, scoreTimelineByGame }: Pr
         {gameOptions.length > 0 && (
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">筛选游戏:</span>
-            <select
-              id="timeline_game_filter"
-              name="timeline_game_filter"
-              className="px-3 py-1 rounded-md border bg-background"
-              value={selectedCode}
-              onChange={(e) => setSelectedCode(e.target.value)}
-            >
-              <option value="__all__">全部</option>
-              {gameOptions.map(([code, items]) => (
-                <option key={code} value={code}>
-                  {items?.[0]?.game_name || code}
-                </option>
-              ))}
-            </select>
+            <Select value={selectedCode} onValueChange={setSelectedCode}>
+              <SelectTrigger className="w-44">
+                <SelectValue placeholder="全部" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">全部</SelectItem>
+                {gameOptions.map(([code, items]) => (
+                  <SelectItem key={code} value={code}>
+                    {items?.[0]?.game_name || code}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
       </div>
 
-      <Card className="glass p-6">
+      <Card className="glass-card glass-spectrum p-6">
         <div className="w-full overflow-x-auto">
           <div className="min-w-[640px]">
             <div className="h-40 relative">
@@ -116,5 +122,3 @@ export default function ScoreTimeline({ scoreTimeline, scoreTimelineByGame }: Pr
     </div>
   )
 }
-
-

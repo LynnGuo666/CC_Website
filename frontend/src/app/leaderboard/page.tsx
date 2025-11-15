@@ -35,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { HeroSection } from "@/components/hero-section";
 
 export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
@@ -103,29 +104,52 @@ export default function LeaderboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mb-4"></div>
-          <p className="text-muted-foreground">加载排行榜数据中...</p>
-        </div>
+      <div className="min-h-screen">
+        <HeroSection
+          title="游戏标准分排行榜"
+          subtitle="本分数与评级根据往年表现计算，仅供参考。切换游戏查看不同项目的表现。"
+        />
+        <section className="section-shell">
+          <div className="max-w-7xl mx-auto">
+            <div className="glass-card text-center p-12">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-muted flex items-center justify-center animate-pulse">
+                <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-semibold mb-2 text-foreground">正在加载排行榜...</h3>
+              <p className="text-muted-foreground">请稍候</p>
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-destructive/20 flex items-center justify-center mb-4 mx-auto">
-            <svg className="w-8 h-8 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+      <div className="min-h-screen">
+        <HeroSection
+          title="游戏标准分排行榜"
+          subtitle="本分数与评级根据往年表现计算，仅供参考。切换游戏查看不同项目的表现。"
+        />
+        <section className="section-shell">
+          <div className="max-w-7xl mx-auto">
+            <div className="glass-card border border-destructive/40 text-destructive p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-10 h-10 rounded-2xl bg-destructive/10 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <p className="font-medium">{error}</p>
+              </div>
+              <Button onClick={loadData} variant="outline">
+                重新加载
+              </Button>
+            </div>
           </div>
-          <p className="text-destructive font-medium mb-4">{error}</p>
-          <Button onClick={loadData} variant="outline">
-            重新加载
-          </Button>
-        </div>
+        </section>
       </div>
     );
   }
@@ -136,41 +160,27 @@ export default function LeaderboardPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Header */}
-      <section className="relative py-20 px-6 bg-gradient-to-br from-background via-muted/20 to-background">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
-        <div className="relative max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              🏆 游戏标准分排行榜
-            </h1>
-            <p className="text-sm text-muted-foreground/80 mb-6 max-w-4xl mx-auto border border-muted/20 bg-muted/10 rounded-lg p-3">
-              📊 本分数与评级根据往年得分计算并排名后得出，该数据并不严谨，仅供参考
-            </p>
-            
-            {/* 游戏筛选器 */}
-            <div className="flex items-center justify-center gap-4">
-              <span className="text-sm font-medium text-muted-foreground">筛选游戏：</span>
-              <Select value={selectedGame} onValueChange={setSelectedGame}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="选择游戏" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">综合排行</SelectItem>
-                  {availableGames.map(game => (
-                    <SelectItem key={game.code} value={game.code}>
-                      {game.name} ({game.unique_players}人)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection
+        title="游戏标准分排行榜"
+        subtitle="本分数与评级根据往年表现计算，仅供参考。切换游戏查看不同项目的表现。"
+      >
+        <span>筛选游戏：</span>
+        <Select value={selectedGame} onValueChange={setSelectedGame}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="选择游戏" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">综合排行</SelectItem>
+            {availableGames.map((game) => (
+              <SelectItem key={game.code} value={game.code}>
+                {game.name} ({game.unique_players}人)
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </HeroSection>
 
-      {/* Content */}
-      <section className="py-12 px-6">
+      <section className="section-shell">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
             {/* 等级分布统计 */}

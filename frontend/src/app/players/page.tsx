@@ -8,6 +8,9 @@ import { getMatches, MatchList } from '@/services/matchService';
 import { getMatchTeams, getTeamMembers } from '@/services/matchTeamService';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { HeroSection } from '@/components/hero-section';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export default function PlayersPage() {
   const [players, setPlayers] = useState<User[]>([]);
@@ -121,123 +124,135 @@ export default function PlayersPage() {
       list = [...list].sort((a, b) => (b.nickname || '').localeCompare(a.nickname || '', 'zh-Hans-CN'));
     }
     return list;
-  }, [players, selectedMatchId, matchUserIds, sortMode]);
+  }, [players, selectedMatchId, matchUserIds, sortMode, searchQuery]);
 
   if (loading) {
     return (
-      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-        <h1 className="text-3xl font-bold mb-6">所有选手</h1>
-        <p className="text-gray-500">加载中...</p>
+      <div className="min-h-screen">
+        <HeroSection
+          title="所有选手"
+          subtitle="显示所有注册选手"
+        />
+        <section className="section-shell">
+          <div className="max-w-6xl mx-auto">
+            <div className="glass-card text-center p-12">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-muted flex items-center justify-center animate-pulse">
+                <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-semibold mb-2 text-foreground">正在加载选手...</h3>
+              <p className="text-muted-foreground">请稍候</p>
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen">
-      {/* Hero Header 与其他页面保持一致 */}
-      <section className="relative py-12 px-6 bg-gradient-to-br from-background via-muted/20 to-background">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
-        <div className="relative max-w-7xl mx-auto">
-          <div className="flex flex-col items-center text-center gap-2">
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">所有选手</h1>
-            <div className="text-sm text-muted-foreground">
-              显示 {Math.min(visibleCount, processedPlayers.length)} / {processedPlayers.length} 位（默认前100位）
-            </div>
+      <HeroSection
+        title="所有选手"
+        subtitle={`显示 ${Math.min(visibleCount, processedPlayers.length)} / ${processedPlayers.length} 位选手（默认前 100 位）`}
+      >
+        {filterLoading && <span>筛选中...</span>}
+        {totalFromApi !== null && <span>数据库共 {totalFromApi} 位注册选手</span>}
+      </HeroSection>
+
+      <section className="section-shell">
+        <div className="max-w-6xl mx-auto space-y-10">
+          <div className="glass-panel grid gap-4 rounded-3xl p-6 md:grid-cols-[2fr,1.5fr,1fr]">
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="搜索昵称 / 显示名 / ID..."
+            />
+            <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="按赛事筛选" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部赛事</SelectItem>
+                {matches.map((m) => (
+                  <SelectItem key={m.id} value={String(m.id)}>
+                    {m.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sortMode} onValueChange={(v) => setSortMode(v as any)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="排序" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">默认顺序</SelectItem>
+                <SelectItem value="az">按昵称 A-Z</SelectItem>
+                <SelectItem value="za">按昵称 Z-A</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          {/* 控制栏：赛事筛选与排序 */}
-          <div className="mt-6 flex flex-col md:flex-row items-stretch md:items-center justify-center gap-4">
-            <div className="w-full md:w-96">
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="搜索昵称/显示名/ID..."
-              />
+
+          {error && (
+            <div className="glass-card border border-destructive/40 text-destructive text-center p-6">
+              {error}
             </div>
-            <div className="w-full md:w-80">
-              <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="按赛事筛选" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">全部赛事</SelectItem>
-                  {matches.map((m) => (
-                    <SelectItem key={m.id} value={String(m.id)}>
-                      {m.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          )}
+
+          {!error && (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
+              {processedPlayers.length > 0 ? (
+                processedPlayers.slice(0, visibleCount).map((player) => (
+                  <Link href={`/players/${player.id}`} key={player.id} className="group">
+                    <Card className="glass-card text-center transition-all duration-300">
+                      <CardContent className="pt-6 pb-5">
+                        <Avatar
+                          username={player.nickname}
+                          userId={player.id}
+                          size={64}
+                          className="rounded-2xl mx-auto mb-3 border border-white/30 shadow-lg"
+                          fallbackClassName="rounded-2xl bg-gradient-to-br from-primary to-accent text-lg"
+                          fallbackLetter={player.nickname?.charAt(0)?.toUpperCase()}
+                        />
+                        <h2 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                          {player.nickname}
+                        </h2>
+                        <p className="text-xs text-muted-foreground mt-1">ID: {player.id}</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))
+              ) : (
+                <p className="text-muted-foreground">未找到任何选手。</p>
+              )}
             </div>
-            <div className="w-full md:w-56">
-              <Select value={sortMode} onValueChange={(v) => setSortMode(v as any)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="排序" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="default">默认顺序</SelectItem>
-                  <SelectItem value="az">按昵称 A-Z</SelectItem>
-                  <SelectItem value="za">按昵称 Z-A</SelectItem>
-                </SelectContent>
-              </Select>
+          )}
+
+          {(processedPlayers.length > visibleCount || visibleCount > 100) && (
+            <div className="flex justify-center">
+              <div className="flex items-center gap-3">
+                {processedPlayers.length > visibleCount && (
+                  <Button
+                    className="rounded-2xl px-6"
+                    onClick={() => setVisibleCount((c) => c + 100)}
+                  >
+                    加载更多（+100）
+                  </Button>
+                )}
+                {visibleCount > 100 && (
+                  <Button
+                    variant="outline"
+                    className="rounded-2xl px-6"
+                    onClick={() => setVisibleCount(100)}
+                  >
+                    收起到前100位
+                  </Button>
+                )}
+              </div>
             </div>
-            {filterLoading && (
-              <span className="text-sm text-muted-foreground">筛选中...</span>
-            )}
-          </div>
+          )}
         </div>
       </section>
-
-      <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-        {error && <p className="text-red-500 bg-red-100 p-4 rounded-lg">{error}</p>}
-
-        {!error && (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-5">
-            {processedPlayers.length > 0 ? (
-              processedPlayers.slice(0, visibleCount).map((player) => (
-                <Link href={`/players/${player.id}`} key={player.id} className="group">
-                  <div className="block p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 text-center">
-                    <Avatar
-                      username={player.nickname}
-                      userId={player.id}
-                      size={64}
-                      className="rounded-full mx-auto mb-3"
-                      fallbackClassName="rounded-full bg-gradient-to-br from-blue-500 to-purple-600"
-                      fallbackLetter={player.nickname?.charAt(0)?.toUpperCase()}
-                    />
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{player.nickname}</h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">ID: {player.id}</p>
-                  </div>
-                </Link>
-              ))
-            ) : (
-              <p>未找到任何选手。</p>
-            )}
-          </div>
-        )}
-
-        {(processedPlayers.length > visibleCount || visibleCount > 100) && (
-          <div className="flex justify-center mt-8">
-            <div className="flex items-center gap-3">
-              {processedPlayers.length > visibleCount && (
-                <button
-                  className="px-4 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                  onClick={() => setVisibleCount((c) => c + 100)}
-                >
-                  加载更多（+100）
-                </button>
-              )}
-              {visibleCount > 100 && (
-                <button
-                  className="px-4 py-2 rounded-xl border border-muted/50 hover:bg-muted/20 transition-colors"
-                  onClick={() => setVisibleCount(100)}
-                >
-                  收起到前100位
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
