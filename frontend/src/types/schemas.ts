@@ -26,6 +26,7 @@ export const MatchTeamMembershipSchema = z.object({
     user_id: z.number(),
     role: z.string(), // Assuming role is a string from enum
     joined_at: z.string(),
+    match_points: z.number().optional(),
     user: UserSchema,
 });
 
@@ -153,6 +154,7 @@ export const TeamMemberSchema = z.object({
   user_id: z.number(),
   role: z.string(),
   joined_at: z.string(),
+  match_points: z.number().optional(),
   user: UserSchema.optional(),
 });
 

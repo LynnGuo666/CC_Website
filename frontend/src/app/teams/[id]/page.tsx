@@ -229,6 +229,9 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {currentMembers.map((membership: any) => {
                   const member = membership.user;
+                  const matchPoints = typeof membership.match_points === 'number'
+                    ? membership.match_points
+                    : member?.total_points ?? 0;
                   return (
                     <Link key={membership.id} href={`/players/${member.id}`} className="group">
                       <Card className="h-full bg-card/50 backdrop-blur-sm border border-muted/50 hover:border-primary/40 hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02] relative overflow-hidden">
@@ -252,8 +255,8 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
                         </CardHeader>
                         <CardContent className="pt-0 space-y-3">
                           <div className="flex justify-between items-center text-sm">
-                            <span className="text-muted-foreground">总积分</span>
-                            <span className="font-semibold text-primary">{member.total_points || 0}</span>
+                            <span className="text-muted-foreground">本届总积分</span>
+                            <span className="font-semibold text-primary">{matchPoints}</span>
                           </div>
                         </CardContent>
                       </Card>

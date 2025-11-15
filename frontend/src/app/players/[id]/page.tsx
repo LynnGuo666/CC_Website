@@ -160,103 +160,6 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
       {/* Content Section */}
       <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
-          {/* Game Performance - Enhanced Version */}
-          {Object.keys(gameScores).length > 0 && (
-            <div className="mb-16">
-              <div className="flex items-center mb-8">
-                <svg className="w-6 h-6 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-                <h2 className="text-2xl font-bold">游戏表现分析</h2>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {Object.entries(gameScores)
-                  .sort(([,a], [,b]) => ((b as any).average_standard_score || 0) - ((a as any).average_standard_score || 0)) // 按平均标准分排序
-                  .map(([gameName, stats]: [string, any], index) => {
-                    const avgScore = stats.games_played > 0 ? Math.round(stats.total_score / stats.games_played) : 0;
-                    const avgStandardScore = stats.average_standard_score || 0;
-                    const level = stats.level || 'D';
-                    const levelProgress = stats.level_progress || 0;
-                    
-                    const rating = (() => {
-                      if (level === 'S') return { grade: 'S', color: 'bg-gradient-to-r from-yellow-400 to-yellow-600', textColor: 'text-yellow-600' };
-                      if (level === 'A') return { grade: 'A', color: 'bg-gradient-to-r from-green-400 to-green-600', textColor: 'text-green-600' };
-                      if (level === 'B') return { grade: 'B', color: 'bg-gradient-to-r from-blue-400 to-blue-600', textColor: 'text-blue-600' };
-                      if (level === 'C') return { grade: 'C', color: 'bg-gradient-to-r from-orange-400 to-orange-600', textColor: 'text-orange-600' };
-                      return { grade: 'D', color: 'bg-gradient-to-r from-gray-400 to-gray-600', textColor: 'text-gray-600' };
-                    })();
-                    
-                    // 使用后端提供的进度值
-                    const progressValue = Math.min(Math.max(levelProgress, 0), 100);
-                    
-                    return (
-                      <Card key={gameName} className={`glass card-hover relative overflow-hidden ${index === 0 ? 'ring-2 ring-primary/20' : ''}`}>
-                        <div className="absolute top-0 right-0 w-20 h-20 opacity-10">
-                          <svg className="w-full h-full" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                          </svg>
-                        </div>
-                        
-                        <CardHeader className="pb-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <CardTitle className="text-lg mb-2 flex items-center">
-                                <span className="mr-2">{gameName}</span>
-                                {index === 0 && (
-                                  <Badge variant="outline" className="text-xs px-2 py-1 border-yellow-400 text-yellow-600">
-                                    最佳
-                                  </Badge>
-                                )}
-                              </CardTitle>
-                              <div className="flex items-center space-x-3 text-sm text-muted-foreground">
-                                <span className="flex items-center">
-                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                  </svg>
-                                  {stats.games_played} 场
-                                </span>
-                                <span className="flex items-center">
-                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                  </svg>
-                                  {avgStandardScore.toFixed(1)} 标准分
-                                </span>
-                              </div>
-                            </div>
-                            
-                            {/* 等级徽章 */}
-                            <div className={`w-16 h-16 rounded-full ${rating.color} flex items-center justify-center text-white font-bold text-xl shadow-lg`}>
-                              {rating.grade}
-                            </div>
-                          </div>
-                        </CardHeader>
-                        
-                        <CardContent className="space-y-4">
-                          {/* 技能进度条 */}
-                          <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span className="font-medium text-muted-foreground">技能等级</span>
-                              <span className={`font-semibold ${rating.textColor}`}>{rating.grade} 级</span>
-                            </div>
-                            <div className="relative">
-                              <Progress 
-                                value={progressValue} 
-                                className="h-3"
-                              />
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <span className="text-xs font-medium text-white mix-blend-difference">
-                                  {progressValue.toFixed(0)}%
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
 
           {/* Match History */}
           {matchHistory.length > 0 && (
@@ -302,9 +205,13 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
             </div>
           )}
 
-          {/* Score Timeline (Line Chart) - Client component for interactive filter */}
+          {/* Game Performance & Score Timeline */}
           {(scoreTimeline.length > 0 || Object.keys(scoreTimelineByGame).length > 0) && (
-            <ScoreTimeline scoreTimeline={scoreTimeline} scoreTimelineByGame={scoreTimelineByGame} />
+            <ScoreTimeline
+              scoreTimeline={scoreTimeline}
+              scoreTimelineByGame={scoreTimelineByGame}
+              gameScores={gameScores}
+            />
           )}
 
           {/* Team History */}

@@ -165,9 +165,27 @@ def get_match_team(db: Session, team_id: int):
 
 def get_team_members(db: Session, team_id: int):
     """获取队伍成员列表"""
-    return db.query(models.MatchTeamMembership).filter(
+    memberships = db.query(models.MatchTeamMembership).filter(
         models.MatchTeamMembership.match_team_id == team_id
     ).all()
+    
+    if not memberships:
+        return memberships
+    
+    # 计算该队伍内每位队员在本场比赛的总积分
+    score_rows = db.query(
+        models.Score.user_id,
+        func.sum(models.Score.points).label("total_points")
+    ).filter(
+        models.Score.match_team_id == team_id
+    ).group_by(models.Score.user_id).all()
+    
+    score_map = {user_id: int(total_points or 0) for user_id, total_points in score_rows}
+    
+    for membership in memberships:
+        setattr(membership, "match_points", score_map.get(membership.user_id, 0))
+    
+    return memberships
 
 def update_match_team(db: Session, team_id: int, team_update: schemas.MatchTeamUpdate):
     """更新比赛队伍信息"""

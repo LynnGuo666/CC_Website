@@ -1,15 +1,9 @@
 'use client'
 
-import React, { useMemo, useState } from 'react'
-import { Card } from '@/components/ui/card'
+import React, { useMemo } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Progress } from '@/components/ui/progress'
 
 type TimelineItem = {
   match_id: number
@@ -20,158 +14,258 @@ type TimelineItem = {
   rank_change?: number | null
   score_delta?: number | null
   game_name?: string
+  match_avg_score?: number
+}
+
+type GameScore = {
+  games_played: number
+  total_score: number
+  average_standard_score: number
+  level: string
+  level_progress: number
 }
 
 type Props = {
   scoreTimeline: TimelineItem[]
   scoreTimelineByGame: Record<string, TimelineItem[]>
+  gameScores: Record<string, GameScore>
 }
 
-export default function ScoreTimeline({ scoreTimeline, scoreTimelineByGame }: Props) {
-  const [selectedCode, setSelectedCode] = useState<string>('__all__')
+export default function ScoreTimeline({ scoreTimeline, scoreTimelineByGame, gameScores }: Props) {
+  const gameStats = useMemo(() => {
+    return Object.entries(scoreTimelineByGame).map(([gameCode, items]) => {
+      const gameName = items[0]?.game_name || gameCode
+      const gameScore = gameScores[gameCode] || gameScores[gameName] || {}
+      const avgScore = gameScore.average_standard_score || 0
+      const level = gameScore.level || 'D'
+      const levelProgress = gameScore.level_progress || 0
+      const gamesPlayed = gameScore.games_played || items.length
 
-  const gameOptions = useMemo(() => Object.entries(scoreTimelineByGame), [scoreTimelineByGame])
+      return {
+        gameCode,
+        gameName,
+        avgScore,
+        level,
+        levelProgress,
+        matchCount: gamesPlayed,
+        items
+      }
+    }).sort((a, b) => b.avgScore - a.avgScore)
+  }, [scoreTimelineByGame, gameScores])
 
-  const data = useMemo(() => {
-    if (selectedCode === '__all__') return scoreTimeline || []
-    return scoreTimelineByGame[selectedCode] || []
-  }, [selectedCode, scoreTimeline, scoreTimelineByGame])
+  const getLevelStyle = (level: string) => {
+    switch (level) {
+      case 'S':
+        return { bgColor: 'bg-gradient-to-r from-yellow-400 to-yellow-600', textColor: 'text-yellow-600' }
+      case 'A':
+        return { bgColor: 'bg-gradient-to-r from-green-400 to-green-600', textColor: 'text-green-600' }
+      case 'B':
+        return { bgColor: 'bg-gradient-to-r from-blue-400 to-blue-600', textColor: 'text-blue-600' }
+      case 'C':
+        return { bgColor: 'bg-gradient-to-r from-orange-400 to-orange-600', textColor: 'text-orange-600' }
+      case 'D':
+        return { bgColor: 'bg-gradient-to-r from-gray-400 to-gray-600', textColor: 'text-gray-600' }
+      default:
+        return { bgColor: 'bg-gray-500', textColor: 'text-gray-600' }
+    }
+  }
 
-  const maxY = useMemo(() => {
-    const base = data.length ? data : scoreTimeline
-    return Math.max(...(base.map(p => p.avg_standard_score || 1))) || 1
-  }, [data, scoreTimeline])
-
-  const points = useMemo(() => {
-    const base = data.length ? data : scoreTimeline
-    return base.map((pt, idx) => ({
-      x: (idx / Math.max(base.length - 1, 1)) * 100,
-      y: 50 - (pt.avg_standard_score / maxY) * 50,
-    }))
-  }, [data, scoreTimeline, maxY])
-
-  const poly = points.map(p => `${p.x},${p.y}`).join(' ')
+  if (gameStats.length === 0) return null
 
   return (
     <div className="mb-16">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-2xl font-bold">标准分趋势</h2>
-        {gameOptions.length > 0 && (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">筛选游戏:</span>
-            <Select value={selectedCode} onValueChange={setSelectedCode}>
-              <SelectTrigger className="w-44">
-                <SelectValue placeholder="全部" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">全部</SelectItem>
-                {gameOptions.map(([code, items]) => (
-                  <SelectItem key={code} value={code}>
-                    {items?.[0]?.game_name || code}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+      <div className="flex items-center mb-8">
+        <svg className="w-6 h-6 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+        <h2 className="text-2xl font-bold">游戏表现分析</h2>
       </div>
 
-      <Card className="glass-card p-6">
-        <div className="w-full overflow-x-auto">
-          <div className="min-w-[640px]">
-            <div className="h-64 relative bg-muted/5 rounded-xl p-4">
-              <svg viewBox="0 0 100 50" preserveAspectRatio="none" className="absolute inset-4 w-[calc(100%-2rem)] h-[calc(100%-2rem)]">
-                {/* 网格线 */}
-                <defs>
-                  <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                    <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.2" className="text-muted-foreground/20" />
-                  </pattern>
-                  <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="currentColor" stopOpacity="0.3" className="text-primary" />
-                    <stop offset="100%" stopColor="currentColor" stopOpacity="0.05" className="text-primary" />
-                  </linearGradient>
-                </defs>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {gameStats.map((game, index) => {
+          const levelStyle = getLevelStyle(game.level)
+          const progressValue = Math.min(Math.max(game.levelProgress, 0), 100)
 
-                {/* 背景网格 */}
-                <rect width="100" height="50" fill="url(#grid)" />
+          // 计算该游戏的折线图数据
+          const gameData = game.items
+          const maxY = Math.max(...gameData.map(p => Math.max(p.avg_standard_score, p.match_avg_score || 0))) || 1
+          const points = gameData.map((pt, idx) => {
+            const matchAvg = pt.match_avg_score ?? 0
+            return {
+              x: (idx / Math.max(gameData.length - 1, 1)) * 100,
+              y: 100 - (pt.avg_standard_score / maxY) * 100,
+              avgY: 100 - (matchAvg / maxY) * 100
+            }
+          })
+          const poly = points.map(p => `${p.x},${p.y}`).join(' ')
+          const avgPoly = points.map(p => `${p.x},${p.avgY}`).join(' ')
 
-                {/* 渐变填充区域 */}
-                {points.length > 1 && (
-                  <polygon
-                    points={`0,50 ${poly} 100,50`}
-                    fill="url(#areaGradient)"
-                  />
-                )}
+          // 计算排名趋势图数据（只包含有排名的数据点）
+          const rankedData = gameData.filter(pt => pt.rank != null)
+          const maxRank = Math.max(...rankedData.map(p => p.rank || 1)) || 1
+          const rankPoints = rankedData.map((pt, idx) => ({
+            x: (idx / Math.max(rankedData.length - 1, 1)) * 100,
+            y: ((pt.rank || 1) - 1) / Math.max(maxRank - 1, 1) * 100
+          }))
+          // 越靠上越好：Y 轴 0 代表第一名，数值越大名次越靠后
+          const rankPoly = rankPoints.map(p => `${p.x},${p.y}`).join(' ')
 
-                {/* 主线条 */}
-                {points.length > 1 && (
-                  <polyline
-                    points={poly}
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="0.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-primary drop-shadow-lg"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                )}
-
-                {/* 数据点 */}
-                {points.map((p, i) => (
-                  <g key={i}>
-                    {/* 外圈光晕 */}
-                    <circle cx={p.x} cy={p.y} r="0.8" className="text-primary/20" fill="currentColor" vectorEffect="non-scaling-stroke" />
-                    {/* 主圆点 */}
-                    <circle cx={p.x} cy={p.y} r="0.5" className="text-primary" fill="currentColor" stroke="white" strokeWidth="0.15" vectorEffect="non-scaling-stroke" />
-                  </g>
-                ))}
-              </svg>
-
-              {/* Y轴标签 */}
-              <div className="absolute left-0 top-4 bottom-4 flex flex-col justify-between text-xs text-muted-foreground">
-                <span>{maxY.toFixed(0)}</span>
-                <span>{(maxY * 0.5).toFixed(0)}</span>
-                <span>0</span>
+          return (
+            <Card
+              key={game.gameCode}
+              className={`glass relative overflow-hidden ${index === 0 ? 'ring-2 ring-primary/20' : ''}`}
+            >
+              <div className="absolute top-0 right-0 w-20 h-20 opacity-10">
+                <svg className="w-full h-full" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
               </div>
-            </div>
 
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-              {(data.length ? data : scoreTimeline).map((pt, i) => {
-                // 格式化日期为 YYYY-MM-DD 格式，避免 hydration 错误
-                const formattedDate = pt.timestamp
-                  ? new Date(pt.timestamp).toISOString().split('T')[0]
-                  : '';
-
-                return (
-                <div key={i} className="flex items-center justify-between text-sm p-2 rounded-md border border-border/40">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{pt.match_name}</span>
-                    <span className="text-muted-foreground">{formattedDate}</span>
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg mb-2 flex items-center">
+                      <span className="mr-2">{game.gameName}</span>
+                      {index === 0 && (
+                        <Badge variant="outline" className="text-xs px-2 py-1 border-yellow-400 text-yellow-600">
+                          最佳
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    <div className="flex items-center space-x-3 text-sm text-muted-foreground">
+                      <span className="flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        {game.matchCount} 场
+                      </span>
+                      <span className="flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        {game.avgScore.toFixed(1)} 标准分
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="font-mono">{pt.avg_standard_score.toFixed(1)} 分</span>
-                    {typeof pt.rank === 'number' && (
-                      <span className="text-xs text-muted-foreground">第 {pt.rank} 名</span>
-                    )}
-                    {typeof pt.rank_change === 'number' && (
-                      <Badge variant={pt.rank_change > 0 ? 'secondary' : pt.rank_change < 0 ? 'destructive' : 'outline'}>
-                        {pt.rank_change > 0 ? `↑ +${pt.rank_change}` : pt.rank_change < 0 ? `↓ ${pt.rank_change}` : '—'}
-                      </Badge>
-                    )}
-                    {typeof pt.score_delta === 'number' && (
-                      <Badge variant={pt.score_delta >= 0 ? 'secondary' : 'destructive'}>
-                        {pt.score_delta >= 0 ? `+${pt.score_delta.toFixed(1)}` : pt.score_delta.toFixed(1)} 分
-                      </Badge>
-                    )}
+                  <div className={`w-16 h-16 rounded-full ${levelStyle.bgColor} flex items-center justify-center text-white font-bold text-xl shadow-lg flex-shrink-0`}>
+                    {game.level}
                   </div>
                 </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </Card>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                {/* 技能等级进度条 */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium text-muted-foreground">技能等级</span>
+                    <span className={`font-semibold ${levelStyle.textColor}`}>{game.level} 级</span>
+                  </div>
+                  <div className="relative">
+                    <Progress value={progressValue} className="h-3" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-xs font-medium text-white mix-blend-difference">
+                        {progressValue.toFixed(0)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 标准分趋势图 */}
+                <div className="pt-3 border-t border-border/40">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-muted-foreground">标准分趋势</span>
+                    <div className="flex items-center gap-3 text-xs">
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-0.5 bg-primary"></div>
+                        <span className="text-muted-foreground">选手</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-0.5 bg-muted-foreground" style={{ borderTop: '1px dashed' }}></div>
+                        <span className="text-muted-foreground">平均</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="h-32 relative bg-muted/5 rounded-lg p-2">
+                    <svg viewBox="0 0 100 100" className="absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)]">
+                      <defs>
+                        <linearGradient id={`areaGradient-${game.gameCode}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" className="text-primary" />
+                          <stop offset="100%" stopColor="currentColor" stopOpacity="0.05" className="text-primary" />
+                        </linearGradient>
+                      </defs>
+
+                      {points.length > 1 && (
+                        <>
+                          {/* 填充区域 */}
+                          <polygon points={`0,100 ${poly} 100,100`} fill={`url(#areaGradient-${game.gameCode})`} />
+                          {/* 选手标准分线 */}
+                          <polyline points={poly} fill="none" stroke="currentColor" strokeWidth="0.8" className="text-primary" />
+                          {/* 当届平均分线 */}
+                          <polyline points={avgPoly} fill="none" stroke="currentColor" strokeWidth="0.6" strokeDasharray="2,2" className="text-muted-foreground" />
+                          {/* 数据点 */}
+                          {points.map((p, i) => (
+                            <circle key={i} cx={p.x} cy={p.y} r="1.2" className="text-primary" fill="currentColor" />
+                          ))}
+                        </>
+                      )}
+                    </svg>
+
+                    {/* Y轴标签 */}
+                    <div className="absolute left-0 top-2 bottom-2 flex flex-col justify-between text-[10px] text-muted-foreground">
+                      <span>{maxY.toFixed(0)}</span>
+                      <span>0</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 排名趋势图 */}
+                {rankPoints.length > 1 && (
+                  <div className="pt-3 border-t border-border/40">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-muted-foreground">排名趋势</span>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        <span>数值越小排名越靠前</span>
+                      </div>
+                    </div>
+                    <div className="h-32 relative bg-muted/5 rounded-lg p-2">
+                      <svg viewBox="0 0 100 100" className="absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)]">
+                        <defs>
+                          <linearGradient id={`rankGradient-${game.gameCode}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" className="text-blue-500" />
+                            <stop offset="100%" stopColor="currentColor" stopOpacity="0.05" className="text-blue-500" />
+                          </linearGradient>
+                        </defs>
+
+                        {rankPoints.length > 1 && (
+                          <>
+                            {/* 填充区域 */}
+                            <polygon points={`0,100 ${rankPoly} 100,100`} fill={`url(#rankGradient-${game.gameCode})`} />
+                            {/* 排名线 */}
+                            <polyline points={rankPoly} fill="none" stroke="currentColor" strokeWidth="0.8" className="text-blue-500" />
+                            {/* 数据点 */}
+                            {rankPoints.map((p, i) => (
+                              <circle key={i} cx={p.x} cy={p.y} r="1.2" className="text-blue-500" fill="currentColor" />
+                            ))}
+                          </>
+                        )}
+                      </svg>
+
+                      {/* Y轴标签 */}
+                      <div className="absolute left-0 top-2 bottom-2 flex flex-col justify-between text-[10px] text-muted-foreground">
+                        <span>1</span>
+                        <span>{maxRank}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
     </div>
   )
 }

@@ -52,6 +52,7 @@ class TeamMemberCreate(TeamMemberBase):
 class TeamMember(TeamMemberBase):
     id: int
     joined_at: datetime
+    match_points: int = 0
     
     class Config:
         from_attributes = True
@@ -69,6 +70,7 @@ class MatchTeamMembershipSchema(MatchTeamMembershipBase):
     id: int
     match_team_id: int
     joined_at: datetime
+    match_points: int = 0
     
     class Config:
         from_attributes = True

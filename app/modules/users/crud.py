@@ -408,6 +408,12 @@ def get_user_score_timeline_by_game(db: Session, user_id: int):
                 match_models.Score.standard_score.isnot(None)
             ).scalar() or 0.0
 
+            # 计算当届该游戏的平均分（所有选手）
+            match_avg_score = db.query(func.avg(match_models.Score.standard_score)).filter(
+                match_models.Score.match_game_id.in_(mg_ids),
+                match_models.Score.standard_score.isnot(None)
+            ).scalar() or 0.0
+
             # 站内该游戏的名次（按平均标准分）
             ranks = db.query(
                 match_models.Score.user_id,
@@ -431,6 +437,7 @@ def get_user_score_timeline_by_game(db: Session, user_id: int):
                 "match_name": m.name,
                 "timestamp": (m.start_time or m.created_at).isoformat() if (m.start_time or m.created_at) else None,
                 "avg_standard_score": round(float(avg_score), 2),
+                "match_avg_score": round(float(match_avg_score), 2),
                 "rank": current_rank,
                 "rank_change": rank_change,
                 "score_delta": score_delta,
