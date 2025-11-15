@@ -150,6 +150,39 @@ class StandardScoreCalculator:
                 user.total_standard_score = 0.0
                 user.average_standard_score = 0.0
             
+            # 计算原始总积分与参赛场次
+            raw_stats = self.db.query(
+                func.sum(models.Score.points).label('total_points'),
+                func.count(func.distinct(models.MatchGame.match_id)).label('matches_played')
+            ).join(
+                models.MatchGame, models.MatchGame.id == models.Score.match_game_id
+            ).filter(
+                models.Score.user_id == user_id
+            ).first()
+            
+            if raw_stats:
+                user.total_points = int(raw_stats.total_points or 0)
+                user.total_matches = int(raw_stats.matches_played or 0)
+            else:
+                user.total_points = 0
+                user.total_matches = 0
+            
+            # 计算获胜次数
+            wins = self.db.query(
+                func.count(func.distinct(models.Match.id))
+            ).select_from(
+                models.Match
+            ).join(
+                models.MatchTeam,
+                models.MatchTeam.id == models.Match.winning_team_id
+            ).join(
+                models.MatchTeamMembership,
+                models.MatchTeamMembership.match_team_id == models.MatchTeam.id
+            ).filter(
+                models.MatchTeamMembership.user_id == user_id
+            ).scalar()
+            user.total_wins = int(wins or 0)
+            
             self.db.commit()
             return True
             

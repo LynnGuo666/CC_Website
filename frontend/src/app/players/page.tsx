@@ -208,26 +208,58 @@ export default function PlayersPage() {
           {!error && (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {currentPlayers.length > 0 ? (
-                currentPlayers.map((player) => (
-                  <Link href={`/players/${player.id}`} key={player.id} className="group">
-                    <Card className="glass-card text-center transition-all duration-300">
-                      <CardContent className="pt-6 pb-5 px-4">
-                        <Avatar
-                          username={player.nickname}
-                          userId={player.id}
-                          size={80}
-                          className="rounded-2xl mx-auto mb-4 border border-white/30 shadow-lg"
-                          fallbackClassName="rounded-2xl bg-gradient-to-br from-primary to-accent text-xl"
-                          fallbackLetter={player.nickname?.charAt(0)?.toUpperCase()}
-                        />
-                        <h2 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2 min-h-[2.5rem]">
-                          {player.nickname}
-                        </h2>
-                        <p className="text-xs text-muted-foreground break-words">ID: {player.id}</p>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))
+                currentPlayers.map((player) => {
+                  // 获取等级样式
+                  const getLevelStyle = (level?: string) => {
+                    if (!level) return { bgColor: 'bg-gray-500', textColor: 'text-white' };
+                    switch (level) {
+                      case 'S':
+                        return { bgColor: 'bg-gradient-to-br from-yellow-400 to-orange-500', textColor: 'text-white' };
+                      case 'A':
+                        return { bgColor: 'bg-gradient-to-br from-purple-500 to-pink-500', textColor: 'text-white' };
+                      case 'B':
+                        return { bgColor: 'bg-gradient-to-br from-blue-500 to-cyan-500', textColor: 'text-white' };
+                      case 'C':
+                        return { bgColor: 'bg-gradient-to-br from-green-500 to-emerald-500', textColor: 'text-white' };
+                      case 'D':
+                        return { bgColor: 'bg-gradient-to-br from-gray-400 to-gray-500', textColor: 'text-white' };
+                      default:
+                        return { bgColor: 'bg-gray-500', textColor: 'text-white' };
+                    }
+                  };
+
+                  const levelStyle = getLevelStyle(player.game_level);
+
+                  return (
+                    <Link href={`/players/${player.id}`} key={player.id} className="group">
+                      <Card className="glass-card text-center transition-all duration-300 relative overflow-hidden">
+                        {/* 等级徽章 - 融入玻璃的效果 */}
+                        {player.game_level && (
+                          <div className="absolute -top-8 -right-8 w-32 h-32 z-0 opacity-15 group-hover:opacity-25 transition-all duration-500" style={{ transform: 'rotate(15deg)' }}>
+                            <div className={`w-full h-full rounded-full ${levelStyle.bgColor} flex items-center justify-center font-black text-7xl`}>
+                              {player.game_level}
+                            </div>
+                          </div>
+                        )}
+
+                        <CardContent className="pt-6 pb-5 px-4 relative z-10">
+                          <Avatar
+                            username={player.nickname}
+                            userId={player.id}
+                            size={80}
+                            className="rounded-2xl mx-auto mb-4 border border-white/30 shadow-lg relative z-20"
+                            fallbackClassName="rounded-2xl bg-gradient-to-br from-primary to-accent text-xl"
+                            fallbackLetter={player.nickname?.charAt(0)?.toUpperCase()}
+                          />
+                          <h2 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2 min-h-[2.5rem]">
+                            {player.nickname}
+                          </h2>
+                          <p className="text-xs text-muted-foreground break-words">ID: {player.id}</p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })
               ) : (
                 <p className="text-muted-foreground col-span-full text-center py-12">未找到任何选手。</p>
               )}
