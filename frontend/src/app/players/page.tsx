@@ -16,8 +16,9 @@ export default function PlayersPage() {
   const [players, setPlayers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [visibleCount, setVisibleCount] = useState<number>(100);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalFromApi, setTotalFromApi] = useState<number | null>(null);
+  const playersPerPage = 50;
   const [matches, setMatches] = useState<MatchList[]>([]);
   const [selectedMatchId, setSelectedMatchId] = useState<string>('all');
   const [matchUserIds, setMatchUserIds] = useState<Set<number>>(new Set());
@@ -97,9 +98,9 @@ export default function PlayersPage() {
     loadMatchParticipants();
   }, [selectedMatchId]);
 
-  // 当筛选条件或搜索变化时，将可见数量重置为100
+  // 当筛选条件或搜索变化时，重置到第一页
   useEffect(() => {
-    setVisibleCount(100);
+    setCurrentPage(1);
   }, [selectedMatchId, sortMode, searchQuery]);
 
   const processedPlayers = useMemo(() => {
@@ -150,11 +151,16 @@ export default function PlayersPage() {
     );
   }
 
+  const totalPages = Math.ceil(processedPlayers.length / playersPerPage);
+  const startIndex = (currentPage - 1) * playersPerPage;
+  const endIndex = startIndex + playersPerPage;
+  const currentPlayers = processedPlayers.slice(startIndex, endIndex);
+
   return (
     <div className="min-h-screen">
       <HeroSection
         title="所有选手"
-        subtitle={`显示 ${Math.min(visibleCount, processedPlayers.length)} / ${processedPlayers.length} 位选手（默认前 100 位）`}
+        subtitle={`共 ${processedPlayers.length} 位选手 · 第 ${currentPage} / ${totalPages} 页`}
       >
         {filterLoading && <span>筛选中...</span>}
         {totalFromApi !== null && <span>数据库共 {totalFromApi} 位注册选手</span>}
@@ -200,55 +206,97 @@ export default function PlayersPage() {
           )}
 
           {!error && (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
-              {processedPlayers.length > 0 ? (
-                processedPlayers.slice(0, visibleCount).map((player) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {currentPlayers.length > 0 ? (
+                currentPlayers.map((player) => (
                   <Link href={`/players/${player.id}`} key={player.id} className="group">
                     <Card className="glass-card text-center transition-all duration-300">
-                      <CardContent className="pt-6 pb-5">
+                      <CardContent className="pt-6 pb-5 px-4">
                         <Avatar
                           username={player.nickname}
                           userId={player.id}
-                          size={64}
-                          className="rounded-2xl mx-auto mb-3 border border-white/30 shadow-lg"
-                          fallbackClassName="rounded-2xl bg-gradient-to-br from-primary to-accent text-lg"
+                          size={80}
+                          className="rounded-2xl mx-auto mb-4 border border-white/30 shadow-lg"
+                          fallbackClassName="rounded-2xl bg-gradient-to-br from-primary to-accent text-xl"
                           fallbackLetter={player.nickname?.charAt(0)?.toUpperCase()}
                         />
-                        <h2 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors">
+                        <h2 className="text-base font-semibold text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2 min-h-[2.5rem]">
                           {player.nickname}
                         </h2>
-                        <p className="text-xs text-muted-foreground mt-1">ID: {player.id}</p>
+                        <p className="text-xs text-muted-foreground break-words">ID: {player.id}</p>
                       </CardContent>
                     </Card>
                   </Link>
                 ))
               ) : (
-                <p className="text-muted-foreground">未找到任何选手。</p>
+                <p className="text-muted-foreground col-span-full text-center py-12">未找到任何选手。</p>
               )}
             </div>
           )}
 
-          {(processedPlayers.length > visibleCount || visibleCount > 100) && (
-            <div className="flex justify-center">
-              <div className="flex items-center gap-3">
-                {processedPlayers.length > visibleCount && (
-                  <Button
-                    className="rounded-2xl px-6"
-                    onClick={() => setVisibleCount((c) => c + 100)}
-                  >
-                    加载更多（+100）
-                  </Button>
-                )}
-                {visibleCount > 100 && (
-                  <Button
-                    variant="outline"
-                    className="rounded-2xl px-6"
-                    onClick={() => setVisibleCount(100)}
-                  >
-                    收起到前100位
-                  </Button>
-                )}
+          {/* 分页控制 */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2">
+              <Button
+                variant="outline"
+                className="rounded-2xl"
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+              >
+                首页
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-2xl"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                上一页
+              </Button>
+
+              <div className="flex items-center gap-2">
+                {/* 显示页码 */}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      className="rounded-2xl w-10 h-10 p-0"
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
               </div>
+
+              <Button
+                variant="outline"
+                className="rounded-2xl"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                下一页
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-2xl"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+              >
+                末页
+              </Button>
             </div>
           )}
         </div>

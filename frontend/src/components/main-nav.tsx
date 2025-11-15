@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ThemeToggle } from './theme-toggle';
+import { configService, SiteConfig } from '@/services/configService';
 
 const NavLink = ({
   href,
@@ -25,9 +27,27 @@ const NavLink = ({
 
 export function MainNav() {
   const [isOpen, setIsOpen] = useState(false);
+  const [config, setConfig] = useState<SiteConfig | null>(null);
+
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const siteConfig = await configService.getConfig();
+        setConfig(siteConfig);
+      } catch (error) {
+        console.error('Failed to load site config:', error);
+      }
+    };
+    loadConfig();
+  }, []);
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
+
+  const logoSrc = config?.logo_filename
+    ? `/logos/${config.logo_filename}`
+    : null;
+  const siteAbbr = config?.site_abbr || 'TH';
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
@@ -40,7 +60,17 @@ export function MainNav() {
               className="flex items-center space-x-3 text-lg font-semibold text-foreground transition-all duration-300 hover:opacity-90 group"
             >
               <div className="relative w-9 h-9 rounded-2xl gradient-apple flex items-center justify-center text-sm font-bold text-white shadow-lg overflow-hidden transition-transform duration-300 group-hover:scale-110">
-                <span className="text-white font-bold text-sm relative z-10">TH</span>
+                {logoSrc ? (
+                  <Image
+                    src={logoSrc}
+                    alt="Logo"
+                    width={36}
+                    height={36}
+                    className="w-full h-full object-cover rounded-2xl relative z-10"
+                  />
+                ) : (
+                  <span className="text-white font-bold text-sm relative z-10">{siteAbbr}</span>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
               <span className="relative">

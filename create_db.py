@@ -1,18 +1,20 @@
-# This script initializes the database by creating all necessary tables.
+# Helper script to bootstrap the database using Alembic migrations.
+from pathlib import Path
 
-from app.core.db import Base, engine
-from app.modules.users.models import User  # Import all models here
-from app.modules.games.models import Game
-from app.modules.matches.models import (
-    Match, MatchTeam, MatchTeamMembership, 
-    MatchGame, GameLineup, Score
-)
+from alembic.config import Config
+from alembic import command
 
-print("Creating database tables...")
-Base.metadata.create_all(bind=engine)
-print("Database tables created successfully.")
-print("\nNew team system is ready!")
-print("- MatchTeam: 比赛专属队伍")
-print("- MatchTeamMembership: 队员关系管理") 
-print("- GameLineup: 每个游戏的出战阵容")
-print("- 支持替补机制和多队伍参与")
+from app.core.config import settings
+
+
+def main():
+    print("Running Alembic migrations...")
+    alembic_cfg = Config(str(Path(__file__).parent / "alembic.ini"))
+    # Ensure Alembic uses the same DB URL as the app config
+    alembic_cfg.set_main_option("sqlalchemy.url", settings.SQLALCHEMY_DATABASE_URI)
+    command.upgrade(alembic_cfg, "head")
+    print("Database is up to date.")
+
+
+if __name__ == "__main__":
+    main()
