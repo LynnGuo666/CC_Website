@@ -341,9 +341,9 @@ export default function LeaderboardPage() {
                                 </div>
                                 <div>
                                   <div className="text-sm font-medium">{player.game_level} 级</div>
-                                  <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
-                                    <div 
-                                      className={`h-full ${levelStyle.bgColor.replace('bg-gradient-to-r', 'bg-gradient-to-r')}`}
+                                  <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                      className={`h-full ${levelStyle.color.replace('text-', 'bg-')}`}
                                       style={{ width: `${player.level_progress}%` }}
                                     ></div>
                                   </div>

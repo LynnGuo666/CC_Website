@@ -163,12 +163,31 @@ export default function ScoreTimeline({ scoreTimeline, scoreTimelineByGame, game
                     <span className={`font-semibold ${levelStyle.textColor}`}>{game.level} 级</span>
                   </div>
                   <div className="relative">
-                    <Progress value={progressValue} className="h-3" />
+                    <div className="h-3 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${levelStyle.bgColor}`}
+                        style={{ width: `${progressValue}%` }}
+                      ></div>
+                    </div>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-xs font-medium text-white mix-blend-difference">
+                      <span className="text-xs font-medium text-foreground">
                         {progressValue.toFixed(0)}%
                       </span>
                     </div>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    {(() => {
+                      const levels = ['D', 'C', 'B', 'A', 'S'];
+                      const currentIndex = levels.indexOf(game.level);
+                      const lower = currentIndex > 0 ? levels[currentIndex - 1] : '-';
+                      const upper = currentIndex < levels.length - 1 ? levels[currentIndex + 1] : '-';
+                      return (
+                        <>
+                          <span>{lower}</span>
+                          <span>{upper}</span>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -236,8 +255,8 @@ export default function ScoreTimeline({ scoreTimeline, scoreTimelineByGame, game
                       <svg viewBox="0 0 100 100" className="absolute inset-2 w-[calc(100%-1rem)] h-[calc(100%-1rem)]">
                         <defs>
                           <linearGradient id={`rankGradient-${game.gameCode}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" className="text-blue-500" />
-                            <stop offset="100%" stopColor="currentColor" stopOpacity="0.05" className="text-blue-500" />
+                            <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" className="text-primary" />
+                            <stop offset="100%" stopColor="currentColor" stopOpacity="0.05" className="text-primary" />
                           </linearGradient>
                         </defs>
 
@@ -246,10 +265,10 @@ export default function ScoreTimeline({ scoreTimeline, scoreTimelineByGame, game
                             {/* 填充区域 */}
                             <polygon points={`0,100 ${rankPoly} 100,100`} fill={`url(#rankGradient-${game.gameCode})`} />
                             {/* 排名线 */}
-                            <polyline points={rankPoly} fill="none" stroke="currentColor" strokeWidth="0.8" className="text-blue-500" />
+                            <polyline points={rankPoly} fill="none" stroke="currentColor" strokeWidth="0.8" className="text-primary" />
                             {/* 数据点 */}
                             {rankPoints.map((p, i) => (
-                              <circle key={i} cx={p.x} cy={p.y} r="1.2" className="text-blue-500" fill="currentColor" />
+                              <circle key={i} cx={p.x} cy={p.y} r="1.2" className="text-primary" fill="currentColor" />
                             ))}
                           </>
                         )}

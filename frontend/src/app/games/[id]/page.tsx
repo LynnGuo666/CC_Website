@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
@@ -7,9 +8,37 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Sparkles, ArrowLeft, Tags } from "lucide-react";
+import { Sparkles, ArrowLeft, Tags } from "lucide-react";
 import { getGame, type Game } from "@/services/gameService";
 import { MarkdownViewer } from "@/components/markdown-viewer";
+
+const getMatchStatusBadge = (status?: string | null) => {
+  switch (status) {
+    case "preparing":
+      return { label: "筹办中", className: "bg-amber-500/15 text-amber-800 dark:text-amber-100" };
+    case "ongoing":
+      return { label: "进行中", className: "bg-emerald-500/15 text-emerald-800 dark:text-emerald-100" };
+    case "finished":
+      return { label: "已结束", className: "bg-slate-500/15 text-slate-800 dark:text-slate-100" };
+    case "cancelled":
+      return { label: "已取消", className: "bg-red-500/15 text-red-800 dark:text-red-100" };
+    default:
+      return { label: "未知状态", className: "bg-muted text-muted-foreground" };
+  }
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) return "未排期";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "未排期";
+  return date.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 export default function GameDetailPage() {
   const params = useParams<{ id: string }>();
@@ -42,9 +71,43 @@ export default function GameDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground gap-3">
-        <Loader2 className="h-5 w-5 animate-spin" />
-        <span>正在加载...</span>
+      <div className="relative min-h-screen pb-20">
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/30 -z-10"></div>
+        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+          <div
+            aria-hidden="true"
+            className="refraction-blob top-1/4 left-1/4 w-96 h-96"
+            style={{
+              animation: 'liquid-flow 15s ease-in-out infinite',
+            } as React.CSSProperties}
+          ></div>
+          <div
+            aria-hidden="true"
+            className="refraction-blob bottom-1/4 right-1/4 w-96 h-96"
+            style={{
+              animation: 'liquid-flow 18s ease-in-out infinite reverse',
+            } as React.CSSProperties}
+          ></div>
+        </div>
+
+        <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pt-16 md:px-6">
+          <div className="flex items-center justify-between">
+            <div className="h-9 w-24 rounded-full bg-muted/60 animate-pulse" />
+            <Badge variant="outline" className="glass-panel animate-pulse">加载中</Badge>
+          </div>
+          <div className="glass-card relative overflow-hidden rounded-3xl shadow-xl">
+            <div className="h-64 w-full bg-muted/60 animate-pulse" />
+            <div className="p-6 space-y-5">
+              <div className="h-8 w-1/3 rounded-lg bg-muted/70 animate-pulse" />
+              <div className="h-4 w-24 rounded-full bg-muted/50 animate-pulse" />
+              <div className="space-y-3 pt-4 border-t border-white/10">
+                <div className="h-4 w-full rounded-md bg-muted/40 animate-pulse" />
+                <div className="h-4 w-5/6 rounded-md bg-muted/40 animate-pulse" />
+                <div className="h-4 w-4/6 rounded-md bg-muted/40 animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -59,6 +122,8 @@ export default function GameDetailPage() {
       </div>
     );
   }
+
+  const selectedMatches = game.selected_matches ?? [];
 
   return (
     <div className="relative min-h-screen pb-20">
@@ -153,6 +218,48 @@ export default function GameDetailPage() {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              <div className="border-t border-white/20 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-foreground">入选锦标赛</h2>
+                  <Badge variant="outline" className="rounded-full">
+                    {selectedMatches.length} 个赛事
+                  </Badge>
+                </div>
+
+                {selectedMatches.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    {selectedMatches.map((match) => {
+                      const badge = getMatchStatusBadge(match.status);
+                      return (
+                        <Link
+                          key={match.id}
+                          href={`/matches/${match.id}`}
+                          className="group rounded-2xl border border-white/5 bg-white/80 p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg dark:bg-slate-950/50"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="space-y-1">
+                              <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                                {match.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatDate(match.start_time)} 开赛
+                              </p>
+                            </div>
+                            <Badge className={badge.className} variant="secondary">
+                              {badge.label}
+                            </Badge>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-muted/80 p-4 text-sm text-muted-foreground">
+                    暂无赛事选择该项目。
+                  </div>
+                )}
               </div>
             </div>
           </div>

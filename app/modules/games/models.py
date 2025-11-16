@@ -20,3 +20,15 @@ class Game(Base):
 
     # 建立与 MatchGame 模型的关联，表示一个项目可以出现在多个赛程中
     match_games = relationship("MatchGame", back_populates="game")
+
+    @property
+    def selected_matches(self):
+        """返回使用了该项目的赛事列表"""
+        seen_match_ids = set()
+        matches = []
+        for mg in self.match_games:
+            if mg.match is None or mg.match.id in seen_match_ids:
+                continue
+            seen_match_ids.add(mg.match.id)
+            matches.append(mg.match)
+        return matches

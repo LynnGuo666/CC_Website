@@ -19,9 +19,9 @@ def read_games(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     games = crud.get_games(db, skip=skip, limit=limit)
     return games
 
-@router.get("/{game_id}", response_model=schemas.Game)
+@router.get("/{game_id}", response_model=schemas.GameDetail)
 def read_game(game_id: int, db: Session = Depends(get_db)):
-    """获取单个比赛项目的详细信息"""
+    """获取单个比赛项目的详细信息（包含所属赛事）"""
     db_game = crud.get_game(db, game_id=game_id)
     if db_game is None:
         raise HTTPException(status_code=404, detail="Game not found")

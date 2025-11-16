@@ -57,6 +57,14 @@ export const MatchTeamWithMatchSchema = z.object({
     memberships: z.array(MatchTeamMembershipSchema).optional(),
 });
 
+export const GameMatchBriefSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  status: z.string().nullable(),
+  start_time: z.string().nullable().optional(),
+  end_time: z.string().nullable().optional(),
+});
+
 // OpenAPI Schema: Game
 export const GameSchema = z.object({
   id: z.number(),
@@ -68,6 +76,7 @@ export const GameSchema = z.object({
   tagline: z.string().nullable().optional(),
   rule: z.string().nullable().optional(),
   image_url: z.string().nullable().optional(),
+  selected_matches: z.array(GameMatchBriefSchema).optional().default([]),
 });
 
 // Represents Score (simplified for API responses)

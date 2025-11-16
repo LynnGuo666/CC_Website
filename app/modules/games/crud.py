@@ -1,11 +1,19 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from . import models, schemas
+from app.modules.matches import models as match_models
 
 def get_game(db: Session, game_id: int):
     """根据 ID 查询单个比赛项目"""
-    return db.query(models.Game).filter(models.Game.id == game_id).first()
+    return (
+        db.query(models.Game)
+        .options(
+            selectinload(models.Game.match_games).selectinload(match_models.MatchGame.match)
+        )
+        .filter(models.Game.id == game_id)
+        .first()
+    )
 
 def get_games(db: Session, skip: int = 0, limit: int = 100):
     """查询比赛项目列表，支持分页"""

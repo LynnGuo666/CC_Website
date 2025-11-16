@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.1] - 2025-11-17
+
+### Fixed
+- **赛事加载错误**: 修正 `/api/games/{id}` 的赛程关联加载，避免游戏详情请求异常导致前端 “Failed to fetch”
+- **时间显示**: 游戏详情页 “入选锦标赛” 开赛时间增加年份，避免跨年数据误读
+
+### Technical Details
+- 前端版本: 2.4.0 → 2.4.1
+- 后端版本: 2.4.0 → 2.4.1
+
+---
+
+## [2.4.0] - 2025-11-17
+
+### Added
+- **赛事关联展示**: 游戏详情页新增被选中的锦标赛列表，可直接跳转查看赛程详情
+- **API 输出强化**: `/api/games/{id}` 现在返回 `selected_matches` 列表，包含赛事状态与时间信息，便于前端复用
+
+### Changed
+- **加载体验统一**: 游戏详情页的加载动画改为玻璃拟态骨架，与其他页面风格保持一致
+- **赛事互跳**: 锦标赛详情中的赛程标题支持点击跳转到对应游戏详情，提升导航一致性
+
+### Technical Details
+- 前端版本: 2.3.0 → 2.4.0
+- 后端版本: 2.3.0 → 2.4.0
+
+---
+
 ## [2.3.0] - 2025-11-17
 
 ### Added

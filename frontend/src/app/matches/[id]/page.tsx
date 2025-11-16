@@ -309,7 +309,12 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
                               <span className="text-sm font-bold text-primary">{index + 1}</span>
                             </div>
-                            {game.game.name}
+                            <Link 
+                              href={`/games/${game.game.id}`} 
+                              className="hover:text-primary transition-colors"
+                            >
+                              {game.game.name}
+                            </Link>
                           </CardTitle>
                           <CardDescription className="mt-2">
                             {game.game.description}
