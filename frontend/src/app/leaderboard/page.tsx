@@ -280,24 +280,25 @@ export default function LeaderboardPage() {
                   </CardContent>
                 </Card>
               ) : (
-                <Card className="glass">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-16">排名</TableHead>
-                        <TableHead>玩家</TableHead>
-                        <TableHead>等级</TableHead>
-                        <TableHead className="text-right">标准分</TableHead>
-                        <TableHead className="text-right">游戏数</TableHead>
-                        {selectedGame !== 'all' && (
-                          <TableHead className="text-right">原始分</TableHead>
-                        )}
-                        {selectedGame === 'all' && (
-                          <TableHead>最佳游戏</TableHead>
-                        )}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                <Card className="glass overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-16 whitespace-nowrap">排名</TableHead>
+                          <TableHead className="whitespace-nowrap">玩家</TableHead>
+                          <TableHead className="whitespace-nowrap">等级</TableHead>
+                          <TableHead className="text-right whitespace-nowrap">标准分</TableHead>
+                          <TableHead className="text-right whitespace-nowrap">游戏数</TableHead>
+                          {selectedGame !== 'all' && (
+                            <TableHead className="text-right whitespace-nowrap">原始分</TableHead>
+                          )}
+                          {selectedGame === 'all' && (
+                            <TableHead className="whitespace-nowrap">最佳游戏</TableHead>
+                          )}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                       {leaderboard.map((player) => {
                         const levelStyle = getLevelStyle(player.game_level);
                         const medal = getRankMedal(player.rank);
@@ -394,8 +395,9 @@ export default function LeaderboardPage() {
                           </TableRow>
                         );
                       })}
-                    </TableBody>
-                  </Table>
+                      </TableBody>
+                    </Table>
+                  </div>
                 </Card>
               )}
             </div>

@@ -100,26 +100,26 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
   return (
     <div className="min-h-screen">
       {/* Hero Header */}
-      <section className="relative py-20 px-6 bg-gradient-to-br from-background via-muted/20 to-background">
+      <section className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-br from-background via-muted/20 to-background">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
         <div className="relative max-w-4xl mx-auto">
-          <div className="flex items-center space-x-8 mb-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 mb-6">
             <Avatar
               username={player.nickname}
               userId={player.id}
               size={128}
-              className="rounded-2xl border-4 border-white/20 shadow-2xl"
+              className="rounded-2xl border-4 border-white/20 shadow-2xl flex-shrink-0"
               fallbackClassName="rounded-2xl"
               fallbackLetter={player.nickname?.charAt(0)?.toUpperCase()}
             />
-            <div>
-              <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <div className="flex-1 text-center sm:text-left w-full">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent break-words">
                 {player.nickname}
               </h1>
               {player.display_name && (
-                <p className="text-xl text-muted-foreground mb-4">{player.display_name}</p>
+                <p className="text-lg sm:text-xl text-muted-foreground mb-3 sm:mb-4">{player.display_name}</p>
               )}
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 md:gap-4">
                 <Badge variant="secondary" className="text-lg px-4 py-2">
                   ID: {player.id}
                 </Badge>
@@ -165,18 +165,19 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
           {matchHistory.length > 0 && (
             <div className="mb-16">
               <h2 className="text-2xl font-bold mb-8">比赛历史</h2>
-              <Card className="glass">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>赛事名称</TableHead>
-                      <TableHead>所属队伍</TableHead>
-                      <TableHead>参与游戏</TableHead>
-                      <TableHead>总得分</TableHead>
-                      <TableHead>平均得分</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+              <Card className="glass overflow-hidden">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="whitespace-nowrap">赛事名称</TableHead>
+                        <TableHead className="whitespace-nowrap">所属队伍</TableHead>
+                        <TableHead className="whitespace-nowrap">参与游戏</TableHead>
+                        <TableHead className="whitespace-nowrap">总得分</TableHead>
+                        <TableHead className="whitespace-nowrap">平均得分</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                     {matchHistory.map((match: any, index: number) => (
                       <TableRow key={index}>
                         <TableCell className="font-medium">
@@ -199,8 +200,9 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                         </TableCell>
                       </TableRow>
                     ))}
-                  </TableBody>
-                </Table>
+                    </TableBody>
+                  </Table>
+                </div>
               </Card>
             </div>
           )}

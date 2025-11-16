@@ -91,7 +91,7 @@ export default function Home() {
           </div>
 
           {/* Main heading with liquid glass effect */}
-          <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight mb-8">
             <span className="relative inline-block">
               <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent" style={{ animation: 'shimmer 3s linear infinite' }}>
                 联合锦标赛
@@ -99,33 +99,33 @@ export default function Home() {
               <span className="absolute inset-0 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 blur-2xl opacity-50"></span>
             </span>
             <br />
-            <span className="text-4xl md:text-5xl lg:text-6xl text-foreground/80 font-light">
+            <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl text-foreground/80 font-light">
               TRIALHAMMER x RIA x INF
             </span>
           </h1>
 
           {/* Subtitle with glass effect */}
-          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed backdrop-blur-sm">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground mb-8 sm:mb-10 md:mb-12 max-w-2xl mx-auto leading-relaxed backdrop-blur-sm px-4">
             所以游目骋怀，足以极视听之娱，信可乐也。
           </p>
 
           {/* Liquid Glass CTA Buttons */}
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link href={notificationLink}>
+          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4">
+            <Link href={notificationLink} className="w-full sm:w-auto">
               <Button
                 size="lg"
-                className="relative overflow-hidden text-primary-foreground shadow-2xl shadow-primary/30 min-w-[200px] h-14 text-lg font-semibold bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all duration-300 group"
+                className="relative overflow-hidden text-primary-foreground shadow-2xl shadow-primary/30 w-full sm:min-w-[200px] h-12 sm:h-14 text-base sm:text-lg font-semibold bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all duration-300 group"
               >
                 <span className="relative z-10">立即观赛</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="absolute inset-0 bg-white/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </Button>
             </Link>
-            <Link href={handbookUrl} target="_blank" rel="noopener noreferrer">
+            <Link href={handbookUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
               <Button
                 size="lg"
                 variant="outline"
-                className="relative overflow-hidden glass-panel min-w-[200px] h-14 text-lg font-semibold border-2 border-white/20 hover:border-white/30 backdrop-blur-xl transition-all duration-300 group"
+                className="relative overflow-hidden glass-panel w-full sm:min-w-[200px] h-12 sm:h-14 text-base sm:text-lg font-semibold border-2 border-white/20 hover:border-white/30 backdrop-blur-xl transition-all duration-300 group"
               >
                 <span className="relative z-10">{handbookText}</span>
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

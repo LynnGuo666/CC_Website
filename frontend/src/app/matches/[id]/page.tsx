@@ -138,26 +138,26 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   return (
     <div className="min-h-screen">
       {/* Hero Header */}
-      <section className="relative py-20 px-6 bg-gradient-to-br from-background via-muted/20 to-background">
+      <section className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-br from-background via-muted/20 to-background">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
         <div className="relative max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
-            <div className="flex-1">
-              <div className="flex items-center space-x-4 mb-4">
-                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8">
+            <div className="flex-1 w-full">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent break-words">
                   {match.name}
                 </h1>
                 {getStatusBadge(match.status)}
               </div>
               
               {match.description && (
-                <p className="text-xl text-muted-foreground mb-6 max-w-3xl">
+                <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-3xl">
                   {match.description}
                 </p>
               )}
 
               {/* Match Info - Small Tags */}
-              <div className="flex flex-wrap items-center gap-4 mb-8">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8">
                 <Badge variant="secondary" className="px-4 py-2 text-sm">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -364,16 +364,18 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                       {game.scores.length > 0 && (
                         <div>
                           <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide mb-3">个人得分排行</h4>
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>排名</TableHead>
-                                <TableHead>选手</TableHead>
-                                <TableHead>队伍</TableHead>
-                                <TableHead className="text-right">得分</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                          <div className="overflow-x-auto -mx-2 sm:mx-0">
+                            <div className="inline-block min-w-full align-middle">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead className="whitespace-nowrap">排名</TableHead>
+                                    <TableHead className="whitespace-nowrap">选手</TableHead>
+                                    <TableHead className="whitespace-nowrap">队伍</TableHead>
+                                    <TableHead className="text-right whitespace-nowrap">得分</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
                               {game.scores
                                 .sort((a: any, b: any) => b.points - a.points)
                                 .slice(0, 10)
@@ -419,8 +421,10 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                                   </TableCell>
                                 </TableRow>
                               )})}
-                            </TableBody>
-                          </Table>
+                                </TableBody>
+                              </Table>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </CardContent>

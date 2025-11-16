@@ -113,17 +113,17 @@ export default function TeamsPage() {
                     </div>
 
                     {match.teams.length > 0 ? (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
                         {match.teams.map((team) => (
                           <Link href={`/teams/${team.id}`} key={team.id} className="group">
-                            <div className="glass-panel rounded-2xl px-4 py-5 text-center transition-all duration-300 hover:-translate-y-1">
+                            <div className="glass-panel rounded-2xl px-3 sm:px-4 py-4 sm:py-5 text-center transition-all duration-300 hover:-translate-y-1">
                               <div
-                                className="w-16 h-16 rounded-2xl mx-auto mb-3 border border-white/30 shadow-lg flex items-center justify-center"
+                                className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl mx-auto mb-2 sm:mb-3 border border-white/30 shadow-lg flex items-center justify-center"
                                 style={{ backgroundColor: team.color || '#8B5CF6' }}
                               >
-                                <span className="text-white font-semibold text-lg drop-shadow">{team.name.charAt(0)}</span>
+                                <span className="text-white font-semibold text-base sm:text-lg drop-shadow">{team.name.charAt(0)}</span>
                               </div>
-                              <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                              <p className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem]">
                                 {team.name}
                               </p>
                               <p className="text-xs text-muted-foreground mt-1">总分 {team.total_score ?? 0}</p>

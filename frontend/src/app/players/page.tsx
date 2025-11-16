@@ -168,35 +168,38 @@ export default function PlayersPage() {
 
       <section className="section-shell">
         <div className="max-w-6xl mx-auto space-y-10">
-          <div className="glass-panel grid gap-4 rounded-3xl p-6 md:grid-cols-[2fr,1.5fr,1fr]">
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="搜索昵称 / 显示名 / ID..."
-            />
-            <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="按赛事筛选" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部赛事</SelectItem>
-                {matches.map((m) => (
-                  <SelectItem key={m.id} value={String(m.id)}>
-                    {m.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={sortMode} onValueChange={(v) => setSortMode(v as any)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="排序" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="default">默认顺序</SelectItem>
-                <SelectItem value="az">按昵称 A-Z</SelectItem>
-                <SelectItem value="za">按昵称 Z-A</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="glass-panel rounded-3xl p-4 sm:p-6">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-[2fr,1.5fr,1fr]">
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="搜索昵称 / 显示名 / ID..."
+                className="w-full"
+              />
+              <Select value={selectedMatchId} onValueChange={setSelectedMatchId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="按赛事筛选" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部赛事</SelectItem>
+                  {matches.map((m) => (
+                    <SelectItem key={m.id} value={String(m.id)}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={sortMode} onValueChange={(v) => setSortMode(v as any)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="排序" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">默认顺序</SelectItem>
+                  <SelectItem value="az">按昵称 A-Z</SelectItem>
+                  <SelectItem value="za">按昵称 Z-A</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {error && (
