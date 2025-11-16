@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Competition Server API",
     description="API for managing competitions, teams, and players.",
-    version="2.0.0",  # 升级版本号表示新的队伍系统
+    version=settings.BACKEND_VERSION,  # 升级版本号表示新的队伍系统
 )
 
 # 添加数据库连接池监控中间件
@@ -52,13 +52,13 @@ if FRONTEND_BUILD_DIR.exists():
 def read_root():
     return {
         "message": "Welcome to the Competition Server API v2.0 - New Team Management System",
-        "backend_version": app.version,
+        "backend_version": app.version or settings.BACKEND_VERSION,
     }
 
 
 @app.get("/api/version")
 def get_version():
-    return {"backend_version": app.version}
+    return {"backend_version": app.version or settings.BACKEND_VERSION}
 
 # Here we will include the routers from our modules
 from app.modules.users.router import router as users_router

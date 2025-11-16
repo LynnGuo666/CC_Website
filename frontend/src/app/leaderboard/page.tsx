@@ -323,7 +323,7 @@ export default function LeaderboardPage() {
                                 />
                                 <div>
                                   <Link 
-                                    href={`/players/${player.user_id}`}
+                                    href={`/player/${player.user_id}`}
                                     className="font-medium hover:text-primary transition-colors"
                                   >
                                     {player.display_name || player.nickname}

@@ -9,7 +9,7 @@ type HeroSectionProps = {
 export function HeroSection({ title, subtitle, children }: HeroSectionProps) {
   return (
     <section className="hero-section">
-      <div className="absolute inset-0 hero-overlay blur-3xl opacity-70"></div>
+      <div aria-hidden="true" className="absolute inset-0 hero-overlay refraction-layer"></div>
       <div className="hero-content space-y-6">
         <h1 className="hero-title">{title}</h1>
         {subtitle && <p className="hero-subtitle">{subtitle}</p>}

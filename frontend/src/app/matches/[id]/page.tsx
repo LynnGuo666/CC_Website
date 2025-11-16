@@ -139,7 +139,10 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
     <div className="min-h-screen">
       {/* Hero Header */}
       <section className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-br from-background via-muted/20 to-background">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
+        <div
+          aria-hidden="true"
+          className="refraction-blob -top-1/2 -left-1/2 w-full h-full opacity-80"
+        ></div>
         <div className="relative max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8">
             <div className="flex-1 w-full">
@@ -400,7 +403,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                                         fallbackLetter={score.user?.nickname?.charAt(0)?.toUpperCase() || 'U'}
                                       />
                                       <Link 
-                                        href={`/players/${score.user_id}`}
+                                        href={`/player/${score.user_id}`}
                                         className="font-medium hover:text-primary transition-colors"
                                       >
                                         {score.user?.nickname || `用户 ${score.user_id}`}

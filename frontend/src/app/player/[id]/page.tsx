@@ -1,5 +1,6 @@
 import { getUserById, getUserStats, getUserTeamHistory, User, UserStats } from '@/services/userService';
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import {
   Card,
   CardContent,
@@ -101,7 +102,16 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
     <div className="min-h-screen">
       {/* Hero Header */}
       <section className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-br from-background via-muted/20 to-background">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl -top-1/2 -left-1/2 w-full h-full"></div>
+        <div
+          aria-hidden="true"
+          className="refraction-blob -top-1/2 -left-1/2 w-full h-full opacity-80"
+          style={
+            {
+              '--blob-primary': 'rgba(0, 122, 255, 0.32)',
+              '--blob-secondary': 'rgba(48, 209, 88, 0.26)',
+            } as CSSProperties
+          }
+        ></div>
         <div className="relative max-w-4xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 mb-6">
             <Avatar
@@ -308,8 +318,14 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                       <Card className="glass-card h-full cursor-pointer transition-all duration-300 hover:shadow-lg group relative overflow-hidden">
                         {/* 背景装饰 */}
                         <div
-                          className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-500"
-                          style={{ backgroundColor: team.color }}
+                          aria-hidden="true"
+                          className="refraction-blob top-0 right-0 w-32 h-32 opacity-0 group-hover:opacity-60 transition-opacity duration-500"
+                          style={
+                            {
+                              '--blob-primary': `${team.color}33`,
+                              '--blob-secondary': `${team.color}1f`,
+                            } as CSSProperties
+                          }
                         ></div>
 
                         <CardContent className="p-5 relative z-10">

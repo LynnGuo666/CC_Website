@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import type { CSSProperties } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { configService } from "@/services/configService";
@@ -38,9 +39,39 @@ export default function Home() {
 
         {/* Animated liquid glass orbs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-primary/20 via-accent/15 to-transparent rounded-full blur-3xl animate-pulse" style={{ animation: 'liquid-flow 12s ease-in-out infinite' }}></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-tl from-accent/20 via-primary/15 to-transparent rounded-full blur-3xl animate-pulse" style={{ animation: 'liquid-flow 15s ease-in-out infinite reverse' }}></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-blue-500/10 rounded-full blur-3xl" style={{ animation: 'spectrum-rotate 20s linear infinite' }}></div>
+          <div
+            aria-hidden="true"
+            className="refraction-blob top-1/4 left-1/4 w-96 h-96 animate-pulse"
+            style={
+              {
+                animation: 'liquid-flow 12s ease-in-out infinite',
+                '--blob-primary': 'rgba(0, 122, 255, 0.28)',
+                '--blob-secondary': 'rgba(48, 209, 88, 0.2)',
+              } as CSSProperties
+            }
+          ></div>
+          <div
+            aria-hidden="true"
+            className="refraction-blob bottom-1/4 right-1/4 w-96 h-96 animate-pulse"
+            style={
+              {
+                animation: 'liquid-flow 15s ease-in-out infinite reverse',
+                '--blob-primary': 'rgba(48, 209, 88, 0.25)',
+                '--blob-secondary': 'rgba(0, 122, 255, 0.2)',
+              } as CSSProperties
+            }
+          ></div>
+          <div
+            aria-hidden="true"
+            className="refraction-blob top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px]"
+            style={
+              {
+                animation: 'spectrum-rotate 20s linear infinite',
+                '--blob-primary': 'rgba(168, 85, 247, 0.22)',
+                '--blob-secondary': 'rgba(14, 165, 233, 0.22)',
+              } as CSSProperties
+            }
+          ></div>
         </div>
         
         <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
@@ -51,7 +82,16 @@ export default function Home() {
                 {/* Main liquid glass container */}
                 <div className="relative inline-flex items-center gap-4 px-8 py-4 rounded-3xl glass-panel backdrop-blur-xl cursor-pointer transition-all duration-500 hover:scale-105">
                   {/* Animated background glow */}
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                  <div
+                    aria-hidden="true"
+                    className="absolute inset-0 rounded-3xl refraction-highlight opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={
+                      {
+                        '--highlight-from': 'rgba(0, 122, 255, 0.35)',
+                        '--highlight-to': 'rgba(48, 209, 88, 0.25)',
+                      } as CSSProperties
+                    }
+                  ></div>
 
                   {/* Live indicator with liquid effect */}
                   <div className="relative flex items-center justify-center">
@@ -77,7 +117,16 @@ export default function Home() {
                     <svg className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    <div className="absolute inset-0 bg-primary/30 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0 rounded-full refraction-highlight opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      style={
+                        {
+                          '--highlight-from': 'rgba(0, 122, 255, 0.4)',
+                          '--highlight-to': 'rgba(14, 165, 233, 0.3)',
+                        } as CSSProperties
+                      }
+                    ></div>
                   </div>
 
                   {/* Top shine effect */}
@@ -85,7 +134,16 @@ export default function Home() {
                 </div>
 
                 {/* Outer glow on hover */}
-                <div className="absolute -inset-3 bg-gradient-to-r from-primary/20 via-accent/15 to-primary/20 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-700 -z-10"></div>
+                <div
+                  aria-hidden="true"
+                  className="absolute -inset-3 rounded-[2rem] refraction-highlight opacity-0 group-hover:opacity-40 transition-opacity duration-700 -z-10"
+                  style={
+                    {
+                      '--highlight-from': 'rgba(0, 122, 255, 0.25)',
+                      '--highlight-to': 'rgba(48, 209, 88, 0.2)',
+                    } as CSSProperties
+                  }
+                ></div>
               </div>
             </Link>
           </div>
@@ -96,7 +154,10 @@ export default function Home() {
               <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent" style={{ animation: 'shimmer 3s linear infinite' }}>
                 联合锦标赛
               </span>
-              <span className="absolute inset-0 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 blur-2xl opacity-50"></span>
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 refraction-highlight opacity-50"
+              ></span>
             </span>
             <br />
             <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl text-foreground/80 font-light">
@@ -117,8 +178,16 @@ export default function Home() {
                 className="relative overflow-hidden text-primary-foreground shadow-2xl shadow-primary/30 w-full sm:min-w-[200px] h-12 sm:h-14 text-base sm:text-lg font-semibold bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 transition-all duration-300 group"
               >
                 <span className="relative z-10">立即观赛</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="absolute inset-0 bg-white/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 refraction-highlight opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={
+                    {
+                      '--highlight-from': 'rgba(255, 255, 255, 0.35)',
+                      '--highlight-to': 'rgba(255, 255, 255, 0.15)',
+                    } as CSSProperties
+                  }
+                ></div>
               </Button>
             </Link>
             <Link href={handbookUrl} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
@@ -128,7 +197,10 @@ export default function Home() {
                 className="relative overflow-hidden glass-panel w-full sm:min-w-[200px] h-12 sm:h-14 text-base sm:text-lg font-semibold border-2 border-white/20 hover:border-white/30 backdrop-blur-xl transition-all duration-300 group"
               >
                 <span className="relative z-10">{handbookText}</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 refraction-highlight opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                ></div>
               </Button>
             </Link>
           </div>
@@ -140,8 +212,28 @@ export default function Home() {
         {/* Background with liquid glass effect */}
         <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/10 to-background"></div>
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-gradient-to-br from-green-500/10 to-transparent rounded-full blur-3xl" style={{ animation: 'liquid-flow 15s ease-in-out infinite' }}></div>
-          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-gradient-to-bl from-red-500/10 to-transparent rounded-full blur-3xl" style={{ animation: 'liquid-flow 18s ease-in-out infinite reverse' }}></div>
+          <div
+            aria-hidden="true"
+            className="refraction-blob top-1/2 left-1/4 w-96 h-96"
+            style={
+              {
+                animation: 'liquid-flow 15s ease-in-out infinite',
+                '--blob-primary': 'rgba(34, 197, 94, 0.25)',
+                '--blob-secondary': 'rgba(34, 197, 94, 0.18)',
+              } as CSSProperties
+            }
+          ></div>
+          <div
+            aria-hidden="true"
+            className="refraction-blob top-1/3 right-1/4 w-96 h-96"
+            style={
+              {
+                animation: 'liquid-flow 18s ease-in-out infinite reverse',
+                '--blob-primary': 'rgba(248, 113, 113, 0.22)',
+                '--blob-secondary': 'rgba(248, 113, 113, 0.12)',
+              } as CSSProperties
+            }
+          ></div>
         </div>
 
         <div className="relative max-w-6xl mx-auto">

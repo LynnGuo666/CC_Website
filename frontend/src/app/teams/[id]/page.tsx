@@ -233,7 +233,7 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
                     ? membership.match_points
                     : member?.total_points ?? 0;
                   return (
-                    <Link key={membership.id} href={`/players/${member.id}`} className="group">
+                    <Link key={membership.id} href={`/player/${member.id}`} className="group">
                       <Card className="h-full bg-card/50 backdrop-blur-sm border border-muted/50 hover:border-primary/40 hover:shadow-lg transition-all duration-300 group-hover:scale-[1.02] relative overflow-hidden">
                         <CardHeader className="text-center pb-4">
                           <Avatar

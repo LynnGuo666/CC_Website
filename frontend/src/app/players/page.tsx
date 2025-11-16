@@ -234,7 +234,7 @@ export default function PlayersPage() {
                   const levelStyle = getLevelStyle(player.game_level);
 
                   return (
-                    <Link href={`/players/${player.id}`} key={player.id} className="group">
+                    <Link href={`/player/${player.id}`} key={player.id} className="group">
                       <Card className="glass-card text-center transition-all duration-300 relative overflow-hidden">
                         {/* 等级徽章 - 融入玻璃的效果 */}
                         {player.game_level && (
