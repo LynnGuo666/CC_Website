@@ -2,6 +2,12 @@
 
 import { useSeasonTheme } from '@/contexts/season-theme-context';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const seasonIcons = {
   default: (

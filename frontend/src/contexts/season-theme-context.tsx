@@ -33,6 +33,15 @@ export function SeasonThemeProvider({ children }: { children: React.ReactNode })
       setSeasonState(autoSeason);
       applySeasonTheme(autoSeason);
     }
+
+    // 后门：暴露全局函数到控制台
+    if (typeof window !== 'undefined') {
+      (window as any).setSeason = (theme: SeasonTheme) => {
+        console.log(`🎨 切换季节主题: ${theme}`);
+        setSeason(theme);
+      };
+      console.log('💡 提示：使用 setSeason("spring"|"summer"|"autumn"|"winter"|"default") 切换季节主题');
+    }
   }, []);
 
   const setSeason = (newSeason: SeasonTheme) => {
