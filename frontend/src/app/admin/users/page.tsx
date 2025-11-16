@@ -148,8 +148,10 @@ export default function AdminUsersPage() {
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleExportCSV}>导出 CSV</Button>
             <Button variant="outline" onClick={handleExportJSON}>导出 JSON</Button>
-            <label>
-              <Button variant="outline" as="span">导入 CSV</Button>
+            <label className="cursor-pointer">
+              <span className="inline-flex h-9 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50">
+                导入 CSV
+              </span>
               <input type="file" accept=".csv" onChange={handleImportCSV} className="hidden" />
             </label>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
