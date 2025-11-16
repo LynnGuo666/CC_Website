@@ -247,21 +247,39 @@
   }
   
   .hero-overlay {
-    background: radial-gradient(circle at top, rgba(255,255,255,0.35), transparent 60%),
-      radial-gradient(circle at 20% 20%, rgba(0,122,255,0.25), transparent 40%),
-      radial-gradient(circle at 80% 0%, rgba(48,209,88,0.2), transparent 45%);
+    background:
+      radial-gradient(circle at top, rgba(255,255,255,0.35), transparent 60%),
+      radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--primary) 25%, transparent), transparent 40%),
+      radial-gradient(circle at 80% 0%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 45%);
+    transition: background 0.5s ease;
   }
-  
+
   .hero-content {
     @apply relative z-10 mx-auto max-w-5xl px-6 text-center;
   }
-  
+
   .hero-title {
-    @apply text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 bg-gradient-to-r from-foreground via-foreground/80 to-foreground bg-clip-text text-transparent;
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4;
+    background: linear-gradient(to right, var(--primary), var(--accent), var(--primary));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
+    transition: background 0.5s ease;
   }
-  
+
   .hero-subtitle {
     @apply text-base md:text-xl text-muted-foreground/80 max-w-3xl mx-auto;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 0% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
   }
   
   .section-shell {
