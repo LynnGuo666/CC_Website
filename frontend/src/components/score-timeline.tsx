@@ -18,11 +18,11 @@ type TimelineItem = {
 }
 
 type GameScore = {
-  games_played: number
-  total_score: number
-  average_standard_score: number
-  level: string
-  level_progress: number
+  games_played?: number
+  total_score?: number
+  average_standard_score?: number
+  level?: string
+  level_progress?: number
 }
 
 type Props = {
@@ -74,11 +74,13 @@ export default function ScoreTimeline({ scoreTimeline, scoreTimelineByGame, game
 
   return (
     <div className="mb-16">
-      <div className="flex items-center mb-8">
-        <svg className="w-6 h-6 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
-        <h2 className="text-2xl font-bold">游戏表现分析</h2>
+      <div className="flex items-center mb-8 gap-3">
+        <div className="p-2 rounded-2xl bg-primary/10 text-primary shadow-inner">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c2.21 0 4-1.79 4-4S14.21 0 12 0 8 1.79 8 4s1.79 4 4 4zm0 2c-3.313 0-6 2.239-6 5v3h12v-3c0-2.761-2.687-5-6-5zM4 18h16v4H4z" transform="translate(0 2)" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold">选手表现总览</h2>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -161,10 +161,28 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
       <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
 
+          {/* Game Performance & Score Timeline (move to top) */}
+          {(scoreTimeline.length > 0 || Object.keys(scoreTimelineByGame).length > 0) && (
+            <div className="mb-16">
+              <ScoreTimeline
+                scoreTimeline={scoreTimeline}
+                scoreTimelineByGame={scoreTimelineByGame}
+                gameScores={gameScores}
+              />
+            </div>
+          )}
+
           {/* Match History */}
           {matchHistory.length > 0 && (
             <div className="mb-16">
-              <h2 className="text-2xl font-bold mb-8">比赛历史</h2>
+              <div className="flex items-center mb-8 gap-3">
+                <div className="p-2 rounded-2xl bg-primary/10 text-primary shadow-inner">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h1.5l.5-1h8l.5 1H16a1 1 0 011 1v1H3V4zm0 3h14v11a1 1 0 01-1 1H4a1 1 0 01-1-1V7zm3 2v2h2V9H6zm0 3v2h2v-2H6zm3-3v2h2V9H9zm0 3v2h2v-2H9zm3-3v2h2V9h-2zm0 3v2h2v-2h-2z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold">比赛履历</h2>
+              </div>
               <Card className="glass overflow-hidden">
                 <div className="overflow-x-auto">
                   <Table>
@@ -207,18 +225,16 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
             </div>
           )}
 
-          {/* Game Performance & Score Timeline */}
-          {(scoreTimeline.length > 0 || Object.keys(scoreTimelineByGame).length > 0) && (
-            <ScoreTimeline
-              scoreTimeline={scoreTimeline}
-              scoreTimelineByGame={scoreTimelineByGame}
-              gameScores={gameScores}
-            />
-          )}
-
           {/* Team History */}
-          <div className="mb-16">
-            <h2 className="text-2xl font-bold mb-8">队伍履历</h2>
+            <div className="mb-16">
+              <div className="flex items-center mb-8 gap-3">
+                <div className="p-2 rounded-2xl bg-primary/10 text-primary shadow-inner">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c2.21 0 4-1.79 4-4S14.21 0 12 0 8 1.79 8 4s1.79 4 4 4zm0 2c-3.313 0-6 2.239-6 5v3h12v-3c0-2.761-2.687-5-6-5zM4 18h16v4H4z" transform="translate(0 2)" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold">选手履历</h2>
+              </div>
             
             {/* Current Team - Full Width */}
             {currentTeam && (
