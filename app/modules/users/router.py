@@ -96,7 +96,7 @@ async def get_avatar_proxy(identifier: str, size: int = 64):
                 content=response.content,
                 media_type=response.headers.get("content-type", "image/png"),
                 headers={
-                    "Cache-Control": "public, max-age=3600",  # 缓存1小时
+                    "Cache-Control": "public, max-age=172800",  # 缓存48小时
                     "Access-Control-Allow-Origin": "*"
                 }
             )

@@ -41,23 +41,30 @@ export function Avatar({
       return;
     }
 
+    // Reset states for fresh attempt
+    setImageError(false);
+    setUseProxy(false);
+
     // Check if image is cached in localStorage
     try {
       const cachedUrl = localStorage.getItem(cacheKey);
       const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+      const cachedSuccess = localStorage.getItem(`${cacheKey}_success`);
       const now = Date.now();
-      
-      // Cache for 1 hour to allow for more frequent updates
-      const CACHE_DURATION = 60 * 60 * 1000;
-      
-      if (cachedUrl && cacheTime && (now - parseInt(cacheTime)) < CACHE_DURATION) {
+
+      // Cache for 48 hours
+      const CACHE_DURATION = 48 * 60 * 60 * 1000;
+
+      // Only use cache if the previous attempt was successful
+      if (cachedUrl && cacheTime && cachedSuccess === 'true' && (now - parseInt(cacheTime)) < CACHE_DURATION) {
         setImageUrl(cachedUrl);
         setIsLoading(false);
         return;
-      } else if (cachedUrl && cacheTime) {
-        // Clear expired cache
+      } else if (cachedUrl || cacheTime || cachedSuccess) {
+        // Clear expired or failed cache
         localStorage.removeItem(cacheKey);
         localStorage.removeItem(`${cacheKey}_time`);
+        localStorage.removeItem(`${cacheKey}_success`);
       }
     } catch (error) {
       console.warn('Failed to access localStorage:', error);
@@ -67,22 +74,36 @@ export function Avatar({
     const identifier = username || userId;
     const mcHeadsUrl = `https://mc-heads.net/avatar/${identifier}/${size}`;
 
-    // Simple check if the URL exists
+    // Set the URL but don't cache yet (will cache on successful load)
     setImageUrl(mcHeadsUrl);
-
-    // Cache the URL with timestamp
-    try {
-      localStorage.setItem(cacheKey, mcHeadsUrl);
-      localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
-    } catch (error) {
-      console.warn('Failed to cache avatar URL:', error);
-    }
 
     setIsLoading(false);
   }, [userId, username, size, cacheKey]);
 
+  // Handle successful image load - cache the URL
+  const handleImageLoad = () => {
+    if (imageUrl) {
+      try {
+        localStorage.setItem(cacheKey, imageUrl);
+        localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+        localStorage.setItem(`${cacheKey}_success`, 'true');
+      } catch (error) {
+        console.warn('Failed to cache avatar URL:', error);
+      }
+    }
+  };
+
   // Handle image error - try proxy fallback
   const handleImageError = () => {
+    // Clear any existing cache since this attempt failed
+    try {
+      localStorage.removeItem(cacheKey);
+      localStorage.removeItem(`${cacheKey}_time`);
+      localStorage.removeItem(`${cacheKey}_success`);
+    } catch (error) {
+      console.warn('Failed to clear cache:', error);
+    }
+
     if (!useProxy) {
       // First error: try using backend proxy
       const identifier = username || userId;
@@ -91,7 +112,7 @@ export function Avatar({
       setUseProxy(true);
       setImageError(false); // Reset error to try proxy
     } else {
-      // Second error: show fallback avatar
+      // Second error: show fallback avatar (don't cache this state)
       setImageError(true);
     }
   };
@@ -118,6 +139,7 @@ export function Avatar({
           width={size}
           height={size}
           className="object-cover"
+          onLoad={handleImageLoad}
           onError={handleImageError}
           unoptimized={true}
         />
