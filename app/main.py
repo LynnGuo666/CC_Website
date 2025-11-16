@@ -4,8 +4,15 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 from pathlib import Path
+import logging
+
+from alembic import command
+from alembic.config import Config
 
 from app.core.middleware import DatabaseConnectionMiddleware
+from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Competition Server API",
@@ -43,7 +50,15 @@ if FRONTEND_BUILD_DIR.exists():
 
 @app.get("/api/health")
 def read_root():
-    return {"message": "Welcome to the Competition Server API v2.0 - New Team Management System"}
+    return {
+        "message": "Welcome to the Competition Server API v2.0 - New Team Management System",
+        "backend_version": app.version,
+    }
+
+
+@app.get("/api/version")
+def get_version():
+    return {"backend_version": app.version}
 
 # Here we will include the routers from our modules
 from app.modules.users.router import router as users_router
@@ -56,3 +71,14 @@ app.include_router(matches_router, prefix="/api/matches", tags=["matches"])
 
 # 注意：teams 模块已被整合到 matches 模块中
 # 新的队伍管理API现在在 /matches/{match_id}/teams 下
+
+
+@app.on_event("startup")
+def run_migrations() -> None:
+    """确保服务启动时数据库迁移到最新版本。"""
+    try:
+        alembic_cfg = Config(str(Path(__file__).parent.parent / "alembic.ini"))
+        alembic_cfg.set_main_option("sqlalchemy.url", settings.SQLALCHEMY_DATABASE_URI)
+        command.upgrade(alembic_cfg, "head")
+    except Exception:
+        logger.exception("Failed to run Alembic migrations on startup")

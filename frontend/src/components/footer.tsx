@@ -3,9 +3,12 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { configService, SiteConfig } from '@/services/configService';
+import packageJson from '../../package.json';
 
 export function Footer() {
   const [config, setConfig] = useState<SiteConfig | null>(null);
+  const frontendVersion = process.env.NEXT_PUBLIC_FRONTEND_VERSION || packageJson.version || '0.0.0';
+  const [backendVersion, setBackendVersion] = useState<string>(process.env.NEXT_PUBLIC_BACKEND_VERSION || '未设置');
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -16,7 +19,22 @@ export function Footer() {
         console.error('Failed to load site config:', error);
       }
     };
+    const loadBackendVersion = async () => {
+      try {
+        const res = await fetch('/api/version');
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.backend_version) {
+            setBackendVersion(String(data.backend_version));
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load backend version:', error);
+      }
+    };
+
     loadConfig();
+    loadBackendVersion();
   }, []);
 
   const logoSrc = config?.logo_filename
@@ -46,9 +64,15 @@ export function Footer() {
             <p className="text-xs text-muted-foreground">TRIALHAMMER x RIA x INF</p>
           </div>
         </div>
-        <div className="flex flex-col gap-1 text-center md:text-left">
+        <div className="flex flex-col gap-1 text-center items-center">
           <span>© 2023-2025 联合锦标赛</span>
           <span className="text-xs">保留所有权利</span>
+          <div className="flex items-center justify-center md:justify-start gap-2 text-xs">
+            <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8l4-4m0 0l4 4m-4-4v16m-4-4l4 4m0 0l4-4" />
+            </svg>
+            <span>前端 v{frontendVersion} · 后端 v{backendVersion}</span>
+          </div>
         </div>
         <div className="flex items-center gap-3 justify-center md:justify-end">
           <img
