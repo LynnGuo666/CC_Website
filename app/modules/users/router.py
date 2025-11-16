@@ -1,12 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse, Response
 from sqlalchemy.orm import Session
 from typing import List
+import httpx
+import logging
 
 from app.core.deps import get_db
 from . import crud, models, schemas
 from app.core.security import get_api_key
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=schemas.User)
@@ -61,6 +65,47 @@ def get_available_games_for_leaderboard(db: Session = Depends(get_db)):
     return {
         "games": crud.get_available_games_for_leaderboard(db)
     }
+
+
+@router.get("/avatar/{identifier}/{size}")
+async def get_avatar_proxy(identifier: str, size: int = 64):
+    """
+    头像反代接口
+
+    当原始头像服务（mc-heads.net）无法访问时，通过后端反代获取头像
+
+    Args:
+        identifier: 用户名或用户ID
+        size: 头像尺寸（默认64）
+
+    Returns:
+        头像图片流
+    """
+    # 限制尺寸范围，防止滥用
+    size = max(8, min(size, 512))
+
+    avatar_url = f"https://mc-heads.net/avatar/{identifier}/{size}"
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(avatar_url)
+            response.raise_for_status()
+
+            # 返回图片流
+            return Response(
+                content=response.content,
+                media_type=response.headers.get("content-type", "image/png"),
+                headers={
+                    "Cache-Control": "public, max-age=3600",  # 缓存1小时
+                    "Access-Control-Allow-Origin": "*"
+                }
+            )
+    except httpx.HTTPError as e:
+        logger.error(f"Failed to fetch avatar for {identifier}: {e}")
+        raise HTTPException(status_code=404, detail="Avatar not found")
+    except Exception as e:
+        logger.error(f"Unexpected error fetching avatar for {identifier}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch avatar")
 
 
 @router.get("/{user_id}", response_model=schemas.User)

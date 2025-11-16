@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { API_BASE_URL } from '@/services/config';
 
 interface AvatarProps {
   userId?: string | number;
@@ -12,10 +13,10 @@ interface AvatarProps {
   fallbackClassName?: string;
 }
 
-export function Avatar({ 
-  userId, 
-  username, 
-  className = "", 
+export function Avatar({
+  userId,
+  username,
+  className = "",
   size = 40,
   fallbackLetter,
   fallbackClassName = ""
@@ -23,6 +24,7 @@ export function Avatar({
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [useProxy, setUseProxy] = useState(false);
 
   // Generate cache key for localStorage - use both userId and username for uniqueness
   const cacheKey = `avatar_${userId ? `id_${userId}` : ''}${username ? `_user_${username}` : ''}`;
@@ -64,10 +66,10 @@ export function Avatar({
     // Generate Minecraft avatar URL - prioritize username (nickname) over userId
     const identifier = username || userId;
     const mcHeadsUrl = `https://mc-heads.net/avatar/${identifier}/${size}`;
-    
+
     // Simple check if the URL exists
     setImageUrl(mcHeadsUrl);
-    
+
     // Cache the URL with timestamp
     try {
       localStorage.setItem(cacheKey, mcHeadsUrl);
@@ -75,9 +77,24 @@ export function Avatar({
     } catch (error) {
       console.warn('Failed to cache avatar URL:', error);
     }
-    
+
     setIsLoading(false);
   }, [userId, username, size, cacheKey]);
+
+  // Handle image error - try proxy fallback
+  const handleImageError = () => {
+    if (!useProxy) {
+      // First error: try using backend proxy
+      const identifier = username || userId;
+      const proxyUrl = `${API_BASE_URL}/users/avatar/${identifier}/${size}`;
+      setImageUrl(proxyUrl);
+      setUseProxy(true);
+      setImageError(false); // Reset error to try proxy
+    } else {
+      // Second error: show fallback avatar
+      setImageError(true);
+    }
+  };
 
   // Show loading state
   if (isLoading) {
@@ -101,7 +118,7 @@ export function Avatar({
           width={size}
           height={size}
           className="object-cover"
-          onError={() => setImageError(true)}
+          onError={handleImageError}
           unoptimized={true}
         />
       </div>
