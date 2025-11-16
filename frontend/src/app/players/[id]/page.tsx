@@ -274,7 +274,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
               </div>
             )}
 
-            {/* Historical Teams - Full Width */}
+            {/* Historical Teams - Grid Layout */}
             {historicalTeams.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold mb-6 flex items-center">
@@ -282,48 +282,58 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   历史队伍
+                  <Badge variant="secondary" className="ml-3 text-xs">
+                    {historicalTeams.length}
+                  </Badge>
                 </h3>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {historicalTeams.map((team: any, index: number) => (
                     <Link key={index} href={`/teams/${team.id}`}>
-                      <Card className="glass card-hover border-border/40 cursor-pointer transition-all duration-300 hover:border-primary/30 hover:shadow-md group">
-                        <CardContent className="p-5">
-                          <div className="flex items-center space-x-5">
-                            <div className="relative">
-                              <div 
-                                className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md transition-transform duration-300 group-hover:scale-105"
+                      <Card className="glass-card h-full cursor-pointer transition-all duration-300 hover:shadow-lg group relative overflow-hidden">
+                        {/* 背景装饰 */}
+                        <div
+                          className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-500"
+                          style={{ backgroundColor: team.color }}
+                        ></div>
+
+                        <CardContent className="p-5 relative z-10">
+                          <div className="flex items-start space-x-4">
+                            {/* 队伍图标 */}
+                            <div className="relative flex-shrink-0">
+                              <div
+                                className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
                                 style={{ backgroundColor: team.color }}
                               >
                                 {team.name.charAt(0)}
                               </div>
-                              <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-muted rounded-full flex items-center justify-center border-2 border-background">
-                                <svg className="w-2.5 h-2.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              {/* 历史标记 */}
+                              <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 bg-muted/90 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-background shadow-sm">
+                                <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                               </div>
                             </div>
-                            
+
+                            {/* 队伍信息 */}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center space-x-3 mb-1">
-                                <h4 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors truncate">{team.name}</h4>
-                                <Badge variant="secondary" className="text-xs px-2 py-1 bg-muted/50 text-muted-foreground flex-shrink-0">
-                                  历史
-                                </Badge>
+                              <div className="flex items-start justify-between gap-2 mb-2">
+                                <h4 className="font-bold text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                                  {team.name}
+                                </h4>
+                                <svg className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-0.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
                               </div>
+
+                              {/* 赛事信息 */}
                               {team.match_name && (
-                                <p className="text-sm text-muted-foreground flex items-center">
-                                  <svg className="w-3.5 h-3.5 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                                  <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                                   </svg>
-                                  <span className="truncate">参与赛事: {team.match_name}</span>
-                                </p>
+                                  <span className="line-clamp-2 leading-relaxed">{team.match_name}</span>
+                                </div>
                               )}
-                            </div>
-                            
-                            <div className="flex-shrink-0 opacity-50 group-hover:opacity-100 transition-opacity">
-                              <svg className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
-                              </svg>
                             </div>
                           </div>
                         </CardContent>

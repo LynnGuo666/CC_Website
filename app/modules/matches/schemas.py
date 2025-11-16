@@ -150,6 +150,8 @@ class MatchGame(MatchGameBase):
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
     multiplier: float = 1.0
+    total_standard_score: float = 0.0
+    average_standard_score: float = 0.0
     created_at: datetime
     
     class Config:

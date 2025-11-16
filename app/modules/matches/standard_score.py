@@ -81,6 +81,16 @@ class StandardScoreCalculator:
                     models.Score.id == score_id
                 ).update({"standard_score": standard_score})
             
+            # 更新赛程的标准分汇总
+            total_std = sum(standard_scores.values())
+            avg_std = total_std / max(len(standard_scores), 1)
+            self.db.query(models.MatchGame).filter(
+                models.MatchGame.id == match_game_id
+            ).update({
+                "total_standard_score": total_std,
+                "average_standard_score": avg_std
+            })
+            
             self.db.commit()
             logger.info(f"Updated standard scores for match_game_id: {match_game_id}")
             return True

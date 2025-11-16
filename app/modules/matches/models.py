@@ -149,6 +149,8 @@ class MatchGame(Base):
     structure_type = Column(String, comment="对战结构类型")
     structure_details = Column(JSON, comment="对战结构详情")
     multiplier = Column(Float, default=1.0, comment="游戏积分倍率")
+    total_standard_score = Column(Float, default=0.0, comment="本场标准分总和")
+    average_standard_score = Column(Float, default=0.0, comment="本场标准分平均值")
     
     # 赛程状态
     is_live = Column(Boolean, default=False, comment="是否正在直播")

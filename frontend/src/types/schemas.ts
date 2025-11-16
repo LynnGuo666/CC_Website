@@ -213,6 +213,7 @@ export const UserStatsSchema = z.object({
       match_name: z.string(),
       timestamp: z.string().nullable(),
       avg_standard_score: z.number(),
+      match_avg_score: z.number(), // 每场比赛其他选手平均标准分
       rank: z.number().nullable(),
       rank_change: z.number().nullable(),
       score_delta: z.number().nullable(),
