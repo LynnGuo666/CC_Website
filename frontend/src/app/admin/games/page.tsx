@@ -225,37 +225,37 @@ export default function AdminGamesPage() {
         </div>
 
         {/* 表格 */}
-        <div className="overflow-hidden bg-white shadow sm:rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="overflow-hidden bg-white dark:bg-gray-800 shadow sm:rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">名称</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">代码</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">简介</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">季节标签</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">封面</th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">操作</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">名称</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">代码</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">简介</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">季节标签</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">封面</th>
+                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">操作</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
               {games.map((game) => (
                 <tr key={game.id}>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">{game.id}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{game.name}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{game.code}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">{game.tagline || game.description || '-'}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{game.seasonal ? (game.season_label || '季节限定') : '常驻'}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{game.id}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{game.name}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{game.code}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{game.tagline || game.description || '-'}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{game.seasonal ? (game.season_label || '季节限定') : '常驻'}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                     {game.image_url ? (
                       <img src={game.image_url} alt={game.name} className="h-10 w-10 rounded-lg object-cover" />
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-gray-400 dark:text-gray-500">-</span>
                     )}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(game)}>编辑</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(game.id)} className="text-red-600 hover:text-red-900">删除</Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(game.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">删除</Button>
                   </td>
                 </tr>
               ))}

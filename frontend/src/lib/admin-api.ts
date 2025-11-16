@@ -2,7 +2,10 @@
  * 管理后台 API 客户端
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://127.0.0.1:8000';
 
 export interface LoginCredentials {
   username: string;
@@ -56,6 +59,14 @@ export interface User {
   average_score: number;
   game_level: string;
   level_progress: number;
+}
+
+export interface AdminUserUpdatePayload {
+  email?: string;
+  full_name?: string;
+  role?: AdminUser['role'];
+  password?: string;
+  is_active?: boolean;
 }
 
 class AdminAPI {
@@ -176,6 +187,15 @@ class AdminAPI {
   async deleteGame(id: number): Promise<void> {
     await this.request<void>(`/api/admin/games/${id}`, {
       method: 'DELETE',
+    });
+  }
+
+  // ==================== 管理员账户 ====================
+
+  async updateAdminUser(id: number, payload: AdminUserUpdatePayload): Promise<AdminUser> {
+    return this.request<AdminUser>(`/api/admin/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
     });
   }
 

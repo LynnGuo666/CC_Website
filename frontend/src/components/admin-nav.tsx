@@ -69,6 +69,9 @@ export function AdminNav() {
               <NavLink href="/admin/users" isActive={isActive('/admin/users')}>
                 选手管理
               </NavLink>
+              <NavLink href="/admin/account" isActive={isActive('/admin/account')}>
+                账户安全
+              </NavLink>
             </div>
           </div>
 

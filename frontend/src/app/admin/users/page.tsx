@@ -188,31 +188,31 @@ export default function AdminUsersPage() {
         </div>
 
         {/* 表格 */}
-        <div className="overflow-hidden bg-white shadow sm:rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="overflow-hidden bg-white dark:bg-gray-800 shadow sm:rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">昵称</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">显示名称</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">等级</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">平均标准分</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">参赛数</th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">操作</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">ID</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">昵称</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">显示名称</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">等级</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">平均标准分</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">参赛数</th>
+                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">操作</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
               {users.map((u) => (
                 <tr key={u.id}>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">{u.id}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">{u.nickname}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{u.display_name || '-'}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{u.game_level}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{u.average_standard_score.toFixed(1)}</td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{u.total_matches}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900 dark:text-gray-100">{u.id}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{u.nickname}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{u.display_name || '-'}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{u.game_level}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{u.average_standard_score.toFixed(1)}</td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{u.total_matches}</td>
                   <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(u)}>编辑</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(u.id)} className="text-red-600 hover:text-red-900">删除</Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(u.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">删除</Button>
                   </td>
                 </tr>
               ))}
