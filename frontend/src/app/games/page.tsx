@@ -57,7 +57,28 @@ export default function GamesPage() {
   }, [games, search, seasonalOnly]);
 
   return (
-    <div className="min-h-screen">
+    <div className="relative min-h-screen">
+      {/* Liquid Glass Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-muted/30 -z-10"></div>
+
+      {/* Animated liquid glass orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div
+          aria-hidden="true"
+          className="refraction-blob top-1/4 left-1/4 w-96 h-96"
+          style={{
+            animation: 'liquid-flow 15s ease-in-out infinite',
+          } as React.CSSProperties}
+        ></div>
+        <div
+          aria-hidden="true"
+          className="refraction-blob bottom-1/4 right-1/4 w-96 h-96"
+          style={{
+            animation: 'liquid-flow 18s ease-in-out infinite reverse',
+          } as React.CSSProperties}
+        ></div>
+      </div>
+
       <HeroSection title="游戏介绍" subtitle="直接浏览后台配置的小游戏项目。">
         <div className="flex flex-wrap gap-3">
           <Badge variant="outline" className="glass-panel glass-spectrum">
@@ -69,9 +90,9 @@ export default function GamesPage() {
         </div>
       </HeroSection>
 
-      <section className="section-shell">
+      <section className="section-shell pb-20">
         <div className="max-w-6xl mx-auto space-y-8">
-          <div className="rounded-2xl border border-white/20 bg-white/70 p-5 shadow-md backdrop-blur dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="glass-panel rounded-2xl p-5 shadow-md backdrop-blur-apple">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="space-y-2 w-full md:max-w-xl">
                 <p className="text-sm font-semibold text-foreground">搜索项目</p>
@@ -114,10 +135,10 @@ export default function GamesPage() {
               暂无匹配的项目，可在后台创建数据或调整筛选条件。
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mb-12">
               {filteredGames.map((game) => (
                 <Link key={game.id} href={`/games/${game.id}`} className="block">
-                  <Card className="relative overflow-hidden border border-white/30 bg-white/90 shadow-lg backdrop-blur transition-transform hover:-translate-y-1 hover:shadow-2xl dark:border-slate-800 dark:bg-slate-900/70">
+                  <Card className="glass-card relative overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
                     <div className="relative h-40 w-full overflow-hidden rounded-t-2xl bg-gradient-to-r from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-900">
                       {game.image_url ? (
                         <Image

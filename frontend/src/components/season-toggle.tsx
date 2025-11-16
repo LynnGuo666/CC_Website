@@ -1,6 +1,7 @@
 'use client';
 
 import { useSeasonTheme } from '@/contexts/season-theme-context';
+import { Button } from '@/components/ui/button';
 
 const seasonIcons = {
   default: (
@@ -21,7 +22,9 @@ const seasonIcons = {
   ),
   autumn: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+      {/* 小麦图标 */}
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C10 4 9 6 9 8c0 1 .5 2 1.5 2.5M12 2c2 2 3 4 3 6 0 1-.5 2-1.5 2.5M12 2v20M9 8c-1.5.5-2.5 1.5-2.5 2.5 0 2 1 4 3 6M15 8c1.5.5 2.5 1.5 2.5 2.5 0 2-1 4-3 6" />
+      <circle cx="12" cy="20" r="2" fill="currentColor" />
     </svg>
   ),
   winter: (
@@ -41,17 +44,37 @@ const seasonLabels = {
 };
 
 export function SeasonToggle() {
-  const { season } = useSeasonTheme();
+  const { season, setSeason } = useSeasonTheme();
+
+  const toggleSeason = () => {
+    // 在默认和自动季节之间切换
+    if (season === 'default') {
+      // 根据月份设置季节
+      const month = new Date().getMonth() + 1;
+      let autoSeason: 'spring' | 'summer' | 'autumn' | 'winter' = 'spring';
+
+      if (month >= 3 && month <= 5) autoSeason = 'spring';
+      else if (month >= 6 && month <= 8) autoSeason = 'summer';
+      else if (month >= 9 && month <= 11) autoSeason = 'autumn';
+      else autoSeason = 'winter';
+
+      setSeason(autoSeason);
+    } else {
+      setSeason('default');
+    }
+  };
 
   return (
-    <div
-      className="flex items-center gap-2 rounded-2xl px-3 py-1.5 text-xs font-medium text-foreground/60 bg-white/5"
-      title={`当前季节主题：${seasonLabels[season]}`}
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggleSeason}
+      className="relative rounded-2xl w-9 h-9 hover:bg-white/10 transition-all"
+      title={season === 'default' ? '切换到季节主题' : `当前：${seasonLabels[season]}，点击切换到默认主题`}
     >
       <span className="text-foreground/70">
         {seasonIcons[season]}
       </span>
-      <span className="hidden sm:inline">{seasonLabels[season]}</span>
-    </div>
+    </Button>
   );
 }
