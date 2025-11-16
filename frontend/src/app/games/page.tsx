@@ -79,13 +79,10 @@ export default function GamesPage() {
         ></div>
       </div>
 
-      <HeroSection title="游戏介绍" subtitle="直接浏览后台配置的小游戏项目。">
+      <HeroSection title="游戏介绍" subtitle="查看所有游戏项目及详情">
         <div className="flex flex-wrap gap-3">
           <Badge variant="outline" className="glass-panel glass-spectrum">
             {loading ? "正在读取 /api/games 数据..." : `共 ${games.length} 个项目`}
-          </Badge>
-          <Badge variant="secondary" className="glass-panel glass-spectrum">
-            数据来源：后端 /api/games
           </Badge>
         </div>
       </HeroSection>
