@@ -64,10 +64,18 @@ def get_version():
 from app.modules.users.router import router as users_router
 from app.modules.games.router import router as games_router
 from app.modules.matches.router import router as matches_router
+from app.modules.admin.router import router as admin_router
+from app.modules.games.admin_router import router as games_admin_router
+from app.modules.users.admin_router import router as users_admin_router
+from app.modules.admin.import_export import router as import_export_router
 
 app.include_router(users_router, prefix="/api/users", tags=["users"])
 app.include_router(games_router, prefix="/api/games", tags=["games"])
 app.include_router(matches_router, prefix="/api/matches", tags=["matches"])
+app.include_router(admin_router, prefix="/api/admin", tags=["admin"])
+app.include_router(games_admin_router, prefix="/api/admin/games", tags=["admin-games"])
+app.include_router(users_admin_router, prefix="/api/admin/users", tags=["admin-users"])
+app.include_router(import_export_router, prefix="/api/admin/import-export", tags=["admin-import-export"])
 
 # 注意：teams 模块已被整合到 matches 模块中
 # 新的队伍管理API现在在 /matches/{match_id}/teams 下

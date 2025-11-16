@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SeasonThemeProvider } from "@/contexts/season-theme-context";
 import { MainNav } from "@/components/main-nav";
 import { Footer } from "@/components/footer";
 import "./globals.css";
@@ -21,9 +22,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
-        <script 
-          defer 
-          src="https://analysis.602007.xyz/script.js" 
+        <script
+          defer
+          src="https://analysis.602007.xyz/script.js"
           data-website-id="60d590d4-0723-4dc2-be0d-fedc78499216"
         ></script>
       </head>
@@ -36,15 +37,17 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <MainNav />
-          
-          <main className="min-h-screen">
-            <div className="relative">
-              {children}
-            </div>
-          </main>
+          <SeasonThemeProvider>
+            <MainNav />
 
-          <Footer />
+            <main className="min-h-screen">
+              <div className="relative">
+                {children}
+              </div>
+            </main>
+
+            <Footer />
+          </SeasonThemeProvider>
         </ThemeProvider>
       </body>
     </html>

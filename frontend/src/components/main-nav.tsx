@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ThemeToggle } from './theme-toggle';
+import { SeasonToggle } from './season-toggle';
 import { configService, SiteConfig } from '@/services/configService';
 
 const NavLink = ({
@@ -81,15 +82,28 @@ export function MainNav() {
             
             <div className="hidden md:flex items-center space-x-1">
               <NavLink href="/matches">赛事</NavLink>
+              <NavLink href="/games">游戏</NavLink>
               <NavLink href="/teams">队伍</NavLink>
               <NavLink href="/players">选手</NavLink>
               <NavLink href="/leaderboard">排行榜</NavLink>
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <Link
+              href="/admin/dashboard"
+              className="hidden md:flex items-center space-x-1 rounded-2xl px-3 py-1.5 text-xs font-medium text-foreground/60 hover:text-foreground hover:bg-white/10 transition-all"
+              title="管理后台"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <span>管理</span>
+            </Link>
+            <SeasonToggle />
             <ThemeToggle />
-            
+
             <div className="md:hidden">
               <button onClick={toggleMenu} className="p-2 rounded-2xl text-foreground/60 hover:text-foreground hover:bg-white/10 transition-all">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,9 +120,11 @@ export function MainNav() {
         <div className="md:hidden px-4">
           <div className="glass-panel mt-2 flex flex-col gap-1 rounded-3xl p-3">
             <NavLink href="/matches" onClick={closeMenu}>赛事</NavLink>
+            <NavLink href="/games" onClick={closeMenu}>游戏</NavLink>
             <NavLink href="/teams" onClick={closeMenu}>队伍</NavLink>
             <NavLink href="/players" onClick={closeMenu}>选手</NavLink>
             <NavLink href="/leaderboard" onClick={closeMenu}>排行榜</NavLink>
+            <NavLink href="/admin/dashboard" onClick={closeMenu}>管理后台</NavLink>
           </div>
         </div>
       )}

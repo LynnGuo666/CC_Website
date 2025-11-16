@@ -2,7 +2,11 @@ import { z } from 'zod';
 
 // --- 基础配置 ---
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+// Default to local backend when未显式配置，便于本地开发。
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://127.0.0.1:8000';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || ''; // 在 .env.local 中配置
 
 type FetchOptions = {
@@ -27,7 +31,8 @@ type NextFetchRequestConfig = {
 async function apiFetch<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { method = 'GET', body, schema, ...restOptions } = options;
 
-  const url = `${API_BASE_URL}${endpoint}`;
+  const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+  const url = `${base}${endpoint}`;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',

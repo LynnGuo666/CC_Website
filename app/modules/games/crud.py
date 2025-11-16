@@ -19,7 +19,16 @@ def create_game(db: Session, game: schemas.GameCreate):
         return db_game
     
     # 如果不存在，创建新游戏
-    db_game = models.Game(name=game.name, code=game.code, description=game.description)
+    db_game = models.Game(
+        name=game.name,
+        code=game.code,
+        description=game.description,
+        seasonal=game.seasonal,
+        season_label=game.season_label,
+        tagline=game.tagline,
+        rule=game.rule,
+        image_url=game.image_url,
+    )
     db.add(db_game)
     db.commit()
     db.refresh(db_game)
@@ -36,6 +45,16 @@ def update_game(db: Session, game_id: int, game_update: schemas.GameCreate):
         db_game.code = game_update.code
     if game_update.description is not None:
         db_game.description = game_update.description
+    if game_update.seasonal is not None:
+        db_game.seasonal = game_update.seasonal
+    if game_update.season_label is not None:
+        db_game.season_label = game_update.season_label
+    if game_update.tagline is not None:
+        db_game.tagline = game_update.tagline
+    if game_update.rule is not None:
+        db_game.rule = game_update.rule
+    if game_update.image_url is not None:
+        db_game.image_url = game_update.image_url
     
     db.commit()
     db.refresh(db_game)

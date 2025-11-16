@@ -63,6 +63,11 @@ export const GameSchema = z.object({
   name: z.string(),
   code: z.string(),
   description: z.string().nullable(),
+  seasonal: z.boolean().optional().default(false),
+  season_label: z.string().nullable().optional(),
+  tagline: z.string().nullable().optional(),
+  rule: z.string().nullable().optional(),
+  image_url: z.string().nullable().optional(),
 });
 
 // Represents Score (simplified for API responses)

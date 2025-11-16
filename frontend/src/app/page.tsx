@@ -76,21 +76,15 @@ export default function Home() {
         
         <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
           {/* Liquid Glass Notification Badge */}
-          <div className="mb-8">
+          <div className="mb-8 inline-block">
             <Link href={notificationLink}>
-              <div className="relative group">
+              <div className="relative group inline-block">
                 {/* Main liquid glass container */}
                 <div className="relative inline-flex items-center gap-4 px-8 py-4 rounded-3xl glass-panel backdrop-blur-xl cursor-pointer transition-all duration-500 hover:scale-105">
                   {/* Animated background glow */}
                   <div
                     aria-hidden="true"
-                    className="absolute inset-0 rounded-3xl refraction-highlight opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={
-                      {
-                        '--highlight-from': 'rgba(0, 122, 255, 0.35)',
-                        '--highlight-to': 'rgba(48, 209, 88, 0.25)',
-                      } as CSSProperties
-                    }
+                    className="absolute inset-0 rounded-3xl bg-gradient-to-r from-primary/10 to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm"
                   ></div>
 
                   {/* Live indicator with liquid effect */}
@@ -102,9 +96,9 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Text content with gradient */}
+                  {/* Text content */}
                   <div className="relative">
-                    <span className="text-sm font-semibold bg-gradient-to-r from-foreground via-foreground/90 to-foreground bg-clip-text text-transparent group-hover:from-primary group-hover:via-accent group-hover:to-primary transition-all duration-500 tracking-wide">
+                    <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors duration-500 tracking-wide">
                       {notificationText}
                     </span>
 
@@ -117,33 +111,11 @@ export default function Home() {
                     <svg className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    <div
-                      aria-hidden="true"
-                      className="absolute inset-0 rounded-full refraction-highlight opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      style={
-                        {
-                          '--highlight-from': 'rgba(0, 122, 255, 0.4)',
-                          '--highlight-to': 'rgba(14, 165, 233, 0.3)',
-                        } as CSSProperties
-                      }
-                    ></div>
                   </div>
 
                   {/* Top shine effect */}
                   <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent rounded-t-3xl"></div>
                 </div>
-
-                {/* Outer glow on hover */}
-                <div
-                  aria-hidden="true"
-                  className="absolute -inset-3 rounded-[2rem] refraction-highlight opacity-0 group-hover:opacity-40 transition-opacity duration-700 -z-10"
-                  style={
-                    {
-                      '--highlight-from': 'rgba(0, 122, 255, 0.25)',
-                      '--highlight-to': 'rgba(48, 209, 88, 0.2)',
-                    } as CSSProperties
-                  }
-                ></div>
               </div>
             </Link>
           </div>

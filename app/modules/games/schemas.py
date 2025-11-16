@@ -6,6 +6,11 @@ class GameBase(BaseModel):
     name: str
     code: str
     description: str | None = None
+    seasonal: bool = False
+    season_label: str | None = None
+    tagline: str | None = None
+    rule: str | None = None
+    image_url: str | None = None
 
 # 创建比赛项目时需要接收的属性
 class GameCreate(GameBase):
