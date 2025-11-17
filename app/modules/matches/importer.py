@@ -172,4 +172,5 @@ def import_score_events_from_csv(
         "inserted": inserted,
         "skipped": skipped,
         "errors": errors,
+        "error_count": len(errors),
     }

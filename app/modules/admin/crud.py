@@ -5,12 +5,28 @@ import datetime
 import hashlib
 import secrets
 
+from passlib.context import CryptContext
+
 from . import models, schemas
 
+_bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+_BCRYPT_PREFIXES = ("$2a$", "$2b$", "$2y$")
+
+
+def _is_legacy_bcrypt(hash_value: str) -> bool:
+    """
+    判断是否为旧版 bcrypt 格式密码
+    传统 bcrypt 哈希以 $2a/$2b/$2y 开头，并包含多个 $ 分隔段。
+    """
+    return hash_value.startswith(_BCRYPT_PREFIXES) and hash_value.count("$") >= 3
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """验证密码"""
-    # 分离 salt 和 hash
+    # 兼容旧版 bcrypt 存量数据
+    if _is_legacy_bcrypt(hashed_password):
+        return _bcrypt_context.verify(plain_password, hashed_password)
+
+    # 默认使用 PBKDF2（salt$hash）
     try:
         salt, stored_hash = hashed_password.split('$', 1)
         # 使用相同的 salt 计算 hash
@@ -147,6 +163,12 @@ def authenticate_user(db: Session, username: str, password: str) -> Optional[mod
         return None
     if not user.is_active:
         return None
+
+    # 老数据可能缺少 api_key，登录时自动补全以避免后续序列化失败
+    if not user.api_key:
+        user.api_key = generate_unique_api_key(db)
+        db.commit()
+        db.refresh(user)
 
     # 更新最后登录时间
     user.last_login = datetime.datetime.utcnow()

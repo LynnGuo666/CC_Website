@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.2] - 2025-11-17
+
+### Changed
+- **小分 CSV 导入确认**：赛事管理页的“小分导入”新增结果对话框，导入后立即展示成功/跳过数量及所有错误行明细，便于复核 `数据测试.csv` 等文件的导入情况
+
+### Technical Details
+- 前端版本: 2.7.1 → 2.7.2
+- 后端版本: 2.7.1 → 2.7.2
+
+## [2.7.1] - 2025-11-17
+
+### Added
+- **管理员密码重置脚本**：新增 `scripts/reset_admin_password.py`，可通过 `.venv/bin/python scripts/reset_admin_password.py --username admin --password <新密码>` 快速重置任意管理员密码，便于线上应急
+
+### Fixed
+- **管理员登录兼容旧密码**：登录校验自动识别旧版 bcrypt 哈希，保证从老环境迁移的管理员账号可正常登录；与现有 PBKDF2 存储保持兼容
+- **缺失 API Key 自动补齐**：老账户在登录时若 `api_key` 为空，后端自动生成唯一密钥，避免 `/api/admin/me` 等接口序列化 `None` 导致 500 错误
+
+### Technical Details
+- 前端版本: 2.7.0 → 2.7.1
+- 后端版本: 2.7.0 → 2.7.1
+
 ## [2.6.0] - 2025-11-17
 
 ### Added
