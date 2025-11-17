@@ -20,6 +20,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 后端版本: 2.5.0 → 2.6.0
 - 数据库迁移: `833c185998bb_add_admin_api_keys.py`
 
+## [2.7.0] - 2025-11-17
+
+### Added
+- **锦标赛后台管理**: 新增 `/api/admin/matches` 系列端点和前端管理页面，可创建、编辑、删除、开始/结束赛事，并直接查看赛事列表
+- **小分 CSV 导入入口**: 后台支持上传 CSV 创建 `ScoreEvent` 细粒度小分记录，可选清空已有数据和导入后自动重算标准分
+
+### Changed
+- **脚本逻辑复用**: 将原 CSV 导入脚本的映射与校验逻辑下沉至 `app/modules/matches/importer.py`，供 API 与 CLI 共用，避免重复维护
+
+### Technical Details
+- 前端版本: 2.6.0 → 2.7.0
+- 后端版本: 2.6.0 → 2.7.0
+
 ## [2.4.2] - 2025-11-17
 
 ### Fixed

@@ -66,6 +66,9 @@ export function AdminNav() {
               <NavLink href="/admin/games" isActive={isActive('/admin/games')}>
                 比赛项目
               </NavLink>
+              <NavLink href="/admin/matches" isActive={isActive('/admin/matches')}>
+                锦标赛
+              </NavLink>
               <NavLink href="/admin/users" isActive={isActive('/admin/users')}>
                 选手管理
               </NavLink>

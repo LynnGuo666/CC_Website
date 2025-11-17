@@ -30,6 +30,35 @@ export interface AdminUser {
   api_key: string;
 }
 
+export type AdminMatchStatus = 'preparing' | 'ongoing' | 'finished' | 'cancelled';
+
+export interface AdminMatch {
+  id: number;
+  name: string;
+  description?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  status: AdminMatchStatus;
+  prize_pool?: string | null;
+  max_teams?: number | null;
+  max_players_per_team: number;
+  allow_substitutes: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminMatchPayload {
+  name: string;
+  description?: string;
+  start_time?: string;
+  end_time?: string;
+  status?: AdminMatchStatus;
+  prize_pool?: string;
+  max_teams?: number;
+  max_players_per_team?: number;
+  allow_substitutes?: boolean;
+}
+
 export interface Game {
   id: number;
   name: string;
@@ -294,6 +323,82 @@ class AdminAPI {
       },
       body: formData,
     });
+
+    return response.json();
+  }
+
+  // ==================== 锦标赛管理与小分导入 ====================
+
+  async getMatches(params?: { status?: AdminMatchStatus; skip?: number; limit?: number }) {
+    const qs = new URLSearchParams();
+    if (params?.status) qs.append('status_filter', params.status);
+    if (params?.skip !== undefined) qs.append('skip', String(params.skip));
+    if (params?.limit !== undefined) qs.append('limit', String(params.limit));
+    const query = qs.toString();
+    return this.request<AdminMatch[]>(`/api/admin/matches/${query ? `?${query}` : ''}`);
+  }
+
+  async createMatch(payload: AdminMatchPayload) {
+    return this.request<AdminMatch>('/api/admin/matches/', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async updateMatch(id: number, payload: Partial<AdminMatchPayload>) {
+    return this.request<AdminMatch>(`/api/admin/matches/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async deleteMatch(id: number) {
+    await this.request<void>(`/api/admin/matches/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async startMatch(id: number) {
+    return this.request<AdminMatch>(`/api/admin/matches/${id}/start`, {
+      method: 'POST',
+    });
+  }
+
+  async finishMatch(id: number) {
+    return this.request<AdminMatch>(`/api/admin/matches/${id}/finish`, {
+      method: 'POST',
+    });
+  }
+
+  async importScoreEvents(
+    matchId: number,
+    file: File,
+    options?: { clearExisting?: boolean; tournamentStage?: string; eventType?: string; recalc?: boolean }
+  ): Promise<{ inserted: number; skipped: number; errors: string[] }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const qs = new URLSearchParams();
+    if (options?.clearExisting) qs.append('clear_existing', 'true');
+    if (options?.tournamentStage) qs.append('tournament_stage', options.tournamentStage);
+    if (options?.eventType) qs.append('event_type', options.eventType);
+    if (options?.recalc) qs.append('recalc', 'true');
+
+    const response = await fetch(
+      `${API_BASE_URL}/api/admin/matches/${matchId}/score-events/import${qs.toString() ? `?${qs.toString()}` : ''}`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+        },
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: '导入失败' }));
+      throw new Error(error.detail || '导入失败');
+    }
 
     return response.json();
   }
