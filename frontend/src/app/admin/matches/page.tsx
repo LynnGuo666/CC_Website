@@ -11,6 +11,13 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 
+type ImportOptions = {
+  clearExisting: boolean;
+  recalc: boolean;
+  tournamentStage: string;
+  eventType: string;
+};
+
 const statusLabels: Record<AdminMatchStatus, string> = {
   preparing: '准备中',
   ongoing: '进行中',
@@ -38,13 +45,20 @@ export default function AdminMatchesPage() {
     max_players_per_team: 4,
     allow_substitutes: true,
   });
-  const [importOptions, setImportOptions] = useState({
+  const [importOptions, setImportOptions] = useState<ImportOptions>({
     clearExisting: false,
     recalc: false,
     tournamentStage: '',
     eventType: 'game_score',
   });
   const [importFile, setImportFile] = useState<File | null>(null);
+  const [importResult, setImportResult] = useState<{ inserted: number; skipped: number; errors: string[] } | null>(null);
+  const [lastImportContext, setLastImportContext] = useState<{
+    fileName: string | null;
+    matchName: string | null;
+    options: ImportOptions;
+  } | null>(null);
+  const [resultDialogOpen, setResultDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -177,11 +191,16 @@ export default function AdminMatchesPage() {
         tournamentStage: importOptions.tournamentStage || undefined,
         eventType: importOptions.eventType || undefined,
       });
-      alert(`导入完成：成功 ${result.inserted} 条，跳过 ${result.skipped} 条。错误 ${result.errors.length} 条`);
-      if (result.errors.length) {
-        console.warn('Import errors', result.errors);
-      }
+      setImportResult(result);
+      setLastImportContext({
+        fileName: importFile?.name ?? null,
+        matchName: importingMatch?.name ?? null,
+        options: { ...importOptions },
+      });
+      setImportFile(null);
+      setResultDialogOpen(true);
       setImportDialogOpen(false);
+      loadMatches();
     } catch (error) {
       alert('导入失败，请检查 CSV 格式');
       console.error('import score events failed', error);
@@ -408,6 +427,62 @@ export default function AdminMatchesPage() {
               <Button type="submit">开始导入</Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={resultDialogOpen} onOpenChange={(open) => {
+        setResultDialogOpen(open);
+        if (!open) {
+          setImportResult(null);
+          setLastImportContext(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>导入结果</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <div className="rounded-lg border border-dashed border-gray-200 dark:border-gray-700 p-4">
+              <p className="font-semibold">摘要</p>
+              <p className="mt-2">
+                成功导入 <span className="font-semibold text-green-600 dark:text-green-400">{importResult?.inserted ?? 0}</span> 条，
+                跳过 <span className="font-semibold text-amber-600 dark:text-amber-400">{importResult?.skipped ?? 0}</span> 条，
+                错误 <span className="font-semibold text-red-600 dark:text-red-400">{importResult?.errors.length ?? 0}</span> 条。
+              </p>
+            </div>
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <p className="font-semibold">导入参数</p>
+              <ul className="mt-2 space-y-1 text-gray-600 dark:text-gray-300">
+                <li>文件：{lastImportContext?.fileName || '未选择'}</li>
+                <li>赛事：{lastImportContext?.matchName ?? '未知'}</li>
+                <li>事件类型：{lastImportContext?.options.eventType || '默认 (game_score)'}</li>
+                <li>阶段：{lastImportContext?.options.tournamentStage || '未填写'}</li>
+                <li>清空旧数据：{lastImportContext?.options.clearExisting ? '是' : '否'}</li>
+                <li>导入后重算：{lastImportContext?.options.recalc ? '是' : '否'}</li>
+              </ul>
+            </div>
+            {(importResult?.errors?.length ?? 0) > 0 ? (
+              <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50/60 dark:bg-red-900/20 p-4">
+                <p className="font-semibold text-red-700 dark:text-red-200">错误详情</p>
+                <div className="mt-2 max-h-64 overflow-y-auto space-y-1 text-xs leading-5 text-red-700 dark:text-red-200">
+                  {importResult?.errors.map((error, index) => (
+                    <div key={index} className="break-all">
+                      {error}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50/60 dark:bg-green-900/20 p-4 text-green-700 dark:text-green-200">
+                未发现错误，所有记录均已导入。
+              </div>
+            )}
+            <div className="text-xs text-muted-foreground">
+              如需复核数据，可在赛事详情中查看小分，或调整 CSV 后再次导入。
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setResultDialogOpen(false)}>关闭</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
