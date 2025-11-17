@@ -25,7 +25,6 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 if str(ROOT_DIR) not in sys.path:
     sys.path.append(str(ROOT_DIR))
 
-from app.core.config import settings  # noqa: E402
 from app.core.db import SessionLocal  # noqa: E402
 from app.modules.games import models as game_models  # noqa: E402
 from app.modules.matches import models as match_models  # noqa: E402
@@ -198,6 +197,8 @@ def import_events(args):
         print(f"导入完成：成功 {inserted} 条，跳过 {skipped} 条。")
 
     if args.recalculate:
+        if not args.api_key:
+            raise SystemExit("触发重算需要提供 --api-key（从后台管理员账号复制）")
         trigger_recalculate(args.api_url, args.api_key, args.match_id)
 
 
@@ -210,7 +211,7 @@ def parse_args():
     parser.add_argument("--clear-existing", action="store_true", help="导入前清空现有 score_events 记录")
     parser.add_argument("--recalculate", action="store_true", help="导入后触发标准分重算")
     parser.add_argument("--api-url", default="http://127.0.0.1:8000/api", help="后端 API 基础地址，用于触发重算")
-    parser.add_argument("--api-key", default=settings.API_KEY, help="调用重算端点的 API Key")
+    parser.add_argument("--api-key", help="调用重算端点的 API Key（从管理员账号复制）")
     return parser.parse_args()
 
 

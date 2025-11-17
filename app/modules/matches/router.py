@@ -13,7 +13,7 @@ router = APIRouter()
 # --- 比赛接口 ---
 
 @router.post("/", response_model=schemas.Match, status_code=201)
-def create_match(match: schemas.MatchCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+def create_match(match: schemas.MatchCreate, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     """创建一场新比赛"""
     return crud.create_match(db=db, match=match)
 
@@ -40,7 +40,7 @@ def update_match(
     match_id: int, 
     match_update: schemas.MatchUpdate, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """更新比赛信息"""
     db_match = crud.update_match(db, match_id=match_id, match_update=match_update)
@@ -49,7 +49,7 @@ def update_match(
     return db_match
 
 @router.post("/{match_id}/start", response_model=schemas.Match)
-def start_match(match_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+def start_match(match_id: int, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     """开始比赛"""
     db_match = crud.start_match(db, match_id=match_id)
     if db_match is None:
@@ -60,7 +60,7 @@ def start_match(match_id: int, db: Session = Depends(get_db), api_key: str = Dep
 def finish_match(
     match_id: int, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """结束比赛"""
     db_match = crud.finish_match(db, match_id=match_id)
@@ -69,7 +69,7 @@ def finish_match(
     return db_match
 
 @router.delete("/{match_id}")
-def delete_match(match_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+def delete_match(match_id: int, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     """删除比赛"""
     success = crud.delete_match(db, match_id=match_id)
     if not success:
@@ -83,7 +83,7 @@ def create_match_team(
     match_id: int, 
     team: schemas.MatchTeamCreate, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """为比赛创建专属队伍"""
     # 验证比赛存在
@@ -135,7 +135,7 @@ def update_match_team(
     team_id: int, 
     team_update: schemas.MatchTeamUpdate, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """更新比赛队伍信息"""
     db_team = crud.update_match_team(db, team_id=team_id, team_update=team_update)
@@ -144,7 +144,7 @@ def update_match_team(
     return db_team
 
 @router.delete("/teams/{team_id}")
-def delete_match_team(team_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+def delete_match_team(team_id: int, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     """删除比赛队伍"""
     success = crud.delete_match_team(db, team_id=team_id)
     if not success:
@@ -158,7 +158,7 @@ def add_team_member(
     team_id: int, 
     member: schemas.TeamMemberCreate, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """添加队员"""
     # 验证用户存在
@@ -178,7 +178,7 @@ def remove_team_member(
     team_id: int, 
     user_id: int, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """移除队员"""
     success = crud.remove_team_member(db, team_id=team_id, user_id=user_id)
@@ -192,7 +192,7 @@ def update_member_role(
     user_id: int, 
     role_update: schemas.MemberRoleUpdate, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """更新队员角色"""
     membership = crud.update_team_member_role(db, team_id=team_id, user_id=user_id, new_role=role_update.role)
@@ -217,7 +217,7 @@ def create_match_game(
     match_id: int, 
     game: schemas.MatchGameCreate, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """为比赛添加游戏赛程"""
     # 验证比赛存在
@@ -240,7 +240,7 @@ def update_match_game(
     match_game_id: int,
     game_update: schemas.MatchGameUpdate,
     db: Session = Depends(get_db),
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """更新赛程信息"""
     db_match_game = crud.get_match_game(db, match_game_id=match_game_id)
@@ -262,7 +262,7 @@ def update_match_game(
     return db_match_game
 
 @router.delete("/games/{match_game_id}")
-def delete_match_game(match_game_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+def delete_match_game(match_game_id: int, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     """删除赛程"""
     success = crud.delete_match_game(db, match_game_id=match_game_id)
     if not success:
@@ -276,7 +276,7 @@ def set_game_lineups(
     match_game_id: int, 
     lineup_setting: schemas.LineupSetting, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """设置游戏出战阵容"""
     # 验证赛程存在
@@ -300,7 +300,7 @@ def create_score_for_match_game(
     match_game_id: int, 
     score: schemas.ScoreCreate, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """为指定赛程创建一条分数记录"""
     # 检查赛程和用户是否存在
@@ -323,7 +323,7 @@ def read_scores_for_match_game(match_game_id: int, db: Session = Depends(get_db)
     return crud.get_scores_for_match_game(db=db, match_game_id=match_game_id)
 
 @router.delete("/scores/{score_id}")
-def delete_score(score_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+def delete_score(score_id: int, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     """删除分数记录"""
     success = crud.delete_score(db, score_id=score_id)
     if not success:
@@ -364,7 +364,7 @@ def create_teams_batch(
     match_id: int, 
     batch_create: schemas.BatchTeamCreate, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """批量创建队伍"""
     # 验证比赛存在
@@ -385,7 +385,7 @@ def create_teams_batch(
 def recalculate_match_standard_scores(
     match_id: int, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """重新计算整个比赛的标准分"""
     db_match = crud.get_match(db, match_id=match_id)
@@ -402,7 +402,7 @@ def recalculate_match_standard_scores(
 def recalculate_game_standard_scores(
     match_game_id: int, 
     db: Session = Depends(get_db), 
-    api_key: str = Depends(get_api_key)
+    _admin_user = Depends(get_api_key)
 ):
     """重新计算单个游戏的标准分"""
     db_match_game = crud.get_match_game(db, match_game_id=match_game_id)

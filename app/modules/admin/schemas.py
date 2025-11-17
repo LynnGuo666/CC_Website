@@ -26,6 +26,7 @@ class AdminUserBase(BaseModel):
 
 class AdminUserCreate(AdminUserBase):
     password: str
+    api_key: Optional[str] = None
 
 
 class AdminUserUpdate(BaseModel):
@@ -34,6 +35,7 @@ class AdminUserUpdate(BaseModel):
     role: Optional[UserRole] = None
     password: Optional[str] = None
     is_active: Optional[bool] = None
+    api_key: Optional[str] = None
 
 
 class AdminUser(AdminUserBase):
@@ -42,6 +44,7 @@ class AdminUser(AdminUserBase):
     is_superuser: bool
     created_at: datetime.datetime
     last_login: Optional[datetime.datetime] = None
+    api_key: str
 
     class Config:
         from_attributes = True

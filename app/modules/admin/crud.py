@@ -55,20 +55,40 @@ def get_admin_user_by_email(db: Session, email: str) -> Optional[models.AdminUse
     return db.query(models.AdminUser).filter(models.AdminUser.email == email).first()
 
 
+def get_admin_user_by_api_key(db: Session, api_key: str) -> Optional[models.AdminUser]:
+    """根据 API Key 获取管理员用户"""
+    return db.query(models.AdminUser).filter(models.AdminUser.api_key == api_key).first()
+
+
 def get_admin_users(db: Session, skip: int = 0, limit: int = 100):
     """获取管理员用户列表"""
     return db.query(models.AdminUser).offset(skip).limit(limit).all()
 
 
+def generate_unique_api_key(db: Session) -> str:
+    """生成唯一的 API Key"""
+    while True:
+        candidate = secrets.token_urlsafe(32)
+        if not get_admin_user_by_api_key(db, candidate):
+            return candidate
+
+
 def create_admin_user(db: Session, user: schemas.AdminUserCreate) -> models.AdminUser:
     """创建管理员用户"""
     hashed_password = get_password_hash(user.password)
+    api_key_value = user.api_key or generate_unique_api_key(db)
+    if user.api_key:
+        existing_key_user = get_admin_user_by_api_key(db, user.api_key)
+        if existing_key_user:
+            raise ValueError("API Key already in use")
+
     db_user = models.AdminUser(
         username=user.username,
         email=user.email,
         full_name=user.full_name,
         hashed_password=hashed_password,
         role=user.role,
+        api_key=api_key_value,
     )
     db.add(db_user)
     db.commit()
@@ -87,6 +107,16 @@ def update_admin_user(db: Session, user_id: int, user_update: schemas.AdminUserU
     # 如果更新密码，需要加密
     if "password" in update_data:
         update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
+
+    if "api_key" in update_data:
+        new_key = update_data["api_key"]
+        if new_key:
+            existing_key_user = get_admin_user_by_api_key(db, new_key)
+            if existing_key_user and existing_key_user.id != user_id:
+                raise ValueError("API Key already in use")
+        else:
+            new_key = generate_unique_api_key(db)
+        update_data["api_key"] = new_key
 
     for field, value in update_data.items():
         setattr(db_user, field, value)

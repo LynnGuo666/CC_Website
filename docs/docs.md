@@ -81,6 +81,9 @@
 |          |                 | |  |
 |          |                 | |  |
 
+⚠️ **API Key 获取方式**  
+现在 API Key 与管理员账号一一对应。请使用后台 `/api/admin/users` 或管理界面创建管理员账号，并在用户详情响应中的 `api_key` 字段复制密钥。若需替换密钥，可在后台更新该账号。不要再从 `.env` 中读取全局 Key。
+
 ```
 import requests
 import json
@@ -90,8 +93,8 @@ from datetime import datetime, timedelta
 # --- 配置 ---
 # 请将 'http://your-api-server.com' 替换为您的API服务器地址
 API_BASE_URL = "http://127.0.0.1:8000/api"
-# 请将 'YOUR_SECRET_API_KEY' 替换为您有效的API密钥
-API_KEY = "YOUR_SECRET_API_KEY"
+# API Key 请在后台管理员账号详情页中复制
+API_KEY = "在后台管理员账号详情页复制的 API Key"
 # --- 配置结束 ---
 
 # 设置请求头
@@ -666,8 +669,8 @@ from typing import Dict, Any
 # --- 配置 ---
 # 请将 'http://your-api-server.com' 替换为您的API服务器地址
 API_BASE_URL = "http://127.0.0.1:8000/api"
-# 请将 'YOUR_SECRET_API_KEY' 替换为您有效的API密钥
-API_KEY = "YOUR_SECRET_API_KEY"
+# API Key 请在后台管理员账号详情页中复制
+API_KEY = "在后台管理员账号详情页复制的 API Key"
 # --- 配置结束 ---
 
 # 设置请求头
@@ -1075,8 +1078,8 @@ from datetime import datetime, timedelta
 # --- 配置 ---
 # 请将 'http://your-api-server.com' 替换为您的API服务器地址
 API_BASE_URL = "https://cc.ziip.space/api/api"
-# 请将 'YOUR_SECRET_API_KEY' 替换为您有效的API密钥
-API_KEY = "YOUR_SECRET_API_KEY"
+# API Key 请在后台管理员账号详情页中复制
+API_KEY = "在后台管理员账号详情页复制的 API Key"
 # --- 配置结束 ---
 
 # 设置请求头
@@ -1548,4 +1551,3 @@ def import_data():
 if __name__ == "__main__":
     import_data()
 ```
-

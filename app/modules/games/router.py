@@ -9,7 +9,7 @@ from app.core.security import get_api_key
 router = APIRouter()
 
 @router.post("/", response_model=schemas.Game)
-def create_game(game: schemas.GameCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+def create_game(game: schemas.GameCreate, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     """创建一个新比赛项目"""
     return crud.create_game(db=db, game=game)
 
@@ -28,7 +28,7 @@ def read_game(game_id: int, db: Session = Depends(get_db)):
     return db_game
 
 @router.put("/{game_id}", response_model=schemas.Game)
-def update_game(game_id: int, game: schemas.GameCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+def update_game(game_id: int, game: schemas.GameCreate, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     """更新比赛项目"""
     db_game = crud.update_game(db, game_id=game_id, game_update=game)
     if db_game is None:
@@ -36,7 +36,7 @@ def update_game(game_id: int, game: schemas.GameCreate, db: Session = Depends(ge
     return db_game
 
 @router.delete("/{game_id}")
-def delete_game(game_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+def delete_game(game_id: int, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     """删除比赛项目"""
     success = crud.delete_game(db, game_id=game_id)
     if not success:

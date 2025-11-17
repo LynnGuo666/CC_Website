@@ -23,6 +23,7 @@ class AdminUser(Base):
     email = Column(String, unique=True, index=True, comment="邮箱")
     hashed_password = Column(String, comment="加密后的密码")
     full_name = Column(String, nullable=True, comment="全名")
+    api_key = Column(String, unique=True, index=True, nullable=False, comment="用于调用受限接口的 API Key")
 
     # 角色和权限
     role = Column(SQLEnum(UserRole), default=UserRole.VIEWER, comment="用户角色")

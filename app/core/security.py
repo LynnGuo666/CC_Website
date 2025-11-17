@@ -8,21 +8,40 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.deps import get_db
+from app.modules.admin import crud
+from app.modules.admin.models import UserRole
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/admin/login")
 
 
-async def get_api_key(api_key_header: str = Security(api_key_header)):
+async def get_api_key(
+    api_key_header_value: str = Security(api_key_header),
+    db: Session = Depends(get_db)
+):
     """
-    从请求头中获取并验证 API Key。
+    从请求头中获取并验证 API Key，返回对应的管理员用户。
     """
-    if not api_key_header or api_key_header != settings.API_KEY:
+    if not api_key_header_value:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API Key",
         )
-    return api_key_header
+
+    admin_user = crud.get_admin_user_by_api_key(db, api_key_header_value)
+    if not admin_user or not admin_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API Key",
+        )
+
+    if not admin_user.has_permission(UserRole.EDITOR):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions for API Key",
+        )
+
+    return admin_user
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

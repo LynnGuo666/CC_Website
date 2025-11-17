@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     return crud.create_user(db=db, user=user)
 
 
@@ -146,7 +146,7 @@ def get_user_team_history(user_id: int, db: Session = Depends(get_db)):
     }
 
 @router.put("/{user_id}", response_model=schemas.User)
-def update_user(user_id: int, user: schemas.UserCreate, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+def update_user(user_id: int, user: schemas.UserCreate, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     """更新用户信息"""
     db_user = crud.update_user(db, user_id=user_id, user_update=user)
     if db_user is None:
@@ -154,7 +154,7 @@ def update_user(user_id: int, user: schemas.UserCreate, db: Session = Depends(ge
     return db_user
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)):
+def delete_user(user_id: int, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     """删除用户"""
     success = crud.delete_user(db, user_id=user_id)
     if not success:

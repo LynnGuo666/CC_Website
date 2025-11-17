@@ -80,7 +80,10 @@ async def create_admin_user(
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    return crud.create_admin_user(db=db, user=user)
+    try:
+        return crud.create_admin_user(db=db, user=user)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.put("/users/{user_id}", response_model=schemas.AdminUser)
@@ -93,7 +96,10 @@ async def update_admin_user(
     """
     更新管理员用户（仅管理员可访问）
     """
-    db_user = crud.update_admin_user(db, user_id, user_update)
+    try:
+        db_user = crud.update_admin_user(db, user_id, user_update)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user

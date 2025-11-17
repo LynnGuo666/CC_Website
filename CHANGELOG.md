@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] - 2025-11-17
+
+### Added
+- **管理员 API Key 绑定**: `admin_users` 表新增 `api_key` 字段，通过 Alembic 迁移为既有账号生成唯一密钥，管理员列表/详情接口可直接查看该密钥并用于脚本调用
+
+### Changed
+- **接口鉴权方式**: `get_api_key` 依赖现在校验管理员激活状态与 **Editor** 以上权限，并使用数据库中的密钥进行校验，彻底移除 `.env` 中的全局 API Key
+- **导入与自动化脚本**: `scripts/import_score_events.py` 触发重算时必须显式传入 `--api-key`，`import/*.py` 示例以及 `docs/docs.md` 全部更新为提示从管理员账号详情页复制密钥
+- **管理员接口体验**: 管理员创建/更新接口增加 API Key 唯一性校验，可选择传入自定义密钥，留空则自动生成新密钥并在响应中返回
+
+### Technical Details
+- 前端版本: 2.5.0 → 2.6.0
+- 后端版本: 2.5.0 → 2.6.0
+- 数据库迁移: `833c185998bb_add_admin_api_keys.py`
+
 ## [2.4.2] - 2025-11-17
 
 ### Fixed

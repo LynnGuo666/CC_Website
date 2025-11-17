@@ -27,6 +27,7 @@ export interface AdminUser {
   is_superuser: boolean;
   created_at: string;
   last_login?: string;
+  api_key: string;
 }
 
 export interface Game {

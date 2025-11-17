@@ -7,7 +7,9 @@ import { useAdminAuth } from '@/contexts/admin-auth-context';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { adminAPI } from '@/lib/admin-api';
+import { Copy } from 'lucide-react';
 
 export default function AdminAccountPage() {
   const router = useRouter();
@@ -16,6 +18,8 @@ export default function AdminAccountPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [copying, setCopying] = useState(false);
+  const [copyMessage, setCopyMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -64,6 +68,20 @@ export default function AdminAccountPage() {
     }
   };
 
+  const handleCopy = async () => {
+    if (!user?.api_key) return;
+    try {
+      setCopying(true);
+      await navigator.clipboard.writeText(user.api_key);
+      setCopyMessage({ text: 'API Key 已复制', type: 'success' });
+    } catch (error) {
+      console.error('Failed to copy api key:', error);
+      setCopyMessage({ text: '复制失败，请手动复制', type: 'error' });
+    } finally {
+      setCopying(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <AdminNav />
@@ -77,12 +95,52 @@ export default function AdminAccountPage() {
         </div>
 
         <div className="rounded-2xl bg-white p-6 shadow dark:bg-gray-800">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">修改密码</h3>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">账户安全</h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                当前登录账户：{user.full_name || user.username}（{user.role}）
+              </p>
+            </div>
+            <Badge variant="secondary" className="uppercase">{user.role}</Badge>
+          </div>
+
+          <div className="mt-6 space-y-2">
+            <Label htmlFor="apiKey">API Key（用于调用受限接口）</Label>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Input
+                id="apiKey"
+                value={user.api_key || '暂无'}
+                readOnly
+                className="font-mono"
+              />
+              <Button type="button" variant="outline" onClick={handleCopy} disabled={copying || !user.api_key}>
+                <Copy className="size-4" />
+                {copying ? '复制中...' : '复制 Key'}
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              保管好此 Key，可用于导入脚本等需要管理权限的操作。
+            </p>
+            {copyMessage && (
+              <div
+                className={`rounded-md px-3 py-2 text-xs ${
+                  copyMessage.type === 'success'
+                    ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-200'
+                    : 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-200'
+                }`}
+              >
+                {copyMessage.text}
+              </div>
+            )}
+          </div>
+
+          <h3 className="mt-8 text-lg font-semibold text-gray-900 dark:text-white">修改密码</h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            当前登录账户：{user.full_name || user.username}（{user.role}）
+            建议定期更换密码提升安全性。
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             <div>
               <Label htmlFor="newPassword">新密码</Label>
               <Input
