@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '@/config/env';
+
 export interface SiteConfig {
   notification_text?: string;
   notification_link?: string;
@@ -11,7 +13,7 @@ export interface SiteConfig {
 class ConfigService {
   async getConfig(): Promise<SiteConfig> {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/config`);
+      const response = await fetch(`${API_BASE_URL}/api/config`);
       if (!response.ok) throw new Error('Failed to fetch config');
       return await response.json();
     } catch (error) {

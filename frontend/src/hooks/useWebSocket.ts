@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { WS_URL } from '@/config/env';
 
 // --- WebSocket Hook ---
 
@@ -10,7 +11,7 @@ const getWebSocketURL = () => {
     const host = process.env.NEXT_PUBLIC_WS_URL?.replace(/^wss?:\/\//, '') || window.location.host;
     return `${protocol}//${host}`;
   }
-  return process.env.NEXT_PUBLIC_WS_URL || 'ws://127.0.0.1:8000';
+  return WS_URL;
 };
 
 type WebSocketOptions<T> = {

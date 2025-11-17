@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.7] - 2025-11-17
+
+### Fixed
+- **API 地址硬编码移除**：移除所有硬编码的 `localhost:8000` 和 `127.0.0.1:8000`，统一使用环境变量配置
+- **环境变量统一管理**：创建 `frontend/src/config/env.ts` 集中管理所有 API 和 WebSocket URL 配置，确保生产环境和开发环境都能正确使用配置的后端地址
+
+### Changed
+- **配置文件重构**：所有 API 请求相关文件（`configService.ts`, `api.ts`, `admin-api.ts`, `useWebSocket.ts` 等）现在都从统一的配置文件导入 API_BASE_URL
+- **环境变量示例**：新增 `frontend/.env.example` 文件，提供环境变量配置参考
+
+### Technical Details
+- 前端版本: 2.7.6 → 2.7.7
+- 后端版本: 2.7.6 → 2.7.7
+- 新增统一配置文件 `src/config/env.ts`
+- 默认开发环境 API 地址：`http://localhost:8000`
+- 生产环境通过 `NEXT_PUBLIC_API_URL` 环境变量配置
+
 ## [2.7.6] - 2025-11-17
 
 ### Fixed
