@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.5] - 2025-11-17
+
+### Fixed
+- **管理后台导航缺失**：站点配置页补齐管理导航及顶部留白，滚动时导航保持固定且与其他管理页一致
+- **主站导航隔离**：管理员路由仅隐藏主站导航与页脚，不再误伤后台导航，同时自动收紧全局顶部偏移避免空白
+
+### Technical Details
+- 前端版本: 2.7.4 → 2.7.5
+- 后端版本: 2.7.4 → 2.7.5
+- MainNav/Footer 增加 data 标记，AdminLayout 读写 `--page-top-offset` 并在卸载时恢复；站点配置页复用登录校验和顶部间距，提交时校验管理员 token
+
+## [2.7.4] - 2025-11-17
+
+### Fixed
+- **导航背景融入页面**：顶部导航新增渐变蒙层与全局背景同步过渡，消除最上方的白色条带，在浅色和深色模式下都保持自然融合
+
+### Technical Details
+- 前端版本: 2.7.3 → 2.7.4
+- 后端版本: 2.7.2 → 2.7.4
+- 导航容器增加全幅背景渐变层，避免透明区域与页面背景产生分割
+
 ## [2.7.3] - 2025-11-17
 
 ### Fixed

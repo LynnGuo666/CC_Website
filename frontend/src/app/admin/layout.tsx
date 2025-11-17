@@ -9,24 +9,34 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   useEffect(() => {
-    // 隐藏主导航和页脚
-    const mainNav = document.querySelector('nav');
-    const footer = document.querySelector('footer');
+    const body = document.body;
+    const mainNav = document.querySelector<HTMLElement>('nav[data-site-main-nav]');
+    const footer = document.querySelector<HTMLElement>('footer[data-site-footer]');
 
-    if (mainNav && mainNav.querySelector('.glass-nav')) {
+    const previousNavDisplay = mainNav?.style.display ?? '';
+    const previousFooterDisplay = footer?.style.display ?? '';
+    const previousOffset = body.style.getPropertyValue('--page-top-offset');
+    const hadInlineOffset = previousOffset !== '';
+
+    if (mainNav) {
       mainNav.style.display = 'none';
     }
     if (footer) {
       footer.style.display = 'none';
     }
+    body.style.setProperty('--page-top-offset', '0px');
 
-    // 清理函数：离开管理页面时恢复显示
     return () => {
       if (mainNav) {
-        mainNav.style.display = '';
+        mainNav.style.display = previousNavDisplay;
       }
       if (footer) {
-        footer.style.display = '';
+        footer.style.display = previousFooterDisplay;
+      }
+      if (hadInlineOffset) {
+        body.style.setProperty('--page-top-offset', previousOffset);
+      } else {
+        body.style.removeProperty('--page-top-offset');
       }
     };
   }, []);

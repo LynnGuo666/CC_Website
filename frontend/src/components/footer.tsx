@@ -45,7 +45,10 @@ export function Footer() {
   const siteAbbr = config?.site_abbr || 'TH';
 
   return (
-    <footer className="glass-panel mx-auto mt-24 mb-12 max-w-6xl px-6 py-10 text-sm text-muted-foreground">
+    <footer
+      data-site-footer
+      className="glass-panel mx-auto mt-24 mb-12 max-w-6xl px-6 py-10 text-sm text-muted-foreground"
+    >
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl gradient-apple text-white font-bold flex items-center justify-center shadow-lg overflow-hidden">

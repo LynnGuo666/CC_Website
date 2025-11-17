@@ -69,6 +69,7 @@ from app.modules.games.admin_router import router as games_admin_router
 from app.modules.users.admin_router import router as users_admin_router
 from app.modules.admin.import_export import router as import_export_router
 from app.modules.matches.admin_router import router as matches_admin_router
+from app.modules.config.router import router as config_router
 
 app.include_router(users_router, prefix="/api/users", tags=["users"])
 app.include_router(games_router, prefix="/api/games", tags=["games"])
@@ -78,6 +79,7 @@ app.include_router(games_admin_router, prefix="/api/admin/games", tags=["admin-g
 app.include_router(users_admin_router, prefix="/api/admin/users", tags=["admin-users"])
 app.include_router(import_export_router, prefix="/api/admin/import-export", tags=["admin-import-export"])
 app.include_router(matches_admin_router, prefix="/api/admin/matches", tags=["admin-matches"])
+app.include_router(config_router, prefix="/api", tags=["config"])
 
 # 注意：teams 模块已被整合到 matches 模块中
 # 新的队伍管理API现在在 /matches/{match_id}/teams 下
