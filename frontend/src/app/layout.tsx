@@ -22,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
         <script
           defer
           src="https://analysis.602007.xyz/script.js"
@@ -41,7 +42,7 @@ export default function RootLayout({
             <MainNav />
 
             <main className="min-h-screen">
-              <div className="relative">
+              <div className="relative pt-20 sm:pt-24">
                 {children}
               </div>
             </main>

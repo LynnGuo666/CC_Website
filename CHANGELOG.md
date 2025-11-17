@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.3] - 2025-11-17
+
+### Fixed
+- **移动端安全区域适配**：修复手机导航条遮挡内容问题，添加 `safe-area-inset` 支持，自动适配刘海屏和底部导航条
+- **背景渐变显示**：修复顶部出现异色分割线问题，确保渐变背景正确覆盖全屏
+
+### Technical Details
+- 前端版本: 2.7.2 → 2.7.3
+- 添加 `viewport-fit=cover` meta 标签
+- 优化 body/html 背景层级关系
+
 ## [2.7.2] - 2025-11-17
 
 ### Changed
