@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAdminAuth } from "@/contexts/admin-auth-context";
+import { adminAPI } from "@/lib/admin-api";
 
 interface SiteConfig {
   notification_text?: string;
@@ -21,15 +22,14 @@ interface SiteConfig {
 
 export default function ConfigPage() {
   const router = useRouter();
-  const { token, user, isAuthenticated, loading: authLoading } = useAdminAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAdminAuth();
   const [config, setConfig] = useState<SiteConfig>({});
   const [configLoading, setConfigLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const fetchConfig = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/config`);
-      const data = await response.json();
+      const data = await adminAPI.getSiteConfig();
       setConfig(data);
     } catch (error) {
       console.error('Failed to fetch config:', error);
@@ -48,32 +48,14 @@ export default function ConfigPage() {
   }, [authLoading, isAuthenticated, router, fetchConfig]);
 
   const handleSave = async () => {
-    if (!token) {
-      alert('管理员凭证失效，请重新登录后重试。');
-      return;
-    }
     setSaving(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/admin/config`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(config)
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setConfig(data);
-        alert('配置已保存');
-      } else {
-        const error = await response.text();
-        console.error('Save failed:', error);
-        alert(`保存失败: ${response.status}`);
-      }
+      const data = await adminAPI.updateSiteConfig(config);
+      setConfig(data);
+      alert('配置已保存');
     } catch (error) {
       console.error('Failed to save config:', error);
-      alert(`保存失败: ${error}`);
+      alert(`保存失败: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setSaving(false);
     }

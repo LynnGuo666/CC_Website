@@ -402,6 +402,23 @@ class AdminAPI {
 
     return response.json();
   }
+
+  // ==================== 站点配置管理 ====================
+
+  async getSiteConfig(): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/api/config`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch site config');
+    }
+    return response.json();
+  }
+
+  async updateSiteConfig(config: any): Promise<any> {
+    return this.request<any>('/api/admin/config', {
+      method: 'PUT',
+      body: JSON.stringify(config),
+    });
+  }
 }
 
 export const adminAPI = new AdminAPI();

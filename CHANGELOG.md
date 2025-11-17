@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.6] - 2025-11-17
+
+### Fixed
+- **管理后台页面顶部 padding 移除**：修复管理后台页面仍然继承主站布局的 `pt-20 sm:pt-24` padding 问题，AdminLayout 的 useEffect 现在直接操作 DOM 将 `main > div` 的 paddingTop 设置为 0，确保管理后台页面内容从顶部开始显示
+- **站点配置页面鉴权统一**：修复站点配置页面 401 错误，从直接使用 fetch + context token 改为使用 adminAPI 统一鉴权机制。在 adminAPI 中新增 `getSiteConfig()` 和 `updateSiteConfig()` 方法，与其他管理页面保持一致的 token 管理方式
+
+### Technical Details
+- 前端版本: 2.7.5 → 2.7.6
+- 后端版本: 2.7.5 → 2.7.6
+- AdminLayout 通过 `document.querySelector('main > div')` 直接移除根布局的顶部 padding
+- config 页面不再从 useAdminAuth context 直接获取 token，改用 adminAPI 的内部 token 管理
+
 ## [2.7.5] - 2025-11-17
 
 ### Fixed
