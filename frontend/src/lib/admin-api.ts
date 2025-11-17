@@ -406,11 +406,7 @@ class AdminAPI {
   // ==================== 站点配置管理 ====================
 
   async getSiteConfig(): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/api/config`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch site config');
-    }
-    return response.json();
+    return this.request<any>('/api/config');
   }
 
   async updateSiteConfig(config: any): Promise<any> {
