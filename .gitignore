@@ -92,3 +92,6 @@ node_modules/
 *.tmp
 *.temp
 /import/
+/docs/AGENTS_STYLE.md
+/docs/ADMIN_SYSTEM_README.md
+/docs/SEASON_THEMES.md
