@@ -9,14 +9,13 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   useEffect(() => {
-    const body = document.body;
-    const mainNav = document.querySelector<HTMLElement>('nav[data-site-main-nav]');
-    const footer = document.querySelector<HTMLElement>('footer[data-site-footer]');
+    const mainNav = document.querySelector<HTMLElement>('nav');
+    const footer = document.querySelector<HTMLElement>('footer');
+    const mainContentWrapper = document.querySelector<HTMLElement>('main > div');
 
     const previousNavDisplay = mainNav?.style.display ?? '';
     const previousFooterDisplay = footer?.style.display ?? '';
-    const previousOffset = body.style.getPropertyValue('--page-top-offset');
-    const hadInlineOffset = previousOffset !== '';
+    const previousPaddingTop = mainContentWrapper?.style.paddingTop ?? '';
 
     if (mainNav) {
       mainNav.style.display = 'none';
@@ -24,7 +23,9 @@ export default function AdminLayout({
     if (footer) {
       footer.style.display = 'none';
     }
-    body.style.setProperty('--page-top-offset', '0px');
+    if (mainContentWrapper) {
+      mainContentWrapper.style.paddingTop = '0';
+    }
 
     return () => {
       if (mainNav) {
@@ -33,10 +34,8 @@ export default function AdminLayout({
       if (footer) {
         footer.style.display = previousFooterDisplay;
       }
-      if (hadInlineOffset) {
-        body.style.setProperty('--page-top-offset', previousOffset);
-      } else {
-        body.style.removeProperty('--page-top-offset');
+      if (mainContentWrapper) {
+        mainContentWrapper.style.paddingTop = previousPaddingTop;
       }
     };
   }, []);
