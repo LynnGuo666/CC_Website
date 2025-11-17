@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from . import models, schemas
 from app.modules.matches import models as match_models
@@ -548,14 +548,14 @@ def delete_user(db: Session, user_id: int):
 
 def get_leaderboard(db: Session, skip: int = 0, limit: int = 100, game_code: str = None):
     """
-    获取标准分排行榜
-    
+    获取标准分排行榜（优化：批量查询避免 N+1 问题）
+
     Args:
         db: 数据库会话
         skip: 跳过数量
         limit: 返回数量限制
         game_code: 游戏代码，如果指定则按该游戏的平均标准分排序
-        
+
     Returns:
         List[Dict]: 排行榜数据
     """
@@ -567,12 +567,19 @@ def get_leaderboard(db: Session, skip: int = 0, limit: int = 100, game_code: str
         users = db.query(models.User).filter(
             models.User.average_standard_score > 0
         ).order_by(desc(models.User.average_standard_score)).offset(skip).limit(limit).all()
-        
+
+        if not users:
+            return []
+
+        # 批量获取所有用户的游戏统计（优化：一次查询替代 N 次查询）
+        user_ids = [user.id for user in users]
+        batch_game_stats = get_batch_user_game_stats(db, user_ids)
+
         leaderboard = []
         for idx, user in enumerate(users):
-            # 获取用户的游戏统计
-            game_stats = get_user_game_stats(db, user.id)
-            
+            # 从批量查询结果中获取该用户的游戏统计
+            game_stats = batch_game_stats.get(user.id, {})
+
             leaderboard.append({
                 "rank": skip + idx + 1,
                 "user_id": user.id,
@@ -587,7 +594,7 @@ def get_leaderboard(db: Session, skip: int = 0, limit: int = 100, game_code: str
                 "best_game": get_user_best_game(game_stats),
                 "game_count": len([g for g in game_stats.values() if g.get('games_played', 0) > 0])
             })
-        
+
         return leaderboard
 
 def get_game_specific_leaderboard(db: Session, game_code: str, skip: int = 0, limit: int = 100):
@@ -708,17 +715,84 @@ def get_game_specific_leaderboard(db: Session, game_code: str, skip: int = 0, li
     
     return leaderboard
 
-def get_user_game_stats(db: Session, user_id: int):
-    """获取用户的游戏统计数据"""
+def get_batch_user_game_stats(db: Session, user_ids: List[int]) -> Dict[int, Dict]:
+    """
+    批量获取多个用户的游戏统计数据（优化：避免 N+1 查询）
+
+    Args:
+        db: 数据库会话
+        user_ids: 用户ID列表
+
+    Returns:
+        Dict[int, Dict]: {user_id: {game_code: stats}}
+    """
     from app.modules.matches import models as match_models
-    
+    from app.modules.games import models as game_models
+
+    if not user_ids:
+        return {}
+
+    # 一次查询获取所有用户的分数和游戏信息
+    scores = db.query(
+        match_models.Score.user_id,
+        match_models.Score.points,
+        match_models.Score.standard_score,
+        game_models.Game.code.label('game_code'),
+        game_models.Game.name.label('game_name')
+    ).join(
+        match_models.MatchGame, match_models.Score.match_game_id == match_models.MatchGame.id
+    ).join(
+        game_models.Game, match_models.MatchGame.game_id == game_models.Game.id
+    ).filter(
+        match_models.Score.user_id.in_(user_ids)
+    ).all()
+
+    # 组织数据结构
+    batch_stats = {}
+    for score in scores:
+        user_id = score.user_id
+        game_code = score.game_code
+
+        if user_id not in batch_stats:
+            batch_stats[user_id] = {}
+
+        if game_code not in batch_stats[user_id]:
+            batch_stats[user_id][game_code] = {
+                "total_score": 0,
+                "total_standard_score": 0.0,
+                "games_played": 0,
+                "game_name": score.game_name
+            }
+
+        batch_stats[user_id][game_code]["total_score"] += score.points
+        batch_stats[user_id][game_code]["total_standard_score"] += (score.standard_score or 0.0)
+        batch_stats[user_id][game_code]["games_played"] += 1
+
+    # 计算每个游戏的平均标准分
+    for user_id in batch_stats:
+        for game_code in batch_stats[user_id]:
+            games_played = batch_stats[user_id][game_code]["games_played"]
+            if games_played > 0:
+                batch_stats[user_id][game_code]["average_standard_score"] = round(
+                    batch_stats[user_id][game_code]["total_standard_score"] / games_played, 2
+                )
+            else:
+                batch_stats[user_id][game_code]["average_standard_score"] = 0.0
+
+    return batch_stats
+
+
+def get_user_game_stats(db: Session, user_id: int):
+    """获取用户的游戏统计数据（保留用于单个用户查询）"""
+    from app.modules.matches import models as match_models
+
     scores = db.query(match_models.Score).filter(match_models.Score.user_id == user_id).all()
-    
+
     game_stats = {}
     for score in scores:
         if not score.match_game or not score.match_game.game:
             continue
-            
+
         game_code = score.match_game.game.code
         if game_code not in game_stats:
             game_stats[game_code] = {
@@ -727,11 +801,11 @@ def get_user_game_stats(db: Session, user_id: int):
                 "games_played": 0,
                 "game_name": score.match_game.game.name
             }
-        
+
         game_stats[game_code]["total_score"] += score.points
         game_stats[game_code]["total_standard_score"] += (score.standard_score or 0.0)
         game_stats[game_code]["games_played"] += 1
-    
+
     # 计算每个游戏的平均标准分
     for game_code in game_stats:
         if game_stats[game_code]["games_played"] > 0:
@@ -740,7 +814,7 @@ def get_user_game_stats(db: Session, user_id: int):
             )
         else:
             game_stats[game_code]["average_standard_score"] = 0.0
-    
+
     return game_stats
 
 def get_user_best_game(game_stats):

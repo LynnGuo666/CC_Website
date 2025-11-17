@@ -14,6 +14,96 @@ from app.modules.games import models as game_models
 def get_match(db: Session, match_id: int):
     return db.query(models.Match).filter(models.Match.id == match_id).first()
 
+def get_match_full_data(db: Session, match_id: int):
+    """
+    获取比赛的完整数据（优化：使用预加载避免 N+1 查询）
+
+    Returns:
+        Dict: 包含比赛、队伍、赛程和分数的完整数据
+    """
+    from sqlalchemy.orm import selectinload
+    from app.modules.games import models as game_models
+
+    # 使用 selectinload 预加载所有关联数据
+    match = db.query(models.Match).options(
+        selectinload(models.Match.teams).selectinload(models.MatchTeam.memberships),
+        selectinload(models.Match.match_games).selectinload(models.MatchGame.game),
+        selectinload(models.Match.match_games).selectinload(models.MatchGame.scores).selectinload(models.Score.user)
+    ).filter(models.Match.id == match_id).first()
+
+    if not match:
+        return None
+
+    # 构建返回数据
+    return {
+        "match": {
+            "id": match.id,
+            "name": match.name,
+            "description": match.description,
+            "start_time": match.start_time.isoformat() if match.start_time else None,
+            "end_time": match.end_time.isoformat() if match.end_time else None,
+            "status": match.status.value,
+            "prize_pool": match.prize_pool,
+            "max_teams": match.max_teams,
+            "max_players_per_team": match.max_players_per_team,
+            "allow_substitutes": match.allow_substitutes,
+            "winning_team_id": match.winning_team_id,
+            "created_at": match.created_at.isoformat() if match.created_at else None,
+            "updated_at": match.updated_at.isoformat() if match.updated_at else None,
+        },
+        "teams": [
+            {
+                "id": team.id,
+                "match_id": team.match_id,
+                "name": team.name,
+                "color": team.color,
+                "external_team_id": team.external_team_id,
+                "total_score": team.total_score,
+                "games_played": team.games_played,
+                "team_rank": team.team_rank,
+                "created_at": team.created_at.isoformat() if team.created_at else None,
+            }
+            for team in match.teams
+        ],
+        "games": [
+            {
+                "id": game.id,
+                "match_id": game.match_id,
+                "game_id": game.game_id,
+                "game_order": game.game_order,
+                "structure_type": game.structure_type,
+                "structure_details": game.structure_details,
+                "multiplier": game.multiplier,
+                "is_live": game.is_live,
+                "total_standard_score": game.total_standard_score,
+                "average_standard_score": game.average_standard_score,
+                "game": {
+                    "id": game.game.id,
+                    "name": game.game.name,
+                    "code": game.game.code,
+                    "description": game.game.description,
+                } if game.game else None,
+                "scores": [
+                    {
+                        "id": score.id,
+                        "points": score.points,
+                        "user_id": score.user_id,
+                        "team_id": score.match_team_id,
+                        "match_game_id": score.match_game_id,
+                        "standard_score": score.standard_score,
+                        "user": {
+                            "id": score.user.id,
+                            "nickname": score.user.nickname,
+                            "display_name": score.user.display_name,
+                        } if score.user else None,
+                    }
+                    for score in game.scores
+                ]
+            }
+            for game in match.match_games
+        ]
+    }
+
 def get_matches(db: Session, skip: int = 0, limit: int = 100, status: schemas.MatchStatus = None):
     query = db.query(models.Match)
     if status:
@@ -298,7 +388,9 @@ def get_score_events(
 
 
 def get_match_events_summary(db: Session, match_id: int):
-    """返回按赛程分组的细粒度事件"""
+    """
+    返回按赛程分组的细粒度事件（优化：直接返回字典避免 ORM 对象序列化）
+    """
     match_games = (
         db.query(models.MatchGame)
         .options(
@@ -325,12 +417,68 @@ def get_match_events_summary(db: Session, match_id: int):
                 e.id,
             )
         )
+
+        # 优化：手动转换为字典，避免 Pydantic 验证和 ORM 对象序列化
+        events_list = []
+        for event in events:
+            event_dict = {
+                "id": event.id,
+                "match_id": event.match_id,
+                "match_game_id": event.match_game_id,
+                "match_team_id": event.match_team_id,
+                "opponent_team_id": event.opponent_team_id,
+                "user_id": event.user_id,
+                "score_id": event.score_id,
+                "event_type": event.event_type,
+                "points": event.points,
+                "raw_points": event.raw_points,
+                "multiplier_used": event.multiplier_used,
+                "tournament_stage": event.tournament_stage,
+                "tournament_round_index": event.tournament_round_index,
+                "game_round_label": event.game_round_label,
+                "game_round_index": event.game_round_index,
+                "area": event.area,
+                "event_time": event.event_time,
+                "meta": event.meta,
+                "created_at": event.created_at.isoformat() if event.created_at else None,
+            }
+
+            # 添加关联对象（仅包含必要字段）
+            if event.user:
+                event_dict["user"] = {
+                    "id": event.user.id,
+                    "nickname": event.user.nickname,
+                    "display_name": event.user.display_name,
+                }
+            else:
+                event_dict["user"] = None
+
+            if event.team:
+                event_dict["team"] = {
+                    "id": event.team.id,
+                    "name": event.team.name,
+                    "color": event.team.color,
+                }
+            else:
+                event_dict["team"] = None
+
+            if event.opponent_team:
+                event_dict["opponent_team"] = {
+                    "id": event.opponent_team.id,
+                    "name": event.opponent_team.name,
+                    "color": event.opponent_team.color,
+                }
+            else:
+                event_dict["opponent_team"] = None
+
+            events_list.append(event_dict)
+
         grouped.append({
             "match_game_id": match_game.id,
             "game_id": match_game.game_id,
             "game_name": match_game.game.name if match_game.game else f"Game #{match_game.game_id}",
             "game_code": match_game.game.code if match_game.game else None,
-            "events": events,
+            "events": events_list,
         })
 
     return {
@@ -443,8 +591,15 @@ def get_game_lineup(db: Session, match_game_id: int, team_id: int = None):
 
 # --- Score CRUD ---
 
-def create_match_score(db: Session, match_game_id: int, score: schemas.ScoreCreate):
-    """为指定赛程创建一条分数记录, 并根据阵容信息自动校正队伍ID"""
+def create_match_score(db: Session, match_game_id: int, score: schemas.ScoreCreate, auto_update_stats: bool = True):
+    """为指定赛程创建一条分数记录, 并根据阵容信息自动校正队伍ID
+
+    Args:
+        db: 数据库会话
+        match_game_id: 赛程ID
+        score: 分数数据
+        auto_update_stats: 是否自动更新统计（批量导入时可设为False以提升性能）
+    """
     # 查找选手在该游戏中的阵容记录，以确定其所属队伍
     lineup_entry = db.query(models.GameLineup).filter(
         models.GameLineup.match_game_id == match_game_id,
@@ -475,13 +630,15 @@ def create_match_score(db: Session, match_game_id: int, score: schemas.ScoreCrea
     db.add(db_score)
     db.commit()
     db.refresh(db_score)
-    
-    # 自动计算该游戏的标准分
-    calculate_standard_scores_for_match_game(db, match_game_id)
-    
-    # 异步更新相关队伍的积分
-    update_team_scores_async([correct_team_id])
-    
+
+    # 仅在需要时自动更新统计（批量操作时可禁用以提升性能）
+    if auto_update_stats:
+        # 自动计算该游戏的标准分
+        calculate_standard_scores_for_match_game(db, match_game_id)
+
+        # 异步更新相关队伍的积分
+        update_team_scores_async([correct_team_id])
+
     return db_score
 
 def get_scores_for_match_game(db: Session, match_game_id: int):
@@ -520,21 +677,18 @@ def get_match_stats(db: Session, match_id: int):
     }
 
 def get_match_leaderboard(db: Session, match_id: int, limit: int = 100) -> List[dict]:
-    """获取指定比赛内的标准分排行榜（仅统计该比赛的所有赛程）。"""
-    # 先取出该比赛的所有赛程ID
-    match_game_ids = [mg.id for mg in get_match_games_by_match(db, match_id) or []]
-    if not match_game_ids:
-        return []
-
-    # 计算该比赛中每位玩家的总标准分、平均标准分和参与场次
+    """获取指定比赛内的标准分排行榜（优化：使用子查询避免先获取所有赛程ID）。"""
+    # 使用子查询直接关联，避免先获取所有赛程ID
     rows = db.query(
         models.Score.user_id.label('user_id'),
         func.avg(models.Score.standard_score).label('avg_standard_score'),
         func.sum(models.Score.standard_score).label('total_standard_score'),
         func.count(models.Score.id).label('games_played')
+    ).join(
+        models.MatchGame, models.MatchGame.id == models.Score.match_game_id
     ).filter(
         models.Score.standard_score.isnot(None),
-        models.Score.match_game_id.in_(match_game_ids)
+        models.MatchGame.match_id == match_id
     ).group_by(
         models.Score.user_id
     ).order_by(
@@ -553,22 +707,21 @@ def get_match_leaderboard(db: Session, match_id: int, limit: int = 100) -> List[
     return leaderboard
 
 def get_multi_match_leaderboard(db: Session, match_ids: List[int], limit: int = 100) -> List[dict]:
-    """获取多场比赛合并的标准分排行榜。"""
+    """获取多场比赛合并的标准分排行榜（优化：使用子查询避免先获取所有赛程ID）。"""
     if not match_ids:
         return []
-    # 获取这些比赛的所有赛程ID
-    match_game_ids = [mg.id for mid in match_ids for mg in (get_match_games_by_match(db, mid) or [])]
-    if not match_game_ids:
-        return []
 
+    # 使用子查询直接关联，避免先获取所有赛程ID
     rows = db.query(
         models.Score.user_id.label('user_id'),
         func.avg(models.Score.standard_score).label('avg_standard_score'),
         func.sum(models.Score.standard_score).label('total_standard_score'),
         func.count(models.Score.id).label('games_played')
+    ).join(
+        models.MatchGame, models.MatchGame.id == models.Score.match_game_id
     ).filter(
         models.Score.standard_score.isnot(None),
-        models.Score.match_game_id.in_(match_game_ids)
+        models.MatchGame.match_id.in_(match_ids)
     ).group_by(
         models.Score.user_id
     ).order_by(

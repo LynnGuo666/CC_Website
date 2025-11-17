@@ -61,26 +61,29 @@ class StandardScoreCalculator:
     def update_match_game_standard_scores(self, match_game_id: int) -> bool:
         """
         更新单个比赛游戏的标准分到数据库
-        
+
         Args:
             match_game_id: 比赛游戏ID
-            
+
         Returns:
             bool: 是否成功更新
         """
         try:
             standard_scores = self.calculate_match_game_standard_scores(match_game_id)
-            
+
             if not standard_scores:
                 logger.warning(f"No scores found for match_game_id: {match_game_id}")
                 return False
-            
-            # 批量更新标准分
-            for score_id, standard_score in standard_scores.items():
-                self.db.query(models.Score).filter(
-                    models.Score.id == score_id
-                ).update({"standard_score": standard_score})
-            
+
+            # 使用批量更新优化性能 - 使用 bulk_update_mappings
+            score_updates = [
+                {"id": score_id, "standard_score": standard_score}
+                for score_id, standard_score in standard_scores.items()
+            ]
+
+            if score_updates:
+                self.db.bulk_update_mappings(models.Score, score_updates)
+
             # 更新赛程的标准分汇总
             total_std = sum(standard_scores.values())
             avg_std = total_std / max(len(standard_scores), 1)
@@ -90,11 +93,11 @@ class StandardScoreCalculator:
                 "total_standard_score": total_std,
                 "average_standard_score": avg_std
             })
-            
+
             self.db.commit()
             logger.info(f"Updated standard scores for match_game_id: {match_game_id}")
             return True
-            
+
         except Exception as e:
             logger.error(f"Error updating standard scores for match_game_id {match_game_id}: {e}")
             self.db.rollback()
@@ -131,10 +134,10 @@ class StandardScoreCalculator:
     def update_user_standard_score_stats(self, user_id: int) -> bool:
         """
         更新用户的标准分统计信息
-        
+
         Args:
             user_id: 用户ID
-            
+
         Returns:
             bool: 是否成功更新
         """
@@ -142,26 +145,13 @@ class StandardScoreCalculator:
             user = self.db.query(user_models.User).filter(user_models.User.id == user_id).first()
             if not user:
                 return False
-            
-            # 计算用户的标准分统计
+
+            # 使用单个查询获取所有统计信息（优化：合并多个查询）
+            from sqlalchemy import case
             stats = self.db.query(
                 func.sum(models.Score.standard_score).label('total_standard_score'),
                 func.count(models.Score.id).label('score_count'),
-                func.avg(models.Score.standard_score).label('avg_standard_score')
-            ).filter(
-                models.Score.user_id == user_id,
-                models.Score.standard_score.isnot(None)
-            ).first()
-            
-            if stats and stats.total_standard_score is not None:
-                user.total_standard_score = float(stats.total_standard_score)
-                user.average_standard_score = float(stats.avg_standard_score or 0)
-            else:
-                user.total_standard_score = 0.0
-                user.average_standard_score = 0.0
-            
-            # 计算原始总积分与参赛场次
-            raw_stats = self.db.query(
+                func.avg(models.Score.standard_score).label('avg_standard_score'),
                 func.sum(models.Score.points).label('total_points'),
                 func.count(func.distinct(models.MatchGame.match_id)).label('matches_played')
             ).join(
@@ -169,15 +159,19 @@ class StandardScoreCalculator:
             ).filter(
                 models.Score.user_id == user_id
             ).first()
-            
-            if raw_stats:
-                user.total_points = int(raw_stats.total_points or 0)
-                user.total_matches = int(raw_stats.matches_played or 0)
+
+            if stats and stats.total_standard_score is not None:
+                user.total_standard_score = float(stats.total_standard_score)
+                user.average_standard_score = float(stats.avg_standard_score or 0)
+                user.total_points = int(stats.total_points or 0)
+                user.total_matches = int(stats.matches_played or 0)
             else:
+                user.total_standard_score = 0.0
+                user.average_standard_score = 0.0
                 user.total_points = 0
                 user.total_matches = 0
-            
-            # 计算获胜次数
+
+            # 计算获胜次数（保持独立查询，因为涉及不同的表关联）
             wins = self.db.query(
                 func.count(func.distinct(models.Match.id))
             ).select_from(
@@ -192,10 +186,10 @@ class StandardScoreCalculator:
                 models.MatchTeamMembership.user_id == user_id
             ).scalar()
             user.total_wins = int(wins or 0)
-            
+
             self.db.commit()
             return True
-            
+
         except Exception as e:
             logger.error(f"Error updating user standard score stats for user {user_id}: {e}")
             self.db.rollback()
@@ -203,23 +197,61 @@ class StandardScoreCalculator:
     
     def update_all_users_standard_score_stats(self) -> int:
         """
-        更新所有用户的标准分统计信息
-        
+        更新所有用户的标准分统计信息（优化：使用批量更新）
+
         Returns:
             int: 成功更新的用户数量
         """
         try:
-            # 获取所有有分数记录的用户
-            user_ids = self.db.query(models.Score.user_id).distinct().all()
-            user_ids = [uid[0] for uid in user_ids]
-            
-            success_count = 0
-            for user_id in user_ids:
-                if self.update_user_standard_score_stats(user_id):
-                    success_count += 1
-            
-            logger.info(f"Updated standard score stats for {success_count}/{len(user_ids)} users")
-            
+            # 使用单个查询批量计算所有用户的统计信息
+            from sqlalchemy import text
+
+            # 批量更新标准分和原始分统计
+            update_query = text("""
+                UPDATE users
+                SET
+                    total_standard_score = COALESCE(stats.total_std, 0),
+                    average_standard_score = COALESCE(stats.avg_std, 0),
+                    total_points = COALESCE(stats.total_pts, 0),
+                    total_matches = COALESCE(stats.matches_played, 0)
+                FROM (
+                    SELECT
+                        s.user_id,
+                        SUM(s.standard_score) as total_std,
+                        AVG(s.standard_score) as avg_std,
+                        SUM(s.points) as total_pts,
+                        COUNT(DISTINCT mg.match_id) as matches_played
+                    FROM scores s
+                    JOIN match_games mg ON mg.id = s.match_game_id
+                    GROUP BY s.user_id
+                ) as stats
+                WHERE users.id = stats.user_id
+            """)
+
+            result = self.db.execute(update_query)
+            updated_count = result.rowcount
+
+            # 批量更新获胜次数
+            wins_query = text("""
+                UPDATE users
+                SET total_wins = COALESCE(wins.win_count, 0)
+                FROM (
+                    SELECT
+                        mtm.user_id,
+                        COUNT(DISTINCT m.id) as win_count
+                    FROM matches m
+                    JOIN match_teams mt ON mt.id = m.winning_team_id
+                    JOIN match_team_memberships mtm ON mtm.match_team_id = mt.id
+                    GROUP BY mtm.user_id
+                ) as wins
+                WHERE users.id = wins.user_id
+            """)
+
+            self.db.execute(wins_query)
+            self.db.commit()
+
+            logger.info(f"Batch updated standard score stats for {updated_count} users")
+
             # 更新完标准分统计后，重新计算所有用户的等级
             try:
                 from app.modules.users.crud import update_all_user_levels
@@ -227,11 +259,12 @@ class StandardScoreCalculator:
                 logger.info(f"Updated levels for {updated_levels} users")
             except Exception as e:
                 logger.error(f"Error updating user levels: {e}")
-            
-            return success_count
-            
+
+            return updated_count
+
         except Exception as e:
             logger.error(f"Error updating all users standard score stats: {e}")
+            self.db.rollback()
             return 0
     
     def get_game_level_distribution(self) -> Dict[str, int]:

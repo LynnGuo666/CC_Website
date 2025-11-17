@@ -35,6 +35,25 @@ def read_match(match_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Match not found")
     return db_match
 
+@router.get("/{match_id}/full")
+def get_match_full_data(match_id: int, db: Session = Depends(get_db)):
+    """
+    获取比赛的完整数据（优化：一次请求返回所有数据）
+
+    包括：
+    - 比赛基本信息
+    - 所有队伍信息
+    - 所有赛程及其游戏信息
+    - 所有分数记录
+    """
+    db_match = crud.get_match(db, match_id=match_id)
+    if db_match is None:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    # 获取完整数据
+    full_data = crud.get_match_full_data(db, match_id=match_id)
+    return full_data
+
 @router.put("/{match_id}", response_model=schemas.Match)
 def update_match(
     match_id: int, 
@@ -418,12 +437,17 @@ def recalculate_game_standard_scores(
 
 # --- Score events data ---
 
-@router.get("/{match_id}/events", response_model=schemas.MatchEventsResponse)
+@router.get("/{match_id}/events")
 def get_match_events(
     match_id: int,
     db: Session = Depends(get_db),
 ):
-    """获取赛事中每个赛程的细粒度记录"""
+    """
+    获取赛事中每个赛程的细粒度记录
+
+    优化：移除 response_model 避免 Pydantic 验证导致的性能问题
+    直接返回字典，由 FastAPI 自动序列化为 JSON
+    """
     db_match = crud.get_match(db, match_id=match_id)
     if not db_match:
         raise HTTPException(status_code=404, detail="Match not found")

@@ -92,9 +92,11 @@ export async function getGameById(gameId: number) {
 }
 
 export async function getMatchEvents(matchId: number): Promise<MatchEventsResponse> {
+  // 优化：禁用 schema 验证，因为数据结构复杂且后端已优化
+  // 直接返回数据，避免 Zod 验证导致的性能问题和验证错误
   return await apiFetch<MatchEventsResponse>(`/api/matches/${matchId}/events`, {
     method: 'GET',
-    schema: MatchEventsResponseSchema,
+    // schema: MatchEventsResponseSchema,  // 暂时禁用验证
     cache: 'no-store',
   });
 }

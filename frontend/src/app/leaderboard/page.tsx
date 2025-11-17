@@ -54,32 +54,30 @@ export default function LeaderboardPage() {
     return 'games_played' in player && !('total_games_played' in player);
   };
 
-  // 简化的数据加载
-  const loadData = async () => {
+  // 优化的数据加载：并行加载，避免重复请求
+  const loadData = async (gameCode: string = 'all') => {
     try {
       setLoading(true);
       setError(null);
 
-      // 串行加载以避免竞态条件
-      // 1. 先加载游戏列表
-      const gamesData = await getAvailableGamesForLeaderboard();
+      // 并行加载所有数据（优化：减少等待时间）
+      const [gamesData, leaderboardData, distributionData] = await Promise.all([
+        getAvailableGamesForLeaderboard(),
+        getLeaderboard({
+          limit: 50,
+          gameCode: gameCode === 'all' ? undefined : gameCode
+        }),
+        // 只在第一次加载时获取等级分布
+        levelDistribution ? Promise.resolve(levelDistribution) : getLevelDistribution()
+      ]);
+
       setAvailableGames(gamesData.games);
 
-      // 2. 然后加载排行榜数据
-      const leaderboardData = await getLeaderboard({ 
-        limit: 50,
-        gameCode: selectedGame === 'all' ? undefined : selectedGame 
-      });
-      
       const leaderboard = (leaderboardData as any).leaderboard || leaderboardData;
       setLeaderboard(Array.isArray(leaderboard) ? leaderboard : []);
 
-      // 3. 最后加载等级分布（只在第一次加载时）
-      if (!levelDistribution) {
-        const distributionData = await getLevelDistribution();
-        if (distributionData && (distributionData as any).distribution) {
-          setLevelDistribution(distributionData as LevelDistribution);
-        }
+      if (!levelDistribution && distributionData && (distributionData as any).distribution) {
+        setLevelDistribution(distributionData as LevelDistribution);
       }
 
     } catch (err: any) {
@@ -90,15 +88,36 @@ export default function LeaderboardPage() {
     }
   };
 
-  // 初始化数据加载
+  // 初始化数据加载（只在组件挂载时执行一次）
   useEffect(() => {
-    loadData();
+    loadData(selectedGame);
   }, []);
 
-  // 游戏选择变化时重新加载排行榜
+  // 游戏选择变化时只重新加载排行榜（优化：避免重复加载游戏列表和等级分布）
   useEffect(() => {
     if (availableGames.length > 0) {
-      loadData();
+      const loadLeaderboardOnly = async () => {
+        try {
+          setLoading(true);
+          setError(null);
+
+          const leaderboardData = await getLeaderboard({
+            limit: 50,
+            gameCode: selectedGame === 'all' ? undefined : selectedGame
+          });
+
+          const leaderboard = (leaderboardData as any).leaderboard || leaderboardData;
+          setLeaderboard(Array.isArray(leaderboard) ? leaderboard : []);
+
+        } catch (err: any) {
+          console.error('Failed to load leaderboard data:', err);
+          setError(err.message || '加载排行榜数据失败');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      loadLeaderboardOnly();
     }
   }, [selectedGame]);
 

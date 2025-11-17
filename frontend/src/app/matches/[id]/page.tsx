@@ -59,46 +59,25 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
     if (isNaN(matchId)) {
       throw new Error('无效的赛事ID。');
     }
-    
-    // Fetch match, teams, and basic game data in parallel
-    const [matchData, teamsData, gamesData] = await Promise.all([
-      getMatchById(matchId),
-      getMatchTeams(matchId),
-      getMatchGames(matchId),
-    ]);
-    
-    match = matchData;
-    teams = teamsData;
-    
-    // Now fetch detailed game info and scores for each game
-    const enrichedGames = await Promise.all(
-      gamesData.map(async (game: any) => {
-        try {
-          const [gameInfo, scores] = await Promise.all([
-            getGameById(game.game_id),
-            getMatchGameScores(game.id),
-          ]);
-          
-          return {
-            ...game,
-            game: gameInfo,
-            scores: scores || [],
-          };
-        } catch (err) {
-          console.warn(`Failed to fetch data for game ${game.id}:`, err);
-          return {
-            ...game,
-            game: { id: game.game_id, name: '未知游戏', description: null },
-            scores: [],
-          };
-        }
-      })
-    );
-    
-    matchGames = enrichedGames;
-    
+
+    // 优化：使用新的完整数据API，一次请求获取所有数据
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/matches/${matchId}/full`, {
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error('获取比赛数据失败');
+    }
+
+    const fullData = await response.json();
+
+    // 解构数据
+    match = fullData.match;
+    teams = fullData.teams;
+    matchGames = fullData.games;
+
     // 直接使用从后端获取的、已排序的队伍数据
-    teamStats = teamsData.sort((a, b) => (a.team_rank || Infinity) - (b.team_rank || Infinity));
+    teamStats = teams.sort((a, b) => (a.team_rank || Infinity) - (b.team_rank || Infinity));
   } catch (e: any) {
     console.error(e);
     error = e.message || '加载赛事详情失败。';
