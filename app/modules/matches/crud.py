@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from sqlalchemy import func, text
@@ -7,6 +7,7 @@ from . import models, schemas
 from .standard_score import calculate_standard_scores_for_match_game
 from typing import List, Optional
 from fastapi import HTTPException
+from app.modules.games import models as game_models
 
 # --- Match CRUD ---
 
@@ -135,7 +136,8 @@ def create_match_team(db: Session, match_id: int, team_data: schemas.MatchTeamCr
     db_team = models.MatchTeam(
         match_id=match_id,
         name=team_data.name,
-        color=team_data.color
+        color=team_data.color,
+        external_team_id=team_data.external_team_id,
     )
     db.add(db_team)
     db.commit()
@@ -250,6 +252,91 @@ def delete_match_team(db: Session, team_id: int):
     db.delete(db_team)
     db.commit()
     return True
+
+# --- Score Event helpers ---
+
+def clear_score_events_for_match(db: Session, match_id: int) -> int:
+    """删除指定比赛的所有细粒度小分事件"""
+    affected = db.query(models.ScoreEvent).filter(models.ScoreEvent.match_id == match_id).delete()
+    db.commit()
+    return int(affected or 0)
+
+
+def get_score_events(
+    db: Session,
+    match_id: int,
+    match_game_id: Optional[int] = None,
+    game_code: Optional[str] = None,
+):
+    """获取指定比赛的所有细粒度小分事件"""
+    query = (
+        db.query(models.ScoreEvent)
+        .options(
+            selectinload(models.ScoreEvent.match_game).selectinload(models.MatchGame.game),
+            selectinload(models.ScoreEvent.team),
+            selectinload(models.ScoreEvent.opponent_team),
+            selectinload(models.ScoreEvent.user),
+        )
+        .filter(models.ScoreEvent.match_id == match_id)
+    )
+
+    if match_game_id:
+        query = query.filter(models.ScoreEvent.match_game_id == match_game_id)
+    elif game_code:
+        query = (
+            query.join(models.ScoreEvent.match_game)
+            .join(models.MatchGame.game)
+            .filter(game_models.Game.code == game_code)
+        )
+
+    return query.order_by(
+        models.ScoreEvent.match_game_id,
+        models.ScoreEvent.tournament_round_index.asc().nullsfirst(),
+        models.ScoreEvent.game_round_index.asc().nullsfirst(),
+        models.ScoreEvent.id,
+    ).all()
+
+
+def get_match_events_summary(db: Session, match_id: int):
+    """返回按赛程分组的细粒度事件"""
+    match_games = (
+        db.query(models.MatchGame)
+        .options(
+            selectinload(models.MatchGame.game),
+            selectinload(models.MatchGame.score_events)
+            .selectinload(models.ScoreEvent.user),
+            selectinload(models.MatchGame.score_events)
+            .selectinload(models.ScoreEvent.team),
+            selectinload(models.MatchGame.score_events)
+            .selectinload(models.ScoreEvent.opponent_team),
+        )
+        .filter(models.MatchGame.match_id == match_id)
+        .order_by(models.MatchGame.game_order.asc(), models.MatchGame.id.asc())
+        .all()
+    )
+
+    grouped = []
+    for match_game in match_games:
+        events = sorted(
+            match_game.score_events,
+            key=lambda e: (
+                e.tournament_round_index if e.tournament_round_index is not None else -1,
+                e.game_round_index if e.game_round_index is not None else -1,
+                e.id,
+            )
+        )
+        grouped.append({
+            "match_game_id": match_game.id,
+            "game_id": match_game.game_id,
+            "game_name": match_game.game.name if match_game.game else f"Game #{match_game.game_id}",
+            "game_code": match_game.game.code if match_game.game else None,
+            "events": events,
+        })
+
+    return {
+        "match_id": match_id,
+        "games": grouped,
+    }
 
 # --- MatchGame CRUD ---
 

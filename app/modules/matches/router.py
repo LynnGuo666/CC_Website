@@ -414,3 +414,17 @@ def recalculate_game_standard_scores(
         return {"message": f"Successfully recalculated standard scores for game {match_game_id}"}
     else:
         raise HTTPException(status_code=500, detail="Failed to recalculate standard scores")
+
+
+# --- Score events data ---
+
+@router.get("/{match_id}/events", response_model=schemas.MatchEventsResponse)
+def get_match_events(
+    match_id: int,
+    db: Session = Depends(get_db),
+):
+    """获取赛事中每个赛程的细粒度记录"""
+    db_match = crud.get_match(db, match_id=match_id)
+    if not db_match:
+        raise HTTPException(status_code=404, detail="Match not found")
+    return crud.get_match_events_summary(db, match_id=match_id)

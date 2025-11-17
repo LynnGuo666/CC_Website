@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.2] - 2025-11-17
+
+### Fixed
+- **比赛事件用户引用**: 修复 `ScoreEvent` 中 `user` 字段的 Pydantic 前向引用解析问题，解决后端启动时报 `PydanticUndefinedAnnotation: name 'User' is not defined` 的错误，保障赛事事件列表可正常返回用户信息
+
+### Technical Details
+- 前端版本: 2.4.1 → 2.4.2
+- 后端版本: 2.4.1 → 2.4.2
+
 ## [2.4.1] - 2025-11-17
 
 ### Fixed
@@ -16,6 +25,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 后端版本: 2.4.0 → 2.4.1
 
 ---
+
+## [2.5.0] - 2025-11-17
+
+### Added
+- **细粒度小分表**: 新建 `score_events` 表，记录锦标赛与小游戏的轮次、对阵、选手、倍率等详细小分；提供 `/api/matches/{id}/events` 接口返回分组数据
+- **导入工具**: 新增 `scripts/import_score_events.py`，支持从 CSV 映射 `external_team_id`、导入细分记录并可触发标准分重算
+- **前端数据页**: 新增 `/matches/[id]/events` 子页面展示详细赛事数据，主赛事页提供入口按钮跳转
+
+### Changed
+- **赛事页互跳**: 主赛事页仅保留概览，详细数据迁移到子页面，避免加载冗余信息
+
+### Technical Details
+- 前端版本: 2.4.2 → 2.5.0
+- 后端版本: 2.4.2 → 2.5.0
 
 ## [2.4.0] - 2025-11-17
 

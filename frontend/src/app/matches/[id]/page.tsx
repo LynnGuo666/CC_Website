@@ -159,6 +159,14 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                 </p>
               )}
 
+              <div className="flex flex-wrap gap-3 mb-6">
+                <Button asChild variant="secondary" size="sm">
+                  <Link href={`/matches/${match.id}/events`}>
+                    查看详细数据
+                  </Link>
+                </Button>
+              </div>
+
               {/* Match Info - Small Tags */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8">
                 <Badge variant="secondary" className="px-4 py-2 text-sm">
@@ -272,6 +280,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                 </svg>
                 赛程详情
               </h2>
+              
               
               {matchGames.map((game, index) => {
                 const gameTeamScores = new Map<number, { name: string; color: string | null; total: number; players: Array<{name: string; score: number}> }>();

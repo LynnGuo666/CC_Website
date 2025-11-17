@@ -4,8 +4,7 @@ from typing import Optional, List, Dict, Any, TYPE_CHECKING
 from datetime import datetime
 import enum
 
-if TYPE_CHECKING:
-    from app.modules.users.schemas import User
+from app.modules.users.schemas import User
 
 # 比赛状态枚举
 class MatchStatus(str, enum.Enum):
@@ -80,6 +79,7 @@ class MatchTeamMembershipSchema(MatchTeamMembershipBase):
 class MatchTeamBase(BaseModel):
     name: str
     color: Optional[str] = None
+    external_team_id: Optional[str] = None
 
 class MatchTeamCreate(MatchTeamBase):
     members: Optional[List[TeamMemberCreate]] = None
@@ -87,6 +87,7 @@ class MatchTeamCreate(MatchTeamBase):
 class MatchTeamUpdate(BaseModel):
     name: Optional[str] = None
     color: Optional[str] = None
+    external_team_id: Optional[str] = None
 
 class MatchTeam(MatchTeamBase):
     id: int
@@ -153,6 +154,7 @@ class MatchGame(MatchGameBase):
     total_standard_score: float = 0.0
     average_standard_score: float = 0.0
     created_at: datetime
+    score_events: Optional[List["ScoreEvent"]] = None
     
     class Config:
         from_attributes = True
@@ -202,6 +204,57 @@ class MatchList(MatchBase):
     
     class Config:
         from_attributes = True
+
+# --- 细粒度小分事件 ---
+
+class ScoreEventBase(BaseModel):
+    match_game_id: int
+    match_team_id: int
+    event_type: str
+    points: int
+    match_id: Optional[int] = None
+    opponent_team_id: Optional[int] = None
+    user_id: Optional[int] = None
+    score_id: Optional[int] = None
+    raw_points: Optional[int] = None
+    multiplier_used: Optional[float] = None
+    tournament_stage: Optional[str] = None
+    tournament_round_index: Optional[int] = None
+    game_round_label: Optional[str] = None
+    game_round_index: Optional[int] = None
+    area: Optional[str] = None
+    event_time: Optional[datetime] = None
+    meta: Optional[Dict[str, Any]] = None
+
+class ScoreEventCreate(ScoreEventBase):
+    pass
+
+class ScoreEvent(ScoreEventBase):
+    id: int
+    created_at: datetime
+    match_game: Optional["MatchGame"] = None
+    team: Optional[MatchTeam] = None
+    opponent_team: Optional[MatchTeam] = None
+    user: Optional["User"] = None
+
+    class Config:
+        from_attributes = True
+
+class MatchGameEventGroup(BaseModel):
+    match_game_id: int
+    game_id: int
+    game_name: str
+    game_code: Optional[str] = None
+    events: List[ScoreEvent] = []
+
+class MatchEventsResponse(BaseModel):
+    match_id: int
+    games: List[MatchGameEventGroup] = []
+
+# 处理前向引用
+Score.model_rebuild()
+MatchGame.model_rebuild()
+ScoreEvent.model_rebuild()
 
 # --- 特殊操作Schema ---
 

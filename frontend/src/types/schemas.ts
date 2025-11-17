@@ -36,6 +36,7 @@ export const MatchTeamSchema = z.object({
     match_id: z.number(),
     name: z.string(),
     color: z.string().nullable(),
+    external_team_id: z.string().nullable().optional(),
     total_score: z.number(),
     games_played: z.number(),
     team_rank: z.number().nullable(),
@@ -49,6 +50,7 @@ export const MatchTeamWithMatchSchema = z.object({
     match_id: z.number(),
     name: z.string(),
     color: z.string().nullable(),
+    external_team_id: z.string().nullable().optional(),
     total_score: z.number(),
     games_played: z.number(),
     created_at: z.string(),
@@ -103,6 +105,45 @@ export const MatchGameSchema = z.object({
   start_time: z.string().nullable(),
   end_time: z.string().nullable(),
   created_at: z.string(),
+});
+
+export const ScoreEventSchema = z.object({
+  id: z.number(),
+  match_id: z.number().nullable().optional(),
+  match_game_id: z.number(),
+  match_team_id: z.number(),
+  opponent_team_id: z.number().nullable().optional(),
+  user_id: z.number().nullable().optional(),
+  score_id: z.number().nullable().optional(),
+  event_type: z.string(),
+  points: z.number(),
+  raw_points: z.number().nullable().optional(),
+  multiplier_used: z.number().nullable().optional(),
+  tournament_stage: z.string().nullable().optional(),
+  tournament_round_index: z.number().nullable().optional(),
+  game_round_label: z.string().nullable().optional(),
+  game_round_index: z.number().nullable().optional(),
+  area: z.string().nullable().optional(),
+  event_time: z.string().nullable().optional(),
+  meta: z.record(z.string(), z.any()).nullable().optional(),
+  created_at: z.string(),
+  match_game: MatchGameSchema.optional(),
+  team: MatchTeamSchema.optional(),
+  opponent_team: MatchTeamSchema.optional().nullable(),
+  user: UserSchema.optional().nullable(),
+});
+
+export const MatchGameEventGroupSchema = z.object({
+  match_game_id: z.number(),
+  game_id: z.number(),
+  game_name: z.string(),
+  game_code: z.string().nullable().optional(),
+  events: z.array(ScoreEventSchema),
+});
+
+export const MatchEventsResponseSchema = z.object({
+  match_id: z.number(),
+  games: z.array(MatchGameEventGroupSchema),
 });
 
 // Simplified Match schema for list endpoints (matches MatchList in backend)

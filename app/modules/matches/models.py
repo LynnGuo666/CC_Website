@@ -72,6 +72,7 @@ class MatchTeam(Base):
     match_id = Column(Integer, ForeignKey("matches.id"), nullable=False, comment="关联的比赛ID")
     name = Column(String, nullable=False, comment="队伍名称")
     color = Column(String, comment="队伍颜色")
+    external_team_id = Column(String(64), nullable=True, index=True, comment="外部系统队伍ID")
     
     # 队伍统计
     total_score = Column(Integer, default=0, comment="队伍总积分")
@@ -86,6 +87,7 @@ class MatchTeam(Base):
     memberships = relationship("MatchTeamMembership", back_populates="team", cascade="all, delete-orphan", lazy="select")
     lineups = relationship("GameLineup", back_populates="team", cascade="all, delete-orphan", lazy="select")
     scores = relationship("Score", back_populates="team", lazy="select")
+    score_events = relationship("ScoreEvent", back_populates="team", lazy="select", foreign_keys="ScoreEvent.match_team_id")
 
     @property
     def is_champion(self) -> bool:
@@ -165,6 +167,7 @@ class MatchGame(Base):
     game = relationship("Game", lazy="select")
     lineups = relationship("GameLineup", back_populates="match_game", cascade="all, delete-orphan", lazy="select")
     scores = relationship("Score", back_populates="match_game", cascade="all, delete-orphan", lazy="select")
+    score_events = relationship("ScoreEvent", back_populates="match_game", cascade="all, delete-orphan", lazy="select")
 
 # 每个小游戏的出战阵容
 class GameLineup(Base):
@@ -206,6 +209,46 @@ class Score(Base):
     user = relationship("User", lazy="select")
     team = relationship("MatchTeam", back_populates="scores", lazy="select")
     match_game = relationship("MatchGame", back_populates="scores", lazy="select")
+    events = relationship("ScoreEvent", back_populates="score", lazy="select")
+
+    @property
+    def team_id(self):
+        """兼容旧前端字段命名"""
+        return self.match_team_id
+
+
+class ScoreEvent(Base):
+    __tablename__ = "score_events"
+
+    id = Column(Integer, primary_key=True, index=True, comment="小分事件ID")
+    match_id = Column(Integer, ForeignKey("matches.id", ondelete="CASCADE"), nullable=True, comment="关联的比赛ID")
+    match_game_id = Column(Integer, ForeignKey("match_games.id", ondelete="CASCADE"), nullable=False, comment="关联的赛程ID")
+    match_team_id = Column(Integer, ForeignKey("match_teams.id", ondelete="CASCADE"), nullable=False, comment="得分队伍ID")
+    opponent_team_id = Column(Integer, ForeignKey("match_teams.id", ondelete="SET NULL"), nullable=True, comment="对阵队伍ID")
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, comment="得分玩家ID")
+    score_id = Column(Integer, ForeignKey("scores.id", ondelete="SET NULL"), nullable=True, comment="汇总得分记录ID")
+
+    event_type = Column(String(50), nullable=False, comment="事件类型 (kill/assist/objective等)")
+    points = Column(Integer, nullable=False, comment="事件积分（倍率后）")
+    raw_points = Column(Integer, nullable=True, comment="原始积分（倍率前）")
+    multiplier_used = Column(Float, nullable=True, comment="倍率")
+
+    tournament_stage = Column(String(50), nullable=True, comment="锦标赛阶段/轮次标签")
+    tournament_round_index = Column(Integer, nullable=True, comment="锦标赛轮次序号")
+    game_round_label = Column(String(50), nullable=True, comment="小游戏回合标签")
+    game_round_index = Column(Integer, nullable=True, comment="小游戏回合序号")
+    area = Column(String(50), nullable=True, comment="赛区/地图/赛道")
+
+    event_time = Column(DateTime, nullable=True, comment="事件发生时间")
+    meta = Column(JSON, nullable=True, comment="附加数据")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, comment="创建时间")
+
+    match = relationship("Match", lazy="select")
+    match_game = relationship("MatchGame", back_populates="score_events", lazy="select")
+    team = relationship("MatchTeam", foreign_keys=[match_team_id], back_populates="score_events", lazy="select")
+    opponent_team = relationship("MatchTeam", foreign_keys=[opponent_team_id], lazy="select")
+    user = relationship("User", lazy="select")
+    score = relationship("Score", back_populates="events", lazy="select")
     
     # 兼容性属性，用于序列化
     @property

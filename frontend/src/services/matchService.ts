@@ -1,11 +1,12 @@
 import apiFetch from './api';
-import { MatchSchema, MatchListSchema, MatchesApiResponseSchema, MatchGameSchema } from '@/types/schemas';
+import { MatchSchema, MatchListSchema, MatchesApiResponseSchema, MatchGameSchema, MatchEventsResponseSchema } from '@/types/schemas';
 import { z } from 'zod';
 
 // Zod can infer the TypeScript type from the schema
 export type Match = z.infer<typeof MatchSchema>;
 export type MatchList = z.infer<typeof MatchListSchema>;
 export type MatchGame = z.infer<typeof MatchGameSchema>;
+export type MatchEventsResponse = z.infer<typeof MatchEventsResponseSchema>;
 
 /**
  * 获取所有比赛的列表
@@ -90,3 +91,10 @@ export async function getGameById(gameId: number) {
   });
 }
 
+export async function getMatchEvents(matchId: number): Promise<MatchEventsResponse> {
+  return await apiFetch<MatchEventsResponse>(`/api/matches/${matchId}/events`, {
+    method: 'GET',
+    schema: MatchEventsResponseSchema,
+    cache: 'no-store',
+  });
+}
