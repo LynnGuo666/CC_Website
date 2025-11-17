@@ -340,7 +340,6 @@ export default function MatchEventsPage() {
         ) : (
           events.map((group) => {
             const isExpanded = expandedGames.has(group.match_game_id);
-            const hasMany = group.events.length > 50;
 
             // 按 area 分组
             const areaGroups = groupEventsByArea(group.events);
@@ -348,8 +347,8 @@ export default function MatchEventsPage() {
             return (
               <Card key={group.match_game_id}>
                 <CardHeader
-                  className={hasMany ? "cursor-pointer hover:bg-muted/50 transition-colors" : ""}
-                  onClick={() => hasMany && toggleGame(group.match_game_id)}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => toggleGame(group.match_game_id)}
                 >
                   <CardTitle className="flex flex-wrap items-center gap-2">
                     <span>{group.game_name}</span>
@@ -361,14 +360,12 @@ export default function MatchEventsPage() {
                     <span className="text-sm text-muted-foreground">
                       共 {group.events.length} 条 · {areaGroups.length} 个分区
                     </span>
-                    {hasMany && (
-                      <Badge variant="secondary" className="text-xs ml-auto">
-                        {isExpanded ? "点击折叠 ▲" : "点击展开 ▼"}
-                      </Badge>
-                    )}
+                    <Badge variant="secondary" className="text-xs ml-auto">
+                      {isExpanded ? "点击折叠 ▲" : "点击展开 ▼"}
+                    </Badge>
                   </CardTitle>
                 </CardHeader>
-                {(!hasMany || isExpanded) && (
+                {isExpanded && (
                   <CardContent className="space-y-4">
                     {/* 检测是否是 BattleBox（通过游戏 ID 判断） */}
                     {group.game_code?.toLowerCase() === 'battlebox' ? (
