@@ -5,6 +5,80 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.2] - 2025-11-17
+
+### Added
+- **BattleBox 轮次分组显示**：针对 BattleBox 游戏（game_code='battlebox'）实现智能轮次分组
+  - 根据场地（area）、时间、对战人员自动推断轮次分组，无需依赖数据库 `game_round_label` 字段
+  - 每个轮次可独立折叠/展开，展开后以网格布局显示所有对阵（移动端1列，平板2列，桌面4列）
+  - 对阵卡片采用 Liquid Glass 风格，紧凑显示队伍名称、颜色标识、比分
+  - 获胜方比分高亮显示为绿色
+  - 支持展开查看详细得分记录，每个队员名字前显示队伍颜色小点
+
+### Changed
+- **赛事详情页浮动按钮优化**：
+  - 赛事摘要页（`/matches/[id]`）的"查看详细数据"按钮改为固定在视口右下角的 Liquid Glass 风格圆形按钮
+  - 赛事详情页（`/matches/[id]/events`）的"返回赛事详情"按钮同样采用圆形浮动按钮设计
+  - 按钮跟随页面滚动，始终可见且不遮挡内容
+
+### Technical Details
+- 前端版本：2.9.1 → 2.9.2
+- 后端版本：2.9.1 → 2.9.2
+- 涉及文件：
+  - `frontend/src/app/matches/[id]/page.tsx` - 浮动按钮样式优化
+  - `frontend/src/app/matches/[id]/events/page.tsx` - BattleBox 轮次分组逻辑
+- 新增函数：`groupMatchupsByRound()` - 根据场地和时间自动推断轮次
+
+## [2.9.1] - 2025-11-17
+
+### Fixed
+- **赛事详情/数据页浮动按钮**：引入全局 Portal 式浮动按钮组件，确保圆形 LiquidGlass 操作钮固定在页面右下角，滚动过程中保持可见，解决原先卡在页面底部左侧且无法跟随页面的问题。
+
+### Technical Details
+- 前端版本：2.9.0 → 2.9.1
+- 后端版本：2.9.0 → 2.9.1
+- 涉及文件：
+  - `frontend/src/components/floating-action-button.tsx`
+  - `frontend/src/app/matches/[id]/page.tsx`
+  - `frontend/src/app/matches/[id]/events/page.tsx`
+
+## [2.9.0] - 2025-11-17
+
+### Added
+- **赛事细节页面智能分组显示**：全新的数据组织方式，提升复盘和分析体验
+  - **按分区（Area）分组**：自动按 area 字段分组显示，清晰展示不同地图/分区的对战情况
+  - **智能对阵检测**：自动识别 PvP 游戏（team ≠ opponent_team），启用对阵轮次显示
+  - **对阵轮次可视化**：为 BattleBox 等 PvP 游戏显示精美的对阵图，包括轮次编号、队伍对比、实时比分
+  - **队伍@选手格式**：在对阵记录中显示"队伍@选手"格式，清晰表明选手归属
+  - **三级折叠结构**：游戏级别（>50 条）、分区级别（>20 条）、完全展开，灵活查看数据
+
+### Changed
+- **赛事细节页面显示优化**：
+  - 移除 200 条强制限制，支持查看所有事件数据
+  - 对阵模式下显示比分对比（220:30），获胜方高亮显示
+  - 队伍颜色圆点标识，快速区分不同队伍
+  - 一行紧凑显示，适合查看大量记录
+
+### Technical Details
+- 前端版本: 2.8.0 → 2.9.0
+- 后端版本: 2.8.0 → 2.9.0
+- 优化文件:
+  - `frontend/src/app/matches/[id]/events/page.tsx` - 智能分组和对阵轮次显示
+
+### Features
+- **智能游戏类型识别**：
+  - PvP 模式（BattleBox）：显示对阵轮次、比分对比、轮次编号
+  - 普通模式（SkyWars）：显示队伍总分、个人记录
+- **数据组织层级**：
+  ```
+  游戏（斗战方框）
+    └─ Area（分区）
+        └─ 对阵轮次
+            ├─ 对阵标题（队伍 VS 队伍）
+            ├─ 比分（220:30）
+            └─ 详细事件列表
+  ```
+
 ## [2.8.0] - 2025-11-17
 
 ### Fixed

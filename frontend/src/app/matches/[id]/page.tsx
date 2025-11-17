@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { FloatingActionButton } from "@/components/floating-action-button";
 
 
 // Function to get status badge styling
@@ -137,14 +138,6 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                   {match.description}
                 </p>
               )}
-
-              <div className="flex flex-wrap gap-3 mb-6">
-                <Button asChild variant="secondary" size="sm">
-                  <Link href={`/matches/${match.id}/events`}>
-                    查看详细数据
-                  </Link>
-                </Button>
-              </div>
 
               {/* Match Info - Small Tags */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8">
@@ -432,7 +425,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
 
           {/* Navigation */}
           <div className="flex justify-center pt-12">
-            <Link 
+            <Link
               href="/matches"
               className="inline-flex items-center px-6 py-3 rounded-2xl glass card-hover border-primary/20 hover:border-primary/40 transition-all"
             >
@@ -444,6 +437,16 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
           </div>
         </div>
       </section>
+
+      <FloatingActionButton
+        href={`/matches/${match.id}/events`}
+        title="查看详细数据"
+        icon={
+          <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        }
+      />
     </div>
   );
 }
