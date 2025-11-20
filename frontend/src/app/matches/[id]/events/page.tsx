@@ -126,7 +126,7 @@ const groupEventsByMatchup = (events: any[]) => {
   events.forEach(event => {
     // 检查是否是真实对阵（team ≠ opponent_team）
     const isRealMatchup = event.team && event.opponent_team &&
-                          event.team.id !== event.opponent_team.id;
+      event.team.id !== event.opponent_team.id;
 
     if (isRealMatchup) {
       // 创建对阵键（排序以确保 A vs B 和 B vs A 是同一场）
@@ -158,7 +158,7 @@ const groupMatchupsByRound = (events: any[]) => {
 
   events.forEach(event => {
     const isRealMatchup = event.team && event.opponent_team &&
-                          event.team.id !== event.opponent_team.id;
+      event.team.id !== event.opponent_team.id;
 
     if (isRealMatchup) {
       const teamIds = [event.team.id, event.opponent_team.id].sort((a, b) => a - b);
@@ -317,7 +317,7 @@ export default function MatchEventsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/10 py-10 px-4">
+    <div className="min-h-screen bg-muted/10 pt-40 pb-10 px-4">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -493,106 +493,105 @@ export default function MatchEventsPage() {
 
                         const matchupGroups = hasRealMatchups ? groupEventsByMatchup(areaEvents) : null;
 
-                      return (
-                        <div key={areaKey} className="border rounded-lg overflow-hidden">
-                          {/* Area Header */}
-                          <div
-                            className={`px-4 py-3 bg-muted/30 flex items-center justify-between ${
-                              hasManyInArea ? 'cursor-pointer hover:bg-muted/50' : ''
-                            }`}
-                            onClick={() => hasManyInArea && toggleArea(areaKey)}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Badge variant="default" className="text-xs">
-                                {area}
-                              </Badge>
-                              <span className="text-sm text-muted-foreground">
-                                {areaEvents.length} 条记录
-                                {matchupGroups && ` · ${matchupGroups.length} 场对阵`}
-                              </span>
-                            </div>
-                            {hasManyInArea && (
-                              <Badge variant="outline" className="text-xs">
-                                {isAreaExpanded ? "收起 ▲" : "展开 ▼"}
-                              </Badge>
-                            )}
-                          </div>
-
-                          {/* Area Content */}
-                          {(!hasManyInArea || isAreaExpanded) && (
-                            <div className="p-4 space-y-4">
-                              {matchupGroups ? (
-                                // PvP 模式：按对阵分组显示
-                                matchupGroups.map(([matchupKey, matchupEvents], idx) => {
-                                  const firstEvent = matchupEvents[0];
-                                  const team1 = firstEvent.team;
-                                  const team2 = firstEvent.opponent_team;
-
-                                  // 计算双方总分
-                                  const team1Score = matchupEvents
-                                    .filter((e: any) => e.team?.id === team1?.id)
-                                    .reduce((sum: number, e: any) => sum + e.points, 0);
-                                  const team2Score = matchupEvents
-                                    .filter((e: any) => e.team?.id === team2?.id)
-                                    .reduce((sum: number, e: any) => sum + e.points, 0);
-
-                                  return (
-                                    <div key={matchupKey} className="border rounded-lg p-4 bg-muted/10">
-                                      {/* 对阵标题 */}
-                                      <div className="flex items-center justify-between mb-3 pb-3 border-b">
-                                        <div className="flex items-center gap-3 flex-1">
-                                          <Badge variant="secondary" className="text-xs">
-                                            第 {idx + 1} 场
-                                          </Badge>
-                                          <div className="flex items-center gap-2">
-                                            <div
-                                              className="w-3 h-3 rounded-full"
-                                              style={{ backgroundColor: team1?.color || '#6b7280' }}
-                                            />
-                                            <span className="font-semibold">{team1?.name}</span>
-                                          </div>
-                                          <Badge variant="outline" className="text-xs">VS</Badge>
-                                          <div className="flex items-center gap-2">
-                                            <span className="font-semibold">{team2?.name}</span>
-                                            <div
-                                              className="w-3 h-3 rounded-full"
-                                              style={{ backgroundColor: team2?.color || '#6b7280' }}
-                                            />
-                                          </div>
-                                        </div>
-                                        <div className="flex items-center gap-4 text-lg font-bold">
-                                          <span className={team1Score > team2Score ? 'text-green-600' : ''}>
-                                            {team1Score}
-                                          </span>
-                                          <span className="text-muted-foreground">:</span>
-                                          <span className={team2Score > team1Score ? 'text-green-600' : ''}>
-                                            {team2Score}
-                                          </span>
-                                        </div>
-                                      </div>
-
-                                      {/* 详细事件 */}
-                                      <div className="space-y-2">
-                                        {matchupEvents.map((event: any) => (
-                                          <EventRow key={event.id} event={event} />
-                                        ))}
-                                      </div>
-                                    </div>
-                                  );
-                                })
-                              ) : (
-                                // 普通模式：直接显示所有事件
-                                <div className="space-y-2">
-                                  {areaEvents.map((event: any) => (
-                                    <EventRow key={event.id} event={event} />
-                                  ))}
-                                </div>
+                        return (
+                          <div key={areaKey} className="border rounded-lg overflow-hidden">
+                            {/* Area Header */}
+                            <div
+                              className={`px-4 py-3 bg-muted/30 flex items-center justify-between ${hasManyInArea ? 'cursor-pointer hover:bg-muted/50' : ''
+                                }`}
+                              onClick={() => hasManyInArea && toggleArea(areaKey)}
+                            >
+                              <div className="flex items-center gap-3">
+                                <Badge variant="default" className="text-xs">
+                                  {area}
+                                </Badge>
+                                <span className="text-sm text-muted-foreground">
+                                  {areaEvents.length} 条记录
+                                  {matchupGroups && ` · ${matchupGroups.length} 场对阵`}
+                                </span>
+                              </div>
+                              {hasManyInArea && (
+                                <Badge variant="outline" className="text-xs">
+                                  {isAreaExpanded ? "收起 ▲" : "展开 ▼"}
+                                </Badge>
                               )}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })
+
+                            {/* Area Content */}
+                            {(!hasManyInArea || isAreaExpanded) && (
+                              <div className="p-4 space-y-4">
+                                {matchupGroups ? (
+                                  // PvP 模式：按对阵分组显示
+                                  matchupGroups.map(([matchupKey, matchupEvents], idx) => {
+                                    const firstEvent = matchupEvents[0];
+                                    const team1 = firstEvent.team;
+                                    const team2 = firstEvent.opponent_team;
+
+                                    // 计算双方总分
+                                    const team1Score = matchupEvents
+                                      .filter((e: any) => e.team?.id === team1?.id)
+                                      .reduce((sum: number, e: any) => sum + e.points, 0);
+                                    const team2Score = matchupEvents
+                                      .filter((e: any) => e.team?.id === team2?.id)
+                                      .reduce((sum: number, e: any) => sum + e.points, 0);
+
+                                    return (
+                                      <div key={matchupKey} className="border rounded-lg p-4 bg-muted/10">
+                                        {/* 对阵标题 */}
+                                        <div className="flex items-center justify-between mb-3 pb-3 border-b">
+                                          <div className="flex items-center gap-3 flex-1">
+                                            <Badge variant="secondary" className="text-xs">
+                                              第 {idx + 1} 场
+                                            </Badge>
+                                            <div className="flex items-center gap-2">
+                                              <div
+                                                className="w-3 h-3 rounded-full"
+                                                style={{ backgroundColor: team1?.color || '#6b7280' }}
+                                              />
+                                              <span className="font-semibold">{team1?.name}</span>
+                                            </div>
+                                            <Badge variant="outline" className="text-xs">VS</Badge>
+                                            <div className="flex items-center gap-2">
+                                              <span className="font-semibold">{team2?.name}</span>
+                                              <div
+                                                className="w-3 h-3 rounded-full"
+                                                style={{ backgroundColor: team2?.color || '#6b7280' }}
+                                              />
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-4 text-lg font-bold">
+                                            <span className={team1Score > team2Score ? 'text-green-600' : ''}>
+                                              {team1Score}
+                                            </span>
+                                            <span className="text-muted-foreground">:</span>
+                                            <span className={team2Score > team1Score ? 'text-green-600' : ''}>
+                                              {team2Score}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {/* 详细事件 */}
+                                        <div className="space-y-2">
+                                          {matchupEvents.map((event: any) => (
+                                            <EventRow key={event.id} event={event} />
+                                          ))}
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                                ) : (
+                                  // 普通模式：直接显示所有事件
+                                  <div className="space-y-2">
+                                    {areaEvents.map((event: any) => (
+                                      <EventRow key={event.id} event={event} />
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })
                     )}
                   </CardContent>
                 )}

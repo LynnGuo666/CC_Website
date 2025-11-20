@@ -171,6 +171,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    transition: background-color 1s ease, border-color 1s ease, color 1s ease, fill 1s ease, stroke 1s ease, opacity 1s ease, box-shadow 1s ease, transform 0.3s ease;
   }
 
   html {
@@ -632,4 +633,49 @@
   html.season-winter .gradient-apple {
     background: linear-gradient(135deg, #87ceeb 0%, #4682b4 100%) !important;
   }
+}
+
+/* Minecraft Square Bokeh Animation */
+@keyframes float-up-rotate {
+  0% {
+    transform: translateY(100%) rotate(0deg);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-100%) rotate(90deg);
+    opacity: 0;
+  }
+}
+
+.translate-z-\[48px\] {
+  transform: translateZ(48px);
+}
+
+.-translate-z-\[48px\] {
+  transform: translateZ(-48px);
+}
+
+.translate-z-\[64px\] {
+  transform: translateZ(64px);
+}
+
+.-translate-z-\[64px\] {
+  transform: translateZ(-64px);
+}
+
+.rotate-y-90 {
+  transform: rotateY(90deg);
+}
+
+.rotate-x-90 {
+  transform: rotateX(90deg);
 }

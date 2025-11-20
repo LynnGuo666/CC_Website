@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.4] - 2025-11-20
+
+### Added
+- **交互式点云背景**：实现了跟随鼠标移动的动态点云粒子效果，替代了之前的静态 Minecraft 方块，提升页面互动性和视觉深度
+- **滑动玻璃导航**：使用 `framer-motion` 实现导航栏选中项的平滑滑动动画效果
+  - 选中项背景会在不同链接之间流畅滑动
+  - 自动适配季节主题色（冬季蓝色、春季绿色等）
+  - 增强 3D 凸起效果，带有阴影、边框和高光
+- **简化主题切换**：移除下拉菜单，改为点击循环切换（浅色 → 深色 → 跟随系统）
+
+### Changed
+- **平滑主题过渡**：将全局 CSS 过渡时间从 0.3 秒延长到 1 秒，使主题切换时的颜色渐变更加明显和优雅
+- **修复数据详情页导航栏遮挡**：为 `/matches/[id]/events` 页面添加 `pt-40` 顶部内边距
+
+### Fixed
+- **修复 Hydration 错误**：修复 `ThemeToggle` 组件的服务器端/客户端渲染不一致问题，添加 `mounted` 状态避免 hydration mismatch
+
+### Technical Details
+- 前端版本：2.9.3 → 2.9.4
+- 后端版本：2.9.3 → 2.9.4
+- 新增依赖：`framer-motion` (用于滑动动画)
+- 涉及文件：
+  - `frontend/src/components/ui/liquid-background.tsx` (点云背景)
+  - `frontend/src/components/main-nav.tsx` (滑动玻璃导航)
+  - `frontend/src/components/theme-toggle.tsx` (简化主题切换)
+  - `frontend/src/app/globals.css` (平滑过渡)
+  - `frontend/src/app/matches/[id]/events/page.tsx` (导航栏遮挡修复)
+
 ## [2.9.3] - 2025-11-20
 
 ### Fixed

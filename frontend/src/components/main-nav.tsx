@@ -7,6 +7,9 @@ import { ThemeToggle } from './theme-toggle';
 import { SeasonToggle } from './season-toggle';
 import { configService, SiteConfig } from '@/services/configService';
 
+import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
+
 const NavLink = ({
   href,
   children,
@@ -15,16 +18,28 @@ const NavLink = ({
   href: string
   children: React.ReactNode
   onClick?: () => void
-}) => (
-  <Link
-    href={href}
-    onClick={onClick}
-    className="relative inline-flex items-center rounded-2xl px-4 py-2 text-sm font-medium text-foreground/70 transition-all duration-300 hover:text-foreground hover:bg-white/15 dark:hover:bg-white/10 overflow-hidden group"
-  >
-    <span className="relative z-10">{children}</span>
-    <span className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></span>
-  </Link>
-)
+}) => {
+  const pathname = usePathname();
+  const isActive = pathname === href || (href !== '/' && pathname?.startsWith(href));
+
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`relative inline-flex items-center rounded-2xl px-4 py-2 text-sm font-medium transition-colors duration-300 z-10
+        ${isActive ? 'text-foreground' : 'text-foreground/70 hover:text-foreground'}`}
+    >
+      {isActive && (
+        <motion.span
+          layoutId="bubble"
+          className="absolute inset-0 bg-primary/15 dark:bg-primary/25 shadow-[0_8px_20px_-6px_rgba(var(--primary),0.5),inset_0_1px_2px_rgba(255,255,255,0.4)] border border-primary/20 rounded-2xl -z-10 backdrop-blur-md"
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+        />
+      )}
+      <span>{children}</span>
+    </Link>
+  );
+}
 
 export function MainNav() {
   const [isOpen, setIsOpen] = useState(false);
@@ -79,7 +94,7 @@ export function MainNav() {
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-primary to-accent group-hover:w-full transition-all duration-300"></span>
               </span>
             </Link>
-            
+
             <div className="hidden md:flex items-center space-x-1">
               <NavLink href="/matches">赛事</NavLink>
               <NavLink href="/games">游戏</NavLink>
@@ -88,7 +103,7 @@ export function MainNav() {
               <NavLink href="/leaderboard">排行榜</NavLink>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <Link
               href="/admin/dashboard"
