@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.9.3] - 2025-11-20
+
+### Fixed
+- **移动端导航栏遮挡优化**：
+  - 首页 Hero 区域增加 `pt-24` 顶部内边距
+  - 子页面（如 Matches, Games, Leaderboard）及详情页（如 `/matches/[id]`）增加 `pt-40` 顶部内边距
+  - 彻底解决移动端固定玻璃导航栏遮挡页面标题的问题
+- **UI 细节修复**：
+  - 统一所有按钮形状为圆角（Pill Shape），修复 `.glass` 类导致的圆角覆盖问题
+  - 修复社区卡片按钮 Hover 状态文字颜色丢失（变白/灰）的问题
+
+### Changed
+- **首页社区卡片视觉升级**：
+  - 为 TRIALHAMMER (绿)、RIA (红)、INF (紫) 社区卡片添加专属色调的玻璃背景和边框
+  - 增强卡片 3D 悬浮效果，Hover 时阴影加深并带有对应主题色光晕，呈现"凸起"质感
+
+### Technical Details
+- 前端版本：2.9.2 → 2.9.3
+- 后端版本：2.9.2 → 2.9.3
+- 涉及文件：
+  - `frontend/src/app/globals.css`
+  - `frontend/src/app/page.tsx`
+  - `frontend/src/app/matches/[id]/page.tsx`
+  - `frontend/src/components/ui/liquid-button.tsx`
+
 ## [2.9.2] - 2025-11-17
 
 ### Added

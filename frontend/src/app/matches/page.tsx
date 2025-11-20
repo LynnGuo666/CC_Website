@@ -5,13 +5,13 @@ import { getMatches, MatchList } from '@/services/matchService';
 import Link from 'next/link';
 import { HeroSection } from '@/components/hero-section';
 import {
-  Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
+import { LiquidBackground } from "@/components/ui/liquid-background";
 
 // 比赛状态映射
 const getStatusInfo = (status: string) => {
@@ -91,18 +91,21 @@ export default function MatchesPage() {
   const ongoingMatches = sortMatchesByStartTime(matches.filter(m => m.status === 'ongoing'));
   const preparingMatches = sortMatchesByStartTime(matches.filter(m => m.status === 'preparing'));
   const finishedMatches = sortMatchesByStartTime(matches.filter(m => m.status === 'finished'));
-  
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative">
+      <LiquidBackground />
+
       <HeroSection
         title="MC 小游戏竞技赛事"
         subtitle="探索精彩的 Minecraft 小游戏竞赛，追踪赛程、观众热度与选手表现。"
+        className="pt-40 pb-20"
       />
 
       <section className="section-shell">
         <div className="max-w-6xl mx-auto">
           {loading ? (
-            <div className="glass-card text-center p-12">
+            <GlassCard className="text-center p-12">
               <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-muted flex items-center justify-center animate-pulse">
                 <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
@@ -110,9 +113,9 @@ export default function MatchesPage() {
               </div>
               <h3 className="text-2xl font-semibold mb-2 text-foreground">正在加载赛事...</h3>
               <p className="text-muted-foreground">请稍候</p>
-            </div>
+            </GlassCard>
           ) : error ? (
-            <div className="glass-card border border-destructive/40 text-destructive p-6">
+            <GlassCard className="border border-destructive/40 text-destructive p-6">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-2xl bg-destructive/10 flex items-center justify-center">
                   <svg className="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,7 +124,7 @@ export default function MatchesPage() {
                 </div>
                 <p className="font-medium">{error}</p>
               </div>
-            </div>
+            </GlassCard>
           ) : (
             <>
               {/* Ongoing Matches */}
@@ -165,7 +168,7 @@ export default function MatchesPage() {
 
               {/* Empty State */}
               {matches.length === 0 && (
-                <div className="glass-card text-center p-12">
+                <GlassCard className="text-center p-12">
                   <svg className="w-16 h-16 mx-auto mb-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                   </svg>
@@ -173,7 +176,7 @@ export default function MatchesPage() {
                   <p className="text-muted-foreground max-w-md mx-auto">
                     还没有创建任何赛事。等待管理员添加新的比赛项目吧！
                   </p>
-                </div>
+                </GlassCard>
               )}
             </>
           )}
@@ -186,13 +189,12 @@ export default function MatchesPage() {
 // Match Card Component
 function MatchCard({ match, priority = false }: { match: MatchList; priority?: boolean }) {
   const statusInfo = getStatusInfo(match.status);
-  
+
   return (
     <Link href={`/matches/${match.id}`} className="group">
-      <Card
-        className={`glass-card h-full transition-all duration-300 ${
-          priority ? 'ring-2 ring-green-400/30' : ''
-        }`}
+      <GlassCard
+        className={`h-full transition-all duration-300 hover:scale-[1.02] ${priority ? 'ring-2 ring-green-400/30' : ''
+          }`}
       >
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between">
@@ -201,9 +203,8 @@ function MatchCard({ match, priority = false }: { match: MatchList; priority?: b
                 {match.name}
               </CardTitle>
               <div className="flex items-center space-x-2 mb-3">
-                <div className={`w-2 h-2 rounded-full ${statusInfo.dotColor} ${
-                  match.status === 'ongoing' ? 'animate-pulse' : ''
-                }`}></div>
+                <div className={`w-2 h-2 rounded-full ${statusInfo.dotColor} ${match.status === 'ongoing' ? 'animate-pulse' : ''
+                  }`}></div>
                 <span className={`text-sm font-medium px-2 py-1 rounded-full ${statusInfo.bgColor} ${statusInfo.color}`}>
                   {statusInfo.text}
                 </span>
@@ -221,7 +222,7 @@ function MatchCard({ match, priority = false }: { match: MatchList; priority?: b
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent className="flex-1 pb-4">
           <div className="space-y-4">
             {/* 显示开赛和结束时间 */}
@@ -257,7 +258,7 @@ function MatchCard({ match, priority = false }: { match: MatchList; priority?: b
                 )}
               </div>
             )}
-            
+
             {match.prize_pool && (
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">奖金池</span>
@@ -266,7 +267,7 @@ function MatchCard({ match, priority = false }: { match: MatchList; priority?: b
             )}
           </div>
         </CardContent>
-        
+
         <CardFooter className="pt-0">
           <div className="w-full text-center">
             <span className="text-sm font-medium text-primary group-hover:underline">
@@ -274,7 +275,7 @@ function MatchCard({ match, priority = false }: { match: MatchList; priority?: b
             </span>
           </div>
         </CardFooter>
-      </Card>
+      </GlassCard>
     </Link>
   );
 }

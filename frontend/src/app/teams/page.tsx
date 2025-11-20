@@ -22,14 +22,14 @@ export default function TeamsPage() {
     async function fetchTeamsData() {
       try {
         const matches = await getMatches();
-        
+
         const enrichedMatches = await Promise.all(
           matches.map(async (match) => {
             const teams = await getMatchTeams(match.id);
             return { ...match, teams };
           })
         );
-        
+
         setMatchesWithTeams(enrichedMatches);
       } catch (e) {
         console.error(e);
@@ -46,6 +46,7 @@ export default function TeamsPage() {
       <HeroSection
         title="参赛队伍"
         subtitle="跟随每一项赛事，查看参赛战队的最新阵容、颜色标识与表现。"
+        className="pt-40 pb-20"
       />
 
       <section className="section-shell">

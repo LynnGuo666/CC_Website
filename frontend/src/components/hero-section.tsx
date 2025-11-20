@@ -4,11 +4,12 @@ type HeroSectionProps = {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   children?: React.ReactNode;
+  className?: string;
 };
 
-export function HeroSection({ title, subtitle, children }: HeroSectionProps) {
+export function HeroSection({ title, subtitle, children, className }: HeroSectionProps) {
   return (
-    <section className="hero-section">
+    <section className={`hero-section ${className || ''}`}>
       <div aria-hidden="true" className="absolute inset-0 hero-overlay refraction-layer"></div>
       <div className="hero-content space-y-6">
         <h1 className="hero-title">{title}</h1>

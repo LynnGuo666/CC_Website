@@ -118,7 +118,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   return (
     <div className="min-h-screen">
       {/* Hero Header */}
-      <section className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-br from-background via-muted/20 to-background">
+      <section className="relative pt-40 pb-20 px-4 sm:px-6 bg-gradient-to-br from-background via-muted/20 to-background">
         <div
           aria-hidden="true"
           className="refraction-blob -top-1/2 -left-1/2 w-full h-full opacity-80"
@@ -132,7 +132,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                 </h1>
                 {getStatusBadge(match.status)}
               </div>
-              
+
               {match.description && (
                 <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-4 sm:mb-6 max-w-3xl">
                   {match.description}
@@ -147,28 +147,28 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                   </svg>
                   {teams.length} 支队伍
                 </Badge>
-                
+
                 <Badge variant="secondary" className="px-4 py-2 text-sm">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                   {matchGames.length} 个项目
                 </Badge>
-                
+
                 <Badge variant="secondary" className="px-4 py-2 text-sm">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                   {matchGames.reduce((total, game) => total + game.scores.length, 0)} 条记录
                 </Badge>
-                
+
                 <Badge variant="secondary" className="px-4 py-2 text-sm">
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                   最高 {teamStats[0]?.total_score || 0} 分
                 </Badge>
-                
+
                 {/* Champion Badge */}
                 {(match.winning_team_id || (match.status === 'finished' && teamStats.length > 0)) && (
                   <Badge variant="default" className="px-4 py-2 text-sm bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-0">
@@ -176,7 +176,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                     </svg>
                     总冠军: {
-                      match.winning_team_id 
+                      match.winning_team_id
                         ? (teams.find(t => t.id === match.winning_team_id)?.name || '未知队伍')
                         : (teamStats[0]?.name || '未知队伍')
                     }
@@ -203,7 +203,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                   </svg>
                   积分榜
                 </h2>
-                
+
                 <Card className="glass">
                   <CardContent className="p-0">
                     <div className="space-y-1">
@@ -218,7 +218,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                                 <span className="text-xl">{getMedal(index + 1)}</span>
                               </div>
                               <div className="flex items-center space-x-3">
-                                <div 
+                                <div
                                   className="w-4 h-4 rounded-full border-2 border-white/50 shadow-sm"
                                   style={{ backgroundColor: team.color || '#6b7280' }}
                                 ></div>
@@ -252,16 +252,16 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                 </svg>
                 赛程详情
               </h2>
-              
-              
+
+
               {matchGames.map((game, index) => {
-                const gameTeamScores = new Map<number, { name: string; color: string | null; total: number; players: Array<{name: string; score: number}> }>();
-                
+                const gameTeamScores = new Map<number, { name: string; color: string | null; total: number; players: Array<{ name: string; score: number }> }>();
+
                 // Calculate team totals for this game
                 game.scores.forEach((score: any) => {
                   const teamId = score.team_id;
                   const team = teams.find(t => t.id === teamId);
-                  
+
                   if (!gameTeamScores.has(teamId)) {
                     gameTeamScores.set(teamId, {
                       name: team?.name || `队伍 ${teamId}`,
@@ -272,9 +272,9 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                   }
                   const teamData = gameTeamScores.get(teamId)!;
                   teamData.total += score.points;
-                  teamData.players.push({ 
-                    name: score.user?.nickname || `用户 ${score.user_id}`, 
-                    score: score.points 
+                  teamData.players.push({
+                    name: score.user?.nickname || `用户 ${score.user_id}`,
+                    score: score.points
                   });
                 });
 
@@ -290,8 +290,8 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
                               <span className="text-sm font-bold text-primary">{index + 1}</span>
                             </div>
-                            <Link 
-                              href={`/games/${game.game.id}`} 
+                            <Link
+                              href={`/games/${game.game.id}`}
                               className="hover:text-primary transition-colors"
                             >
                               {game.game.name}
@@ -311,7 +311,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                         </Badge>
                       </div>
                     </CardHeader>
-                    
+
                     <CardContent className="space-y-6">
                       {/* Team Performance Chart */}
                       <div className="space-y-3">
@@ -326,7 +326,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                                   </span>
                                   <span className="text-lg">{idx === 0 ? '🏆' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ''}</span>
                                 </div>
-                                <div 
+                                <div
                                   className="w-3 h-3 rounded-full"
                                   style={{ backgroundColor: team.color || '#6b7280' }}
                                 ></div>
@@ -334,8 +334,8 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                               </div>
                               <span className="font-bold text-lg">{team.total}</span>
                             </div>
-                            <Progress 
-                              value={(team.total / maxScore) * 100} 
+                            <Progress
+                              value={(team.total / maxScore) * 100}
                               className="h-2"
                             />
                             <div className="flex flex-wrap gap-2 text-xs">
@@ -365,51 +365,52 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                              {game.scores
-                                .sort((a: any, b: any) => b.points - a.points)
-                                .slice(0, 10)
-                                .map((score: any, idx: number) => {
-                                  const team = teams.find(t => t.id === score.team_id);
-                                  return (
-                                <TableRow key={score.id || idx}>
-                                  <TableCell className="font-medium">
-                                    <div className="flex items-center space-x-2">
-                                      <span>{idx + 1}</span>
-                                      <span>{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ''}</span>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex items-center space-x-3">
-                                      <Avatar
-                                        username={score.user?.nickname || `用户${score.user_id}`}
-                                        userId={score.user_id}
-                                        size={32}
-                                        className="rounded-full"
-                                        fallbackClassName="rounded-full bg-primary/20"
-                                        fallbackLetter={score.user?.nickname?.charAt(0)?.toUpperCase() || 'U'}
-                                      />
-                                      <Link 
-                                        href={`/player/${score.user_id}`}
-                                        className="font-medium hover:text-primary transition-colors"
-                                      >
-                                        {score.user?.nickname || `用户 ${score.user_id}`}
-                                      </Link>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell>
-                                    <div className="flex items-center space-x-2">
-                                      <div 
-                                        className="w-3 h-3 rounded-full"
-                                        style={{ backgroundColor: team?.color || '#6b7280' }}
-                                      ></div>
-                                      <span>{team?.name || `队伍 ${score.team_id}`}</span>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                    <span className="font-mono font-bold text-lg">{score.points}</span>
-                                  </TableCell>
-                                </TableRow>
-                              )})}
+                                  {game.scores
+                                    .sort((a: any, b: any) => b.points - a.points)
+                                    .slice(0, 10)
+                                    .map((score: any, idx: number) => {
+                                      const team = teams.find(t => t.id === score.team_id);
+                                      return (
+                                        <TableRow key={score.id || idx}>
+                                          <TableCell className="font-medium">
+                                            <div className="flex items-center space-x-2">
+                                              <span>{idx + 1}</span>
+                                              <span>{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ''}</span>
+                                            </div>
+                                          </TableCell>
+                                          <TableCell>
+                                            <div className="flex items-center space-x-3">
+                                              <Avatar
+                                                username={score.user?.nickname || `用户${score.user_id}`}
+                                                userId={score.user_id}
+                                                size={32}
+                                                className="rounded-full"
+                                                fallbackClassName="rounded-full bg-primary/20"
+                                                fallbackLetter={score.user?.nickname?.charAt(0)?.toUpperCase() || 'U'}
+                                              />
+                                              <Link
+                                                href={`/player/${score.user_id}`}
+                                                className="font-medium hover:text-primary transition-colors"
+                                              >
+                                                {score.user?.nickname || `用户 ${score.user_id}`}
+                                              </Link>
+                                            </div>
+                                          </TableCell>
+                                          <TableCell>
+                                            <div className="flex items-center space-x-2">
+                                              <div
+                                                className="w-3 h-3 rounded-full"
+                                                style={{ backgroundColor: team?.color || '#6b7280' }}
+                                              ></div>
+                                              <span>{team?.name || `队伍 ${score.team_id}`}</span>
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className="text-right">
+                                            <span className="font-mono font-bold text-lg">{score.points}</span>
+                                          </TableCell>
+                                        </TableRow>
+                                      )
+                                    })}
                                 </TableBody>
                               </Table>
                             </div>

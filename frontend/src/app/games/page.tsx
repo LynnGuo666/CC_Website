@@ -49,9 +49,8 @@ export default function GamesPage() {
       if (!keyword) {
         return true;
       }
-      const target = `${game.name ?? ""} ${game.code ?? ""} ${
-        game.description ?? ""
-      }`.toLowerCase();
+      const target = `${game.name ?? ""} ${game.code ?? ""} ${game.description ?? ""
+        }`.toLowerCase();
       return target.includes(keyword);
     });
   }, [games, search, seasonalOnly]);
@@ -79,7 +78,7 @@ export default function GamesPage() {
         ></div>
       </div>
 
-      <HeroSection title="游戏介绍" subtitle="查看所有游戏项目及详情">
+      <HeroSection title="游戏介绍" subtitle="查看所有游戏项目及详情" className="pt-40 pb-20">
         <div className="flex flex-wrap gap-3">
           <Badge variant="outline" className="glass-panel glass-spectrum">
             {loading ? "正在读取 /api/games 数据..." : `共 ${games.length} 个项目`}

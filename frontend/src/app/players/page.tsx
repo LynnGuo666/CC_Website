@@ -133,6 +133,7 @@ export default function PlayersPage() {
         <HeroSection
           title="所有选手"
           subtitle="显示所有注册选手"
+          className="pt-40 pb-20"
         />
         <section className="section-shell">
           <div className="max-w-6xl mx-auto">
@@ -161,6 +162,7 @@ export default function PlayersPage() {
       <HeroSection
         title="所有选手"
         subtitle={`共 ${processedPlayers.length} 位选手 · 第 ${currentPage} / ${totalPages} 页`}
+        className="pt-40 pb-20"
       >
         {filterLoading && <span>筛选中...</span>}
         {totalFromApi !== null && <span>数据库共 {totalFromApi} 位注册选手</span>}

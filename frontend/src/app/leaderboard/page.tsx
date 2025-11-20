@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { 
-  getLeaderboard, 
-  getLevelDistribution, 
+import {
+  getLeaderboard,
+  getLevelDistribution,
   getAvailableGamesForLeaderboard,
   getLevelStyle,
   getRankMedal,
@@ -14,7 +14,7 @@ import {
   type LevelDistribution,
   type GameInfo
 } from '@/services/leaderboardService';
-    
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -127,6 +127,7 @@ export default function LeaderboardPage() {
         <HeroSection
           title="游戏标准分排行榜"
           subtitle="本分数与评级根据往年表现计算，仅供参考。切换游戏查看不同项目的表现。"
+          className="pt-40 pb-20"
         />
         <section className="section-shell">
           <div className="max-w-7xl mx-auto">
@@ -151,6 +152,7 @@ export default function LeaderboardPage() {
         <HeroSection
           title="游戏标准分排行榜"
           subtitle="本分数与评级根据往年表现计算，仅供参考。切换游戏查看不同项目的表现。"
+          className="pt-40 pb-20"
         />
         <section className="section-shell">
           <div className="max-w-7xl mx-auto">
@@ -163,7 +165,7 @@ export default function LeaderboardPage() {
                 </div>
                 <p className="font-medium">{error}</p>
               </div>
-              <Button onClick={loadData} variant="outline">
+              <Button onClick={() => loadData()} variant="outline">
                 重新加载
               </Button>
             </div>
@@ -173,8 +175,8 @@ export default function LeaderboardPage() {
     );
   }
 
-  const currentGameName = selectedGame === 'all' 
-    ? '综合排行' 
+  const currentGameName = selectedGame === 'all'
+    ? '综合排行'
     : availableGames.find(g => g.code === selectedGame)?.name || selectedGame;
 
   return (
@@ -182,6 +184,7 @@ export default function LeaderboardPage() {
       <HeroSection
         title="游戏标准分排行榜"
         subtitle="本分数与评级根据往年表现计算，仅供参考。切换游戏查看不同项目的表现。"
+        className="pt-40 pb-20"
       >
         <span>筛选游戏：</span>
         <Select value={selectedGame} onValueChange={setSelectedGame}>
@@ -318,102 +321,102 @@ export default function LeaderboardPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                      {leaderboard.map((player) => {
-                        const levelStyle = getLevelStyle(player.game_level);
-                        const medal = getRankMedal(player.rank);
-                        
-                        return (
-                          <TableRow key={player.user_id} className={player.rank <= 3 ? 'bg-muted/30' : ''}>
-                            <TableCell className="font-medium">
-                              <div className="flex items-center space-x-2">
-                                <span className="text-lg font-bold min-w-[24px]">{player.rank}</span>
-                                {medal && <span className="text-xl">{medal}</span>}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-3">
-                                <Avatar
-                                  username={player.nickname}
-                                  userId={player.user_id}
-                                  size={40}
-                                  className="rounded-full"
-                                  fallbackClassName="rounded-full bg-primary/20"
-                                  fallbackLetter={player.nickname?.charAt(0)?.toUpperCase() || 'U'}
-                                />
-                                <div>
-                                  <Link 
-                                    href={`/player/${player.user_id}`}
-                                    className="font-medium hover:text-primary transition-colors"
-                                  >
-                                    {player.display_name || player.nickname}
-                                  </Link>
-                                  {player.display_name && (
-                                    <p className="text-xs text-muted-foreground">@{player.nickname}</p>
-                                  )}
+                        {leaderboard.map((player) => {
+                          const levelStyle = getLevelStyle(player.game_level);
+                          const medal = getRankMedal(player.rank);
+
+                          return (
+                            <TableRow key={player.user_id} className={player.rank <= 3 ? 'bg-muted/30' : ''}>
+                              <TableCell className="font-medium">
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-lg font-bold min-w-[24px]">{player.rank}</span>
+                                  {medal && <span className="text-xl">{medal}</span>}
                                 </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <div className={`w-8 h-8 rounded-full ${levelStyle.bgColor} flex items-center justify-center text-white font-bold text-sm`}>
-                                  {player.game_level}
-                                </div>
-                                <div>
-                                  <div className="text-sm font-medium">{player.game_level} 级</div>
-                                  <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                                    <div
-                                      className={`h-full ${levelStyle.color.replace('text-', 'bg-')}`}
-                                      style={{ width: `${player.level_progress}%` }}
-                                    ></div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-3">
+                                  <Avatar
+                                    username={player.nickname}
+                                    userId={player.user_id}
+                                    size={40}
+                                    className="rounded-full"
+                                    fallbackClassName="rounded-full bg-primary/20"
+                                    fallbackLetter={player.nickname?.charAt(0)?.toUpperCase() || 'U'}
+                                  />
+                                  <div>
+                                    <Link
+                                      href={`/player/${player.user_id}`}
+                                      className="font-medium hover:text-primary transition-colors"
+                                    >
+                                      {player.display_name || player.nickname}
+                                    </Link>
+                                    {player.display_name && (
+                                      <p className="text-xs text-muted-foreground">@{player.nickname}</p>
+                                    )}
                                   </div>
                                 </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="text-lg font-bold text-primary">
-                                {player.average_standard_score}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                总分: {player.total_standard_score}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="font-medium">
-                                {selectedGame === 'all' 
-                                  ? (isGlobalPlayer(player) ? player.total_games_played : 0)
-                                  : (isGamePlayer(player) ? player.games_played : 0)
-                                }
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {selectedGame === 'all' 
-                                  ? `${isGlobalPlayer(player) ? player.game_count : 0}种游戏` 
-                                  : '场次'
-                                }
-                              </div>
-                            </TableCell>
-                            {selectedGame !== 'all' && (
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center space-x-2">
+                                  <div className={`w-8 h-8 rounded-full ${levelStyle.bgColor} flex items-center justify-center text-white font-bold text-sm`}>
+                                    {player.game_level}
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-medium">{player.game_level} 级</div>
+                                    <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                      <div
+                                        className={`h-full ${levelStyle.color.replace('text-', 'bg-')}`}
+                                        style={{ width: `${player.level_progress}%` }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </TableCell>
                               <TableCell className="text-right">
-                                <div className="font-medium">
-                                  {isGamePlayer(player) ? player.total_raw_score?.toLocaleString() || 0 : 0}
+                                <div className="text-lg font-bold text-primary">
+                                  {player.average_standard_score}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  平均: {isGamePlayer(player) ? player.average_raw_score || 0 : 0}
+                                  总分: {player.total_standard_score}
                                 </div>
                               </TableCell>
-                            )}
-                            {selectedGame === 'all' && isGlobalPlayer(player) && player.best_game && (
-                              <TableCell>
-                                <div className="text-sm">
-                                  <div className="font-medium">{player.best_game.game_name}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {player.best_game.average_standard_score} 分 · {player.best_game.games_played} 场
+                              <TableCell className="text-right">
+                                <div className="font-medium">
+                                  {selectedGame === 'all'
+                                    ? (isGlobalPlayer(player) ? player.total_games_played : 0)
+                                    : (isGamePlayer(player) ? player.games_played : 0)
+                                  }
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {selectedGame === 'all'
+                                    ? `${isGlobalPlayer(player) ? player.game_count : 0}种游戏`
+                                    : '场次'
+                                  }
+                                </div>
+                              </TableCell>
+                              {selectedGame !== 'all' && (
+                                <TableCell className="text-right">
+                                  <div className="font-medium">
+                                    {isGamePlayer(player) ? player.total_raw_score?.toLocaleString() || 0 : 0}
                                   </div>
-                                </div>
-                              </TableCell>
-                            )}
-                          </TableRow>
-                        );
-                      })}
+                                  <div className="text-xs text-muted-foreground">
+                                    平均: {isGamePlayer(player) ? player.average_raw_score || 0 : 0}
+                                  </div>
+                                </TableCell>
+                              )}
+                              {selectedGame === 'all' && isGlobalPlayer(player) && player.best_game && (
+                                <TableCell>
+                                  <div className="text-sm">
+                                    <div className="font-medium">{player.best_game.game_name}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {player.best_game.average_standard_score} 分 · {player.best_game.games_played} 场
+                                    </div>
+                                  </div>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
@@ -424,7 +427,7 @@ export default function LeaderboardPage() {
 
           {/* Navigation */}
           <div className="flex justify-center pt-12">
-            <Link 
+            <Link
               href="/"
               className="inline-flex items-center px-6 py-3 rounded-2xl glass card-hover border-primary/20 hover:border-primary/40 transition-all"
             >
