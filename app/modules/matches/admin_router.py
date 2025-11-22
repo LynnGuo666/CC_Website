@@ -112,6 +112,7 @@ async def import_score_events(
     tournament_stage: Optional[str] = None,
     event_type: str = "game_score",
     recalc: bool = False,
+    preview: bool = False,
     db: Session = Depends(get_db),
     current_user = Depends(require_role(UserRole.EDITOR.value)),
 ):
@@ -125,13 +126,14 @@ async def import_score_events(
             tournament_stage=tournament_stage,
             event_type=event_type,
             clear_existing=clear_existing,
+            dry_run=preview,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"导入失败: {exc}") from exc
 
-    if recalc:
+    if recalc and not preview:
         crud.recalculate_match_standard_scores(db, match_id=match_id)
 
     return result

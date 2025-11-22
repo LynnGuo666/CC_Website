@@ -24,6 +24,7 @@ MANIFEST
 # Database
 *.db
 *.sqlite3
+*.csv
 
 # Environment
 .env

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import csv
 import io
+import datetime
 from typing import Dict, Optional, Tuple, List
 
 from sqlalchemy.orm import Session
@@ -76,6 +77,27 @@ def resolve_team(team_maps: Tuple[Dict[str, match_models.MatchTeam], Dict[str, m
     return None
 
 
+def parse_duration_to_seconds(time_str: str) -> Optional[float]:
+    """Parse MM:SS.s format to total seconds"""
+    if not time_str:
+        return None
+    try:
+        parts = time_str.strip().split(':')
+        if len(parts) == 2:
+            minutes = float(parts[0])
+            seconds = float(parts[1])
+            return minutes * 60 + seconds
+        elif len(parts) == 3:
+             # Handle HH:MM:SS if necessary, though spec says MM:SS.s
+            hours = float(parts[0])
+            minutes = float(parts[1])
+            seconds = float(parts[2])
+            return hours * 3600 + minutes * 60 + seconds
+    except ValueError:
+        pass
+    return None
+
+
 def import_score_events_from_csv(
     db: Session,
     match_id: int,
@@ -83,6 +105,7 @@ def import_score_events_from_csv(
     tournament_stage: Optional[str] = None,
     event_type: str = "game_score",
     clear_existing: bool = False,
+    dry_run: bool = False,
 ) -> Dict[str, object]:
     """从 CSV 内容导入 ScoreEvent 记录"""
     if not file_bytes:
@@ -91,11 +114,16 @@ def import_score_events_from_csv(
     text = file_bytes.decode("utf-8-sig")
     csv_reader = csv.DictReader(io.StringIO(text))
 
+    # Fetch match to get start_time
+    match = db.query(match_models.Match).filter(match_models.Match.id == match_id).first()
+    if not match:
+        raise ValueError(f"Match with id {match_id} not found")
+
     team_maps = build_team_maps(db, match_id)
     game_map = build_game_map(db, match_id)
     user_map = build_user_map(db, match_id)
 
-    if clear_existing:
+    if clear_existing and not dry_run:
         db.query(models.ScoreEvent).filter(models.ScoreEvent.match_id == match_id).delete()
         db.commit()
 
@@ -104,6 +132,11 @@ def import_score_events_from_csv(
     errors: List[str] = []
 
     for row_num, row in enumerate(csv_reader, start=2):  # header is row 1
+        # Check if row is effectively empty (all values are empty strings or None)
+        if not any(v and str(v).strip() for v in row.values()):
+            skipped += 1
+            continue
+
         points_raw = (row.get("points") or "").strip()
         if not points_raw:
             skipped += 1
@@ -143,6 +176,14 @@ def import_score_events_from_csv(
             errors.append(f"第 {row_num} 行玩家未在当前比赛队伍中: {row.get('username')}")
             continue
 
+        # Parse time
+        time_str = row.get("time")
+        event_time = None
+        if time_str and match.start_time:
+            seconds = parse_duration_to_seconds(time_str)
+            if seconds is not None:
+                event_time = match.start_time + datetime.timedelta(seconds=seconds)
+
         event = models.ScoreEvent(
             match_id=match_id,
             match_game_id=match_game.id,
@@ -156,21 +197,25 @@ def import_score_events_from_csv(
             tournament_stage=tournament_stage,
             game_round_label=row.get("round") or None,
             area=row.get("area") or None,
+            event_time=event_time,
             meta={
                 "source_csv_id": row.get("id"),
-                "time": row.get("time"),
+                "time_raw": time_str,
                 "rival_name": rival_name,
             },
         )
 
-        db.add(event)
+        if not dry_run:
+            db.add(event)
         inserted += 1
 
-    db.commit()
+    if not dry_run:
+        db.commit()
 
     return {
         "inserted": inserted,
         "skipped": skipped,
         "errors": errors,
         "error_count": len(errors),
+        "dry_run": dry_run,
     }
