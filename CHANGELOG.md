@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.10.0] - 2025-11-22
+
+### Added
+- **玩家能力雷达图系统**：全新的六维能力可视化功能
+  - **六大维度**：武力、协作、策略、爆发、知识、身法
+  - **智能算法**：基于排名和标准分的 v2.0 算法，支持分数突破 100（超凡表现）
+  - **赛事筛选**：支持查看综合能力或特定赛事表现
+  - **主题适配**：雷达图颜色自动跟随季节主题变化
+  - **选手详情页集成**：在选手详情页右侧显示雷达图，可通过下拉框切换查看不同赛事
+- **完整文档**：新增 `docs/radar_chart_system.md`，包含算法说明、公式、游戏配置和 API 文档
+
+### Changed
+- **下拉框动画优化**：移除所有动画效果，下拉框立即显示，避免"飘出来"的视觉效果
+
+### Technical Details
+- 前端版本：2.9.4 → 2.10.0
+- 后端版本：2.9.4 → 2.10.0
+- 新增依赖：`recharts` (前端图表库)
+- 新增后端模块：
+  - `app/modules/users/radar_calculator.py` - 雷达图计算引擎
+  - API 端点：`GET /api/users/{user_id}/radar?match_id={match_id}`
+- 新增前端组件：
+  - `frontend/src/components/player-radar-chart.tsx` - 雷达图组件
+  - `frontend/src/components/match-radar-chart.tsx` - 赛事级雷达图组件
+- 涉及文件：
+  - `frontend/src/services/userService.ts` - 新增 `getUserRadar` 方法
+  - `frontend/src/app/player/[id]/page.tsx` - 集成雷达图显示
+  - `frontend/src/components/ui/select.tsx` - 优化下拉框动画
+
 ## [2.9.4] - 2025-11-20
 
 ### Added

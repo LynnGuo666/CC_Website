@@ -1,4 +1,4 @@
-import { getUserById, getUserStats, getUserTeamHistory, User, UserStats } from '@/services/userService';
+import { getUserById, getUserStats, getUserTeamHistory, getUserRadar, User, UserStats } from '@/services/userService';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import {
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar } from "@/components/ui/avatar";
 import ScoreTimeline from '@/components/score-timeline';
+import PlayerRadarChart from '@/components/player-radar-chart';
 import {
   Table,
   TableBody,
@@ -29,6 +30,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
   let player: User | null = null;
   let playerStats: UserStats | null = null;
   let teamHistory: any = null;
+  let radarData: Record<string, number> | null = null;
   let error: string | null = null;
 
   try {
@@ -37,24 +39,31 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
     if (isNaN(playerId)) {
       throw new Error('无效的选手ID。');
     }
-    
+
     // 获取用户基本信息
     player = await getUserById(playerId);
-    
+
     // 获取用户统计信息
     try {
       playerStats = await getUserStats(playerId);
     } catch (statsError) {
       console.warn('Failed to load player stats:', statsError);
     }
-    
+
     // 获取队伍历史
     try {
       teamHistory = await getUserTeamHistory(playerId);
     } catch (teamError) {
       console.warn('Failed to load team history:', teamError);
     }
-    
+
+    // 获取雷达图数据
+    try {
+      radarData = await getUserRadar(playerId);
+    } catch (radarError) {
+      console.warn('Failed to load radar data:', radarError);
+    }
+
   } catch (e: any) {
     console.error(e);
     error = e.message || '加载选手详情失败。';
@@ -101,7 +110,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
   return (
     <div className="min-h-screen">
       {/* Hero Header */}
-      <section className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-br from-background via-muted/20 to-background">
+      <section className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-br from-background via-muted/20 to-background overflow-hidden">
         <div
           aria-hidden="true"
           className="refraction-blob -top-1/2 -left-1/2 w-full h-full opacity-80"
@@ -112,57 +121,69 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
             } as CSSProperties
           }
         ></div>
-        <div className="relative max-w-4xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 mb-6">
-            <Avatar
-              username={player.nickname}
-              userId={player.id}
-              size={128}
-              className="rounded-2xl border-4 border-white/20 shadow-2xl flex-shrink-0"
-              fallbackClassName="rounded-2xl"
-              fallbackLetter={player.nickname?.charAt(0)?.toUpperCase()}
-            />
-            <div className="flex-1 text-center sm:text-left w-full">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent break-words">
-                {player.nickname}
-              </h1>
-              {player.display_name && (
-                <p className="text-lg sm:text-xl text-muted-foreground mb-3 sm:mb-4">{player.display_name}</p>
-              )}
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 md:gap-4">
-                <Badge variant="secondary" className="text-lg px-4 py-2">
-                  ID: {player.id}
-                </Badge>
-                {player.game_level && (
-                  <Badge 
-                    variant="outline" 
-                    className={`text-lg px-3 py-2 font-bold ${
-                      player.game_level === 'S' ? 'text-yellow-500 border-yellow-500/30 bg-yellow-500/10' :
-                      player.game_level === 'A' ? 'text-green-500 border-green-500/30 bg-green-500/10' :
-                      player.game_level === 'B' ? 'text-blue-500 border-blue-500/30 bg-blue-500/10' :
-                      player.game_level === 'C' ? 'text-orange-500 border-orange-500/30 bg-orange-500/10' :
-                      'text-gray-500 border-gray-500/30 bg-gray-500/10'
-                    }`}
-                  >
-                    综合等级{player.game_level}
-                  </Badge>
+        <div className="relative max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8 lg:gap-12">
+
+            {/* Left: Avatar & Info */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 sm:gap-8 flex-1 w-full lg:w-auto">
+              <Avatar
+                username={player.nickname}
+                userId={player.id}
+                size={128}
+                className="rounded-2xl border-4 border-white/20 shadow-2xl flex-shrink-0"
+                fallbackClassName="rounded-2xl"
+                fallbackLetter={player.nickname?.charAt(0)?.toUpperCase()}
+              />
+              <div className="flex-1 text-center sm:text-left w-full">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent break-words">
+                  {player.nickname}
+                </h1>
+                {player.display_name && (
+                  <p className="text-lg sm:text-xl text-muted-foreground mb-3 sm:mb-4">{player.display_name}</p>
                 )}
-                {player.source && (
-                  <Badge variant="outline" className="text-lg px-4 py-2">
-                    {player.source}
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 md:gap-4">
+                  <Badge variant="secondary" className="text-lg px-4 py-2">
+                    ID: {player.id}
                   </Badge>
-                )}
-                {currentTeam && (
-                  <Badge 
-                    variant="outline" 
-                    className="text-lg px-4 py-2"
-                    style={{ borderColor: currentTeam.color, color: currentTeam.color }}
-                  >
-                    {currentTeam.name}
-                  </Badge>
-                )}
+                  {player.game_level && (
+                    <Badge
+                      variant="outline"
+                      className={`text-lg px-3 py-2 font-bold ${player.game_level === 'S' ? 'text-yellow-500 border-yellow-500/30 bg-yellow-500/10' :
+                        player.game_level === 'A' ? 'text-green-500 border-green-500/30 bg-green-500/10' :
+                          player.game_level === 'B' ? 'text-blue-500 border-blue-500/30 bg-blue-500/10' :
+                            player.game_level === 'C' ? 'text-orange-500 border-orange-500/30 bg-orange-500/10' :
+                              'text-gray-500 border-gray-500/30 bg-gray-500/10'
+                        }`}
+                    >
+                      综合等级{player.game_level}
+                    </Badge>
+                  )}
+                  {player.source && (
+                    <Badge variant="outline" className="text-lg px-4 py-2">
+                      {player.source}
+                    </Badge>
+                  )}
+                  {currentTeam && (
+                    <Badge
+                      variant="outline"
+                      className="text-lg px-4 py-2"
+                      style={{ borderColor: currentTeam.color, color: currentTeam.color }}
+                    >
+                      {currentTeam.name}
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* Right: Radar Chart */}
+            <div className="w-full max-w-md lg:w-[400px] flex-shrink-0 mt-8 lg:mt-0">
+              <PlayerRadarChart
+                userId={player.id}
+                userMatches={matchHistory.map((m: any) => ({ id: m.match_id, name: m.match_name }))}
+              />
+            </div>
+
           </div>
         </div>
       </section>
@@ -206,28 +227,28 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                    {matchHistory.map((match: any, index: number) => (
-                      <TableRow key={index}>
-                        <TableCell className="font-medium">
-                          <Link 
-                            href={`/matches/${match.match_id}`}
-                            className="text-primary hover:underline cursor-pointer"
-                          >
-                            {match.match_name}
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{match.team_name}</Badge>
-                        </TableCell>
-                        <TableCell>{match.games_played}</TableCell>
-                        <TableCell>
-                          <span className="font-semibold text-primary">{match.total_points}</span>
-                        </TableCell>
-                        <TableCell>
-                          {match.games_played > 0 ? Math.round(match.total_points / match.games_played) : 0}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                      {matchHistory.map((match: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">
+                            <Link
+                              href={`/matches/${match.match_id}`}
+                              className="text-primary hover:underline cursor-pointer"
+                            >
+                              {match.match_name}
+                            </Link>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{match.team_name}</Badge>
+                          </TableCell>
+                          <TableCell>{match.games_played}</TableCell>
+                          <TableCell>
+                            <span className="font-semibold text-primary">{match.total_points}</span>
+                          </TableCell>
+                          <TableCell>
+                            {match.games_played > 0 ? Math.round(match.total_points / match.games_played) : 0}
+                          </TableCell>
+                        </TableRow>
+                      ))}
                     </TableBody>
                   </Table>
                 </div>
@@ -236,16 +257,16 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
           )}
 
           {/* Team History */}
-            <div className="mb-16">
-              <div className="flex items-center mb-8 gap-3">
-                <div className="p-2 rounded-2xl bg-primary/10 text-primary shadow-inner">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c2.21 0 4-1.79 4-4S14.21 0 12 0 8 1.79 8 4s1.79 4 4 4zm0 2c-3.313 0-6 2.239-6 5v3h12v-3c0-2.761-2.687-5-6-5zM4 18h16v4H4z" transform="translate(0 2)" />
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold">选手履历</h2>
+          <div className="mb-16">
+            <div className="flex items-center mb-8 gap-3">
+              <div className="p-2 rounded-2xl bg-primary/10 text-primary shadow-inner">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c2.21 0 4-1.79 4-4S14.21 0 12 0 8 1.79 8 4s1.79 4 4 4zm0 2c-3.313 0-6 2.239-6 5v3h12v-3c0-2.761-2.687-5-6-5zM4 18h16v4H4z" transform="translate(0 2)" />
+                </svg>
               </div>
-            
+              <h2 className="text-2xl font-bold">选手履历</h2>
+            </div>
+
             {/* Current Team - Full Width */}
             {currentTeam && (
               <div className="mb-8">
@@ -258,7 +279,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                     <CardContent className="p-6">
                       <div className="flex items-center space-x-6">
                         <div className="relative">
-                          <div 
+                          <div
                             className="w-16 h-16 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg transition-transform duration-300 group-hover:scale-110"
                             style={{ backgroundColor: currentTeam.color }}
                           >
@@ -270,7 +291,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                             </svg>
                           </div>
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-4 mb-2">
                             <h4 className="font-bold text-xl text-foreground group-hover:text-primary transition-colors">{currentTeam.name}</h4>
@@ -287,7 +308,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                             </p>
                           )}
                         </div>
-                        
+
                         <div className="flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
                           <svg className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
@@ -379,7 +400,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
 
           {/* Navigation */}
           <div className="flex justify-center">
-            <Link 
+            <Link
               href="/players"
               className="inline-flex items-center px-6 py-3 rounded-2xl glass card-hover border-primary/20 hover:border-primary/40 transition-all"
             >

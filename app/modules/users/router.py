@@ -145,6 +145,26 @@ def get_user_team_history(user_id: int, db: Session = Depends(get_db)):
         "historical_teams": teams.get("historical_teams", [])
     }
 
+
+@router.get("/{user_id}/radar")
+def get_user_radar_chart(user_id: int, match_id: int = None, db: Session = Depends(get_db)):
+    """
+    获取玩家六维能力雷达图数据
+    
+    Args:
+        user_id: 用户 ID
+        match_id: 可选，赛事 ID。如果指定则只计算该赛事的数据
+    """
+    from app.modules.users.radar_calculator import RadarCalculator
+    
+    # 检查用户是否存在
+    user = crud.get_user(db, user_id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    calculator = RadarCalculator(db)
+    return calculator.calculate_user_radar(user_id, match_id)
+
 @router.put("/{user_id}", response_model=schemas.User)
 def update_user(user_id: int, user: schemas.UserCreate, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
     """更新用户信息"""
