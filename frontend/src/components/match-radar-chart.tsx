@@ -124,10 +124,10 @@ export default function MatchRadarChart({ userId, matchId, userName, className }
                     <CardContent className="h-[280px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
-                                <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                                <PolarGrid stroke="hsl(var(--primary) / 0.3)" strokeWidth={1.5} />
                                 <PolarAngleAxis
                                     dataKey="subject"
-                                    tick={{ fill: "var(--foreground)", fontSize: 11, fontWeight: 600 }}
+                                    tick={{ fill: "hsl(var(--foreground))", fontSize: 11, fontWeight: 600 }}
                                 />
                                 <PolarRadiusAxis
                                     angle={30}
@@ -145,12 +145,12 @@ export default function MatchRadarChart({ userId, matchId, userName, className }
                                 />
                                 <Tooltip
                                     contentStyle={{
-                                        backgroundColor: "rgba(0,0,0,0.8)",
-                                        border: "none",
+                                        backgroundColor: "hsl(var(--popover))",
+                                        border: "1px solid hsl(var(--border))",
                                         borderRadius: "8px",
-                                        color: "#fff",
+                                        color: "hsl(var(--popover-foreground))",
                                     }}
-                                    itemStyle={{ color: "#fff" }}
+                                    itemStyle={{ color: "hsl(var(--popover-foreground))" }}
                                     formatter={(value: number) => [value.toFixed(1), "分数"]}
                                 />
                             </RadarChart>

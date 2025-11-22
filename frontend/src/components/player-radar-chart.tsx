@@ -153,7 +153,7 @@ export default function PlayerRadarChart({ userId, userMatches, className }: Pla
             <CardContent className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-                        <PolarGrid stroke="hsl(var(--accent) / 0.3)" strokeWidth={1.5} />
+                        <PolarGrid stroke="hsl(var(--primary) / 0.3)" strokeWidth={1.5} />
                         <PolarAngleAxis
                             dataKey="subject"
                             tick={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 600 }}
@@ -167,9 +167,9 @@ export default function PlayerRadarChart({ userId, userMatches, className }: Pla
                         <Radar
                             name="能力值"
                             dataKey="A"
-                            stroke="hsl(var(--accent))"
+                            stroke="hsl(var(--primary))"
                             strokeWidth={3}
-                            fill="hsl(var(--accent))"
+                            fill="hsl(var(--primary))"
                             fillOpacity={0.4}
                         />
                         <Tooltip

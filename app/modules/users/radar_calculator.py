@@ -49,7 +49,7 @@ class RadarCalculator:
         Returns:
             Dict[str, float]: {Dimension: Score} (0-100+)
         """
-        # 1. 获取用户在各个游戏中的表现（平均标准分、平均排名）
+        # 1. 获取用户在各个游戏中的表现（平均标准分、平均排名、实际房间人数）
         game_stats = self._get_user_game_performance(user_id, match_id)
         
         dim_scores = {d: 0.0 for d in self.DIMS}
@@ -60,7 +60,8 @@ class RadarCalculator:
                 continue
                 
             config = self.GAME_CONFIG[game_code]
-            lobby_size = config["lobby_size"]
+            # 使用实际的房间人数，而不是固定的 50
+            lobby_size = stats.get("actual_lobby_size", 50)  # 默认 50 作为后备
             
             # 获取数据
             avg_std_score = stats["avg_std_score"]
@@ -79,7 +80,7 @@ class RadarCalculator:
             rank_score = max(0, min(100, rank_score))
             
             # B. 标准分表现 (Std Score Performance)
-            # 预期平均分 = 总池 / 房间人数
+            # 预期平均分 = 总池 / 房间人数（使用实际人数）
             expected_avg = self.TOTAL_STD_POOL / lobby_size
             
             # 表现分 = (实际分 / 预期分) * 50
@@ -189,25 +190,34 @@ class RadarCalculator:
         
         # 构建内存索引: match_game_id -> list of scores (sorted desc)
         match_score_map = {}
+        match_lobby_sizes = {}  # 记录每个 match_game 的实际人数
         for mg_id, score in all_match_scores:
             if mg_id not in match_score_map:
                 match_score_map[mg_id] = []
             match_score_map[mg_id].append(score)
             
-        for scores_list in match_score_map.values():
+        for mg_id, scores_list in match_score_map.items():
             scores_list.sort(reverse=True)
+            match_lobby_sizes[mg_id] = len(scores_list)  # 实际参赛人数
             
-        # 计算每个记录的排名
+        # 计算每个记录的排名和累计房间人数
         for mg_id, std_score, game_code in user_scores:
             if game_code not in game_data:
-                game_data[game_code] = {"total_std": 0.0, "total_rank": 0, "count": 0}
+                game_data[game_code] = {
+                    "total_std": 0.0, 
+                    "total_rank": 0, 
+                    "total_lobby_size": 0,  # 累计房间人数
+                    "count": 0
+                }
                 
             # 计算 rank
             # 简单的 rank 算法：在排序列表中找到第一个 <= std_score 的位置（其实是等于，因为是浮点数，最好用近似或直接找）
             # 由于是降序，index + 1 就是排名
             rank = 1
+            lobby_size = 50  # 默认值
             if mg_id in match_score_map:
                 scores_list = match_score_map[mg_id]
+                lobby_size = match_lobby_sizes.get(mg_id, 50)
                 for i, s in enumerate(scores_list):
                     if abs(s - std_score) < 0.001: # Float equality
                         rank = i + 1
@@ -215,6 +225,7 @@ class RadarCalculator:
             
             game_data[game_code]["total_std"] += std_score
             game_data[game_code]["total_rank"] += rank
+            game_data[game_code]["total_lobby_size"] += lobby_size
             game_data[game_code]["count"] += 1
             
         # 计算平均值
@@ -223,7 +234,9 @@ class RadarCalculator:
             if data["count"] > 0:
                 result[code] = {
                     "avg_std_score": data["total_std"] / data["count"],
-                    "avg_rank": data["total_rank"] / data["count"]
+                    "avg_rank": data["total_rank"] / data["count"],
+                    "actual_lobby_size": round(data["total_lobby_size"] / data["count"])  # 平均房间人数
                 }
                 
         return result
+
