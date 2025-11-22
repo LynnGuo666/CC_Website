@@ -5,6 +5,7 @@
 
 // API Base URL - 默认指向 localhost:8000 用于本地开发
 export const API_BASE_URL =
+  (typeof window === 'undefined' && process.env.INTERNAL_API_URL) ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
   'http://localhost:8000';

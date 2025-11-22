@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { FloatingActionButton } from "@/components/floating-action-button";
+import { API_BASE_URL } from '@/config/env';
 
 
 // Function to get status badge styling
@@ -61,8 +62,9 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
       throw new Error('无效的赛事ID。');
     }
 
+
     // 优化：使用新的完整数据API，一次请求获取所有数据
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/matches/${matchId}/full`, {
+    const response = await fetch(`${API_BASE_URL}/api/matches/${matchId}/full`, {
       cache: 'no-store'
     });
 
