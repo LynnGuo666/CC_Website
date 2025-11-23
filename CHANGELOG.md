@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.6] - 2025-11-23
+
+### Fixed
+- **管理后台视频页面依旧出现 Mixed Content**：手动加载选手列表时缺少末尾斜杠，FastAPI 在自动重定向过程中回退为 `http://`，导致浏览器阻断请求。现统一拼接为 `/api/users/`，避免重定向触发，从而在 HTTPS 页面中始终以安全协议访问 API。
+
+### Technical Details
+- 前端版本：2.13.5 → 2.13.6
+- 后端版本：2.13.5 → 2.13.6
+- 修改文件：`frontend/src/app/admin/matches/[id]/videos/page.tsx`
+- 影响范围：管理员赛事视频页面拉取选手时不再触发 HTTP 302/307 跳转与随后的 Mixed Content 告警
+
+## [2.13.5] - 2025-11-23
+
+### Fixed
+- **前端 API 根路径环境变量统一**：彻底移除对 `NEXT_PUBLIC_API_URL` 的兼容兜底，仅保留 `NEXT_PUBLIC_API_BASE_URL`，避免部署和调试时反复确认两个变量的优先级，同时保留 HTTPS 自动升级与 localhost 默认回退逻辑
+
+### Technical Details
+- 前端版本：2.13.4 → 2.13.5
+- 后端版本：2.13.4 → 2.13.5
+- 修改文件：`frontend/src/config/env.ts`
+- 影响范围：所有调用 `getApiBaseUrl()` 的请求在构建期与运行期都会读取同一环境变量，彻底消除历史兼容路径
+
 ## [2.13.4] - 2025-11-23
 
 ### Fixed

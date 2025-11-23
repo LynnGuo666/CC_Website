@@ -12,14 +12,21 @@ export function getApiBaseUrl(): string {
     const isHttps = window.location.protocol === 'https:';
 
     // 从环境变量获取配置的 URL
-    let envUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
+    let envUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
     if (envUrl) {
       // 移除末尾斜杠
       envUrl = envUrl.replace(/\/$/, '');
 
-      // 如果当前页面是 HTTPS，强制 API 也使用 HTTPS
-      if (isHttps && envUrl.startsWith('http://')) {
+      // 强制生产域名使用 HTTPS（防止混合内容错误）
+      const productionDomains = ['api-cc.lynn6.top', 'cc.lynn6.top', 'cc.ziip.space', 'cc-mc-website.vercel.app', 'championship.midnight.school', 'cc.midnight.school'];
+      const isProductionDomain = productionDomains.some(domain => envUrl!.includes(domain));
+
+      if (isProductionDomain && envUrl.startsWith('http://')) {
+        envUrl = envUrl.replace('http://', 'https://');
+        console.log('[ENV] Forced HTTPS for production domain:', envUrl);
+      } else if (isHttps && envUrl.startsWith('http://')) {
+        // 如果当前页面是 HTTPS，强制 API 也使用 HTTPS
         envUrl = envUrl.replace('http://', 'https://');
         console.log('[ENV] Upgraded to HTTPS:', envUrl);
       }
@@ -38,10 +45,20 @@ export function getApiBaseUrl(): string {
     return process.env.INTERNAL_API_URL.replace(/\/$/, '');
   }
 
-  // 服务端：使用环境变量
-  const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
+  // 服务端：使用环境变量，强制生产域名使用 HTTPS
+  let envUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
   if (envUrl) {
-    return envUrl.replace(/\/$/, '');
+    envUrl = envUrl.replace(/\/$/, '');
+
+    // 强制生产域名使用 HTTPS
+    const productionDomains = ['api-cc.lynn6.top', 'cc.lynn6.top', 'cc.ziip.space', 'cc-mc-website.vercel.app', 'championship.midnight.school', 'cc.midnight.school'];
+    const isProductionDomain = productionDomains.some(domain => envUrl!.includes(domain));
+
+    if (isProductionDomain && envUrl.startsWith('http://')) {
+      envUrl = envUrl.replace('http://', 'https://');
+    }
+
+    return envUrl;
   }
 
   // 默认值

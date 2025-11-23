@@ -73,7 +73,7 @@ export default function AdminMatchVideosPage() {
 
             // Load all players for selection
             const apiUrl = getApiBaseUrl(); // 动态获取，确保使用正确的协议
-            const usersUrl = `${apiUrl}/api/users`;
+            const usersUrl = `${apiUrl}/api/users/`; // 保留末尾斜杠避免 FastAPI 重定向回 http
             console.log('[Video Page] API URL:', apiUrl);
             console.log('[Video Page] Fetching users from:', usersUrl);
 
