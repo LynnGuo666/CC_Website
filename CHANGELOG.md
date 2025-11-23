@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.11.0] - 2025-11-23
+
+### Added
+- **赛事视频管理系统**：新增 `match_videos` 数据表、后台 CRUD API 以及管理员页面，可针对每场赛事维护官方录播、选手视角与二创视频，支持匹配选手、小游戏、观看数、缩略图等元数据。
+- **Bilibili 集成**：管理端支持一键识别 B 站链接，自动拉取标题、简介、时长、封面、观看数，并通过 `/api/admin/matches/videos/proxy-image` 代理高清封面。
+- **赛事端视频入口**：比赛详情页新增“赛事视频”悬浮按钮与 `VideoModal`/`VideoCard` 组件，观众可在页面内快速筛选官方录播、选手 POV 及其他投稿。
+- **文档补全**：补充 `docs/video_system_design.md`、`docs/video_api_reference.md`、`docs/example_video_model.py` 详述数据结构、API 约定与示例脚本。
+
+### Changed
+- 雷达图评分算法（`app/modules/users/radar_calculator.py`）改为使用实际参加人数计算排名与期望分，提升不同房间规模下的公平性。
+- `MatchRadarChart`/`PlayerRadarChart` 配色与网格线改为跟随主题主色，阅读体验更统一。
+- `FloatingActionButton` 允许以按钮形式触发（`onClick`），配合赛事视频入口使用，避免为了打开弹窗强制跳转。
+
+### Fixed
+- 管理端视频表单新增 `view_count` 字段支持，修复无法设置观看数导致的 TypeScript 报错和后端验证失败。
+- `AdminUser.role` 列改用 `values_callable` 落地枚举值，避免 Alembic 或数据库因为 Enum 差异导致的写入错误。
+
+### Technical Details
+- 前端版本：2.10.1 → 2.11.0；后端版本：2.10.1 → 2.11.0。
+- 新增 Alembic 迁移：`alembic/versions/3a94a9b57ea1_add_match_videos.py`，并在 `app/modules/matches/models.py`、`app/modules/users/models.py` 中补充 `MatchVideo` 及关联关系。
+- 新 API：`POST /api/admin/matches/{match_id}/videos`、`PUT/DELETE /api/admin/matches/videos/{id}`、`GET /api/matches/{match_id}/videos`、`GET /api/admin/matches/videos/bilibili-info`、`GET /api/admin/matches/videos/proxy-image`。
+- 新前端模块：`frontend/src/app/admin/matches/[id]/videos/page.tsx`、`frontend/src/components/video-modal.tsx`、`frontend/src/components/video-card.tsx`、`frontend/src/components/match-video-floating-button.tsx` 等。
+
+## [2.10.1] - 2025-11-23
+
+### Fixed
+- **管理员赛事视频列表渲染异常**：修复 `videos.map` 返回的卡片 JSX 未正确闭合导致 Next.js 报错（Expected '</', got ')'），现在视频网格可正常渲染并支持编辑/删除操作。
+
+### Technical Details
+- 前端版本：2.10.0 → 2.10.1
+- 后端版本：2.10.0 → 2.10.1
+- 涉及文件：
+  - `frontend/src/app/admin/matches/[id]/videos/page.tsx`
+
 ## [2.10.0] - 2025-11-22
 
 ### Added

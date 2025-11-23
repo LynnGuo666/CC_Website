@@ -412,6 +412,100 @@ class AdminAPI {
       body: JSON.stringify(config),
     });
   }
+
+  // ==================== 视频管理 ====================
+
+  async getMatchVideos(matchId: number, params?: { video_type?: string; is_official?: boolean; platform?: string }): Promise<MatchVideo[]> {
+    const qs = new URLSearchParams();
+    if (params?.video_type) qs.append('video_type', params.video_type);
+    if (params?.is_official !== undefined) qs.append('is_official', String(params.is_official));
+    if (params?.platform) qs.append('platform', params.platform);
+    const query = qs.toString();
+    return this.request<MatchVideo[]>(`/api/matches/${matchId}/videos${query ? `?${query}` : ''}`);
+  }
+
+  async createMatchVideo(matchId: number, payload: MatchVideoPayload): Promise<MatchVideo> {
+    return this.request<MatchVideo>(`/api/admin/matches/${matchId}/videos`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async updateMatchVideo(videoId: number, payload: Partial<MatchVideoPayload>): Promise<MatchVideo> {
+    return this.request<MatchVideo>(`/api/admin/matches/videos/${videoId}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async deleteMatchVideo(videoId: number): Promise<void> {
+    await this.request<void>(`/api/admin/matches/videos/${videoId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getBilibiliVideoInfo(url: string): Promise<BilibiliVideoInfo> {
+    const params = new URLSearchParams({ url });
+    return this.request<BilibiliVideoInfo>(`/api/admin/matches/videos/bilibili-info?${params.toString()}`);
+  }
 }
 
 export const adminAPI = new AdminAPI();
+
+export interface BilibiliVideoInfo {
+  bvid: string;
+  aid: number;
+  title: string;
+  description: string;
+  thumbnail_url: string;
+  duration: number;
+  view_count: number;
+  uploader_name: string;
+  uploader_mid: number;
+  published_at: string;
+  cid: number;
+}
+
+export interface MatchVideo {
+  id: number;
+  match_id: number;
+  match_game_id?: number | null;
+  user_id?: number | null;
+  title: string;
+  url: string;
+  platform: 'bilibili' | 'youtube' | 'twitch' | 'douyu' | 'huya' | 'other';
+  video_type: 'livestream' | 'replay' | 'highlight';
+  is_official: boolean;
+  uploader_name?: string | null;
+  description?: string | null;
+  duration?: number | null;
+  thumbnail_url?: string | null;
+  view_count: number;
+  published_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: number;
+    nickname: string;
+    display_name?: string;
+  } | null;
+  match_game?: {
+    id: number;
+    game_name: string;
+  } | null;
+}
+
+export interface MatchVideoPayload {
+  title: string;
+  url: string;
+  platform: string;
+  video_type?: string;
+  is_official?: boolean;
+  uploader_name?: string;
+  match_game_id?: number;
+  user_id?: number;
+  description?: string;
+  duration?: number;
+  thumbnail_url?: string;
+  view_count?: number;
+}

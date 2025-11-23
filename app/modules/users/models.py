@@ -31,6 +31,7 @@ class User(Base):
     # 关联关系
     team_memberships = relationship("MatchTeamMembership", back_populates="user", lazy="select")
     scores = relationship("Score", back_populates="user", lazy="select")
+    videos = relationship("MatchVideo", back_populates="user", lazy="select")
     
     @property
     def current_teams(self):

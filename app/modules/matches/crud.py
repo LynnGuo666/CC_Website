@@ -796,8 +796,9 @@ def recalculate_game_standard_scores(db: Session, match_game_id: int) -> bool:
 def update_team_scores_sync(team_ids: list[int]):
     """同步更新指定队伍的积分（在独立的数据库会话中），考虑游戏倍率"""
     from app.core.db import SessionLocal
-    
+
     db = SessionLocal()
+
     try:
         for team_id in team_ids:
             # 计算队伍总积分和参与游戏数，考虑游戏倍率
@@ -806,27 +807,27 @@ def update_team_scores_sync(team_ids: list[int]):
                     COALESCE(SUM(s.points * COALESCE(mg.multiplier, 1.0)), 0) as total_score,
                     COUNT(DISTINCT s.match_game_id) as games_played
                 FROM match_teams mt
-                LEFT JOIN scores s ON mt.id = s.match_team_id 
+                LEFT JOIN scores s ON mt.id = s.match_team_id
                 LEFT JOIN match_games mg ON s.match_game_id = mg.id
                 WHERE mt.id = :team_id
                 GROUP BY mt.id
             """), {"team_id": team_id})
-            
+
             team_data = result.fetchone()
             if team_data:
                 total_score, games_played = team_data
-                
+
                 # 更新队伍积分
                 db.execute(text("""
-                    UPDATE match_teams 
-                    SET total_score = :total_score, games_played = :games_played 
+                    UPDATE match_teams
+                    SET total_score = :total_score, games_played = :games_played
                     WHERE id = :team_id
                 """), {
                     'total_score': int(total_score or 0),
                     'games_played': int(games_played or 0),
                     'team_id': team_id
                 })
-        
+
         # 在查询排名之前，将分数更新刷入数据库会话
         db.flush()
 
@@ -840,7 +841,7 @@ def update_team_scores_sync(team_ids: list[int]):
             if match_row:
                 match_id = match_row[0]
                 update_team_rankings(db, match_id)
-        
+
         db.commit()
     except Exception as e:
         print(f"更新队伍积分时出错: {e}")
@@ -848,28 +849,110 @@ def update_team_scores_sync(team_ids: list[int]):
     finally:
         db.close()
 
+def update_team_scores_async(team_ids: list[int]):
+    """异步更新队伍积分（在后台线程中执行）"""
+    # 在新线程中运行同步更新函数
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(None, update_team_scores_sync, team_ids)
 
 def update_team_rankings(db, match_id: int):
     """更新指定比赛的队伍排名"""
     # 获取所有队伍按积分排序
     teams_result = db.execute(text("""
         SELECT id, total_score
-        FROM match_teams 
+        FROM match_teams
         WHERE match_id = :match_id
         ORDER BY total_score DESC
     """), {"match_id": match_id})
-    
+
     teams = teams_result.fetchall()
-    
+
     # 更新排名
     for rank, (team_id, total_score) in enumerate(teams, 1):
         db.execute(text("""
-            UPDATE match_teams 
-            SET team_rank = :rank 
+            UPDATE match_teams
+            SET team_rank = :rank
             WHERE id = :team_id
         """), {"rank": rank, "team_id": team_id})
 
-def update_team_scores_async(team_ids: list[int]):
-    """异步更新队伍积分，避免阻塞主线程"""
-    executor = ThreadPoolExecutor(max_workers=1)
-    executor.submit(update_team_scores_sync, team_ids)
+# --- MatchVideo CRUD ---
+
+def create_match_video(db: Session, match_id: int, video: schemas.MatchVideoCreate):
+    db_video = models.MatchVideo(
+        match_id=match_id,
+        match_game_id=video.match_game_id,
+        user_id=video.user_id,
+        title=video.title,
+        url=video.url,
+        platform=models.VideoPlatform(video.platform),
+        video_type=models.VideoType(video.video_type),
+        is_official=video.is_official,
+        uploader_name=video.uploader_name,
+        description=video.description,
+        duration=video.duration,
+        thumbnail_url=video.thumbnail_url,
+        view_count=video.view_count
+    )
+    db.add(db_video)
+    db.commit()
+    db.refresh(db_video)
+    return db_video
+
+def get_match_videos(
+    db: Session, 
+    match_id: int, 
+    video_type: Optional[str] = None,
+    is_official: Optional[bool] = None,
+    platform: Optional[str] = None
+):
+    query = db.query(models.MatchVideo).options(
+        selectinload(models.MatchVideo.user),
+        selectinload(models.MatchVideo.match_game)
+    ).filter(models.MatchVideo.match_id == match_id)
+    
+    if video_type:
+        query = query.filter(models.MatchVideo.video_type == video_type)
+    if is_official is not None:
+        query = query.filter(models.MatchVideo.is_official == is_official)
+    if platform:
+        query = query.filter(models.MatchVideo.platform == platform)
+        
+    return query.order_by(models.MatchVideo.created_at.desc()).all()
+
+def get_match_video(db: Session, video_id: int):
+    return db.query(models.MatchVideo).filter(models.MatchVideo.id == video_id).first()
+
+def update_match_video(db: Session, video_id: int, video_update: schemas.MatchVideoUpdate):
+    db_video = get_match_video(db, video_id)
+    if not db_video:
+        return None
+        
+    update_data = video_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        if key == 'platform' and value:
+            setattr(db_video, key, models.VideoPlatform(value))
+        elif key == 'video_type' and value:
+            setattr(db_video, key, models.VideoType(value))
+        else:
+            setattr(db_video, key, value)
+            
+    db.commit()
+    db.refresh(db_video)
+    return db_video
+
+def delete_match_video(db: Session, video_id: int):
+    db_video = get_match_video(db, video_id)
+    if not db_video:
+        return False
+        
+    db.delete(db_video)
+    db.commit()
+    return True
+
+def get_user_videos(db: Session, user_id: int):
+    return db.query(models.MatchVideo).options(
+        selectinload(models.MatchVideo.match),
+        selectinload(models.MatchVideo.match_game)
+    ).filter(
+        models.MatchVideo.user_id == user_id
+    ).order_by(models.MatchVideo.created_at.desc()).all()

@@ -345,6 +345,7 @@ export default function AdminMatchesPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-wrap gap-2">
                       <Button variant="secondary" onClick={() => handleEdit(m)}>编辑</Button>
+                      <Button variant="outline" onClick={() => router.push(`/admin/matches/${m.id}/videos`)}>视频管理</Button>
                       <Button variant="outline" onClick={() => openImportDialog(m)}>导入小分 CSV</Button>
                       {m.status !== 'ongoing' && (
                         <Button variant="outline" onClick={() => handleStatusChange(m, 'start')}>开始</Button>

@@ -110,7 +110,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
   return (
     <div className="min-h-screen">
       {/* Hero Header */}
-      <section className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gradient-to-br from-background via-muted/20 to-background overflow-hidden">
+      <section className="relative pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6 bg-gradient-to-br from-background via-muted/20 to-background overflow-hidden">
         <div
           aria-hidden="true"
           className="refraction-blob -top-1/2 -left-1/2 w-full h-full opacity-80"

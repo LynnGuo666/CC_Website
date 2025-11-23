@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.core.deps import get_db
 from . import crud, models, schemas
@@ -452,3 +452,27 @@ def get_match_events(
     if not db_match:
         raise HTTPException(status_code=404, detail="Match not found")
     return crud.get_match_events_summary(db, match_id=match_id)
+
+# --- 视频管理接口 ---
+
+@router.get("/{match_id}/videos", response_model=List[schemas.MatchVideo])
+def get_match_videos(
+    match_id: int,
+    video_type: Optional[str] = None,
+    is_official: Optional[bool] = None,
+    platform: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """获取比赛视频列表"""
+    db_match = crud.get_match(db, match_id=match_id)
+    if not db_match:
+        raise HTTPException(status_code=404, detail="Match not found")
+        
+    return crud.get_match_videos(
+        db, 
+        match_id=match_id, 
+        video_type=video_type, 
+        is_official=is_official, 
+        platform=platform
+    )
+

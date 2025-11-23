@@ -4,8 +4,20 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON, Enum
 from sqlalchemy.orm import relationship
 import datetime
 import enum
-
 from app.core.db import Base
+
+class VideoType(enum.Enum):
+    LIVESTREAM = "livestream"    # 直播
+    REPLAY = "replay"            # 录播
+    HIGHLIGHT = "highlight"      # 精彩集锦
+
+class VideoPlatform(enum.Enum):
+    BILIBILI = "bilibili"        # B站
+    YOUTUBE = "youtube"          # YouTube
+    TWITCH = "twitch"            # Twitch
+    DOUYU = "douyu"              # 斗鱼
+    HUYA = "huya"                # 虎牙
+    OTHER = "other"              # 其他
 
 # 比赛状态枚举
 class MatchStatus(enum.Enum):
@@ -48,6 +60,7 @@ class Match(Base):
     teams = relationship("MatchTeam", back_populates="match", cascade="all, delete-orphan", lazy="select", foreign_keys="MatchTeam.match_id")
     match_games = relationship("MatchGame", back_populates="match", cascade="all, delete-orphan", lazy="select")
     winning_team = relationship("MatchTeam", foreign_keys=[winning_team_id], lazy="select")
+    videos = relationship("MatchVideo", back_populates="match", cascade="all, delete-orphan", lazy="select")
 
     @property
     def can_start_live(self) -> bool:
@@ -168,6 +181,7 @@ class MatchGame(Base):
     lineups = relationship("GameLineup", back_populates="match_game", cascade="all, delete-orphan", lazy="select")
     scores = relationship("Score", back_populates="match_game", cascade="all, delete-orphan", lazy="select")
     score_events = relationship("ScoreEvent", back_populates="match_game", cascade="all, delete-orphan", lazy="select")
+    videos = relationship("MatchVideo", back_populates="match_game", cascade="all, delete-orphan", lazy="select")
 
 # 每个小游戏的出战阵容
 class GameLineup(Base):
@@ -255,3 +269,33 @@ class ScoreEvent(Base):
     def team_id(self):
         """兼容旧的team_id字段名"""
         return self.match_team_id
+
+
+class MatchVideo(Base):
+    __tablename__ = "match_videos"
+    
+    id = Column(Integer, primary_key=True, index=True, comment="视频ID")
+    match_id = Column(Integer, ForeignKey("matches.id", ondelete="CASCADE"), nullable=False, index=True, comment="关联的比赛ID")
+    match_game_id = Column(Integer, ForeignKey("match_games.id", ondelete="SET NULL"), nullable=True, index=True, comment="关联的小游戏ID")
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True, comment="关联选手ID")
+    
+    title = Column(String, nullable=False, comment="视频标题")
+    url = Column(String, nullable=False, comment="视频链接")
+    platform = Column(Enum(VideoPlatform), nullable=False, index=True, comment="视频平台")
+    video_type = Column(Enum(VideoType), default=VideoType.REPLAY, index=True, comment="视频类型")
+    
+    is_official = Column(Boolean, default=False, index=True, comment="是否官方录播")
+    uploader_name = Column(String, nullable=True, comment="上传者名称")
+    
+    duration = Column(Integer, nullable=True, comment="视频时长(秒)")
+    thumbnail_url = Column(String, nullable=True, comment="缩略图URL")
+    view_count = Column(Integer, default=0, comment="观看次数")
+    description = Column(String, nullable=True, comment="视频描述")
+    
+    published_at = Column(DateTime, nullable=True, comment="发布时间")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, comment="创建时间")
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow, comment="更新时间")
+    
+    match = relationship("Match", back_populates="videos", lazy="select")
+    match_game = relationship("MatchGame", back_populates="videos", lazy="select")
+    user = relationship("User", back_populates="videos", lazy="select")

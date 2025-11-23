@@ -26,7 +26,7 @@ class AdminUser(Base):
     api_key = Column(String, unique=True, index=True, nullable=False, comment="用于调用受限接口的 API Key")
 
     # 角色和权限
-    role = Column(SQLEnum(UserRole), default=UserRole.VIEWER, comment="用户角色")
+    role = Column(SQLEnum(UserRole, values_callable=lambda x: [e.value for e in x]), default=UserRole.VIEWER, comment="用户角色")
     is_active = Column(Boolean, default=True, comment="是否激活")
     is_superuser = Column(Boolean, default=False, comment="是否超级管理员")
 

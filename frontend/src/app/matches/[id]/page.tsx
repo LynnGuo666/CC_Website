@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { FloatingActionButton } from "@/components/floating-action-button";
 import { API_BASE_URL } from '@/config/env';
+import { MatchVideoFloatingButton } from '@/components/match-video-floating-button';
 
 
 // Function to get status badge styling
@@ -171,6 +172,10 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                   最高 {teamStats[0]?.total_score || 0} 分
                 </Badge>
 
+
+
+
+
                 {/* Champion Badge */}
                 {(match.winning_team_id || (match.status === 'finished' && teamStats.length > 0)) && (
                   <Badge variant="default" className="px-4 py-2 text-sm bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-0">
@@ -184,6 +189,8 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                     }
                   </Badge>
                 )}
+
+
               </div>
             </div>
 
@@ -440,6 +447,8 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
           </div>
         </div>
       </section>
+
+      <MatchVideoFloatingButton matchId={match.id} />
 
       <FloatingActionButton
         href={`/matches/${match.id}/events`}

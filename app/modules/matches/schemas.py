@@ -292,3 +292,63 @@ class PlayerStats(BaseModel):
     average_score: float
     current_team: Optional[str] = None
     match_history: List[PlayerMatchStats] = []
+
+# --- 视频相关Schema ---
+
+class VideoPlatform(str, enum.Enum):
+    BILIBILI = "bilibili"
+    YOUTUBE = "youtube"
+    TWITCH = "twitch"
+    DOUYU = "douyu"
+    HUYA = "huya"
+    OTHER = "other"
+
+class VideoType(str, enum.Enum):
+    LIVESTREAM = "livestream"
+    REPLAY = "replay"
+    HIGHLIGHT = "highlight"
+
+class MatchVideoBase(BaseModel):
+    title: str
+    url: str
+    platform: VideoPlatform
+    video_type: VideoType = VideoType.REPLAY
+    is_official: bool = False
+    uploader_name: Optional[str] = None
+    match_game_id: Optional[int] = None
+    user_id: Optional[int] = None
+    description: Optional[str] = None
+    duration: Optional[int] = None
+    thumbnail_url: Optional[str] = None
+    view_count: Optional[int] = None
+
+class MatchVideoCreate(MatchVideoBase):
+    pass
+
+class MatchVideoUpdate(BaseModel):
+    title: Optional[str] = None
+    url: Optional[str] = None
+    platform: Optional[VideoPlatform] = None
+    video_type: Optional[VideoType] = None
+    is_official: Optional[bool] = None
+    uploader_name: Optional[str] = None
+    match_game_id: Optional[int] = None
+    user_id: Optional[int] = None
+    description: Optional[str] = None
+    duration: Optional[int] = None
+    thumbnail_url: Optional[str] = None
+    view_count: Optional[int] = None
+
+class MatchVideo(MatchVideoBase):
+    id: int
+    match_id: int
+    view_count: int = 0
+    published_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    
+    # 关联对象简略信息
+    user: Optional[User] = None
+    
+    class Config:
+        from_attributes = True

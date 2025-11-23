@@ -137,3 +137,77 @@ async def import_score_events(
         crud.recalculate_match_standard_scores(db, match_id=match_id)
 
     return result
+
+
+# --- 视频管理接口 ---
+
+@router.post("/{match_id}/videos", response_model=schemas.MatchVideo, status_code=status.HTTP_201_CREATED)
+def create_match_video(
+    match_id: int,
+    video: schemas.MatchVideoCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(UserRole.EDITOR.value)),
+):
+    """添加比赛视频（管理员）"""
+    db_match = crud.get_match(db, match_id=match_id)
+    if not db_match:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    return crud.create_match_video(db, match_id=match_id, video=video)
+
+
+@router.put("/videos/{video_id}", response_model=schemas.MatchVideo)
+def update_match_video(
+    video_id: int,
+    video_update: schemas.MatchVideoUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(UserRole.EDITOR.value)),
+):
+    """更新视频信息（管理员）"""
+    db_video = crud.update_match_video(db, video_id=video_id, video_update=video_update)
+    if not db_video:
+        raise HTTPException(status_code=404, detail="Video not found")
+    return db_video
+
+
+@router.delete("/videos/{video_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_match_video(
+    video_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(UserRole.EDITOR.value)),
+):
+    """删除视频（管理员）"""
+    success = crud.delete_match_video(db, video_id=video_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Video not found")
+    return None
+
+
+@router.get("/videos/bilibili-info", status_code=status.HTTP_200_OK)
+async def get_bilibili_video_info(
+    url: str,
+    current_user = Depends(require_role(UserRole.EDITOR.value)),
+):
+    """获取Bilibili视频信息"""
+    from app.utils.bilibili import BilibiliAPI
+
+    video_info = await BilibiliAPI.get_video_info_from_url(url)
+    if not video_info:
+        raise HTTPException(status_code=400, detail="无法获取视频信息，请检查URL是否正确")
+
+    return video_info
+
+
+@router.get("/videos/proxy-image")
+async def proxy_bilibili_image_endpoint(url: str):
+    """代理Bilibili图片（无需认证，用于前端显示）"""
+    from app.utils.bilibili import proxy_bilibili_image
+
+    if not url or not ("bilibili" in url or "hdslb" in url):
+        raise HTTPException(status_code=400, detail="仅支持Bilibili图片URL")
+
+    response = await proxy_bilibili_image(url)
+    if not response:
+        raise HTTPException(status_code=404, detail="图片获取失败")
+
+    return response
