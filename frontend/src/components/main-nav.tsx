@@ -97,6 +97,7 @@ export function MainNav() {
 
             <div className="hidden md:flex items-center space-x-1">
               <NavLink href="/matches">赛事</NavLink>
+              <NavLink href="/resources">资源</NavLink>
               <NavLink href="/games">游戏</NavLink>
               <NavLink href="/teams">队伍</NavLink>
               <NavLink href="/players">选手</NavLink>
@@ -135,6 +136,7 @@ export function MainNav() {
         <div className="md:hidden px-4">
           <div className="glass-panel mt-2 flex flex-col gap-1 rounded-3xl p-3">
             <NavLink href="/matches" onClick={closeMenu}>赛事</NavLink>
+            <NavLink href="/resources" onClick={closeMenu}>资源</NavLink>
             <NavLink href="/games" onClick={closeMenu}>游戏</NavLink>
             <NavLink href="/teams" onClick={closeMenu}>队伍</NavLink>
             <NavLink href="/players" onClick={closeMenu}>选手</NavLink>
