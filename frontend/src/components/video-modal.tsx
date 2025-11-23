@@ -79,17 +79,17 @@ export function VideoModal({ matchId, trigger, open, onOpenChange }: VideoModalP
                     )}
                 </DialogTrigger>
             )}
-            <DialogContent className="max-w-4xl max-h-[85vh] bg-background border-border shadow-2xl flex flex-col">
+            <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] bg-background border-border shadow-2xl flex flex-col p-4 sm:p-6">
                 <DialogHeader className="flex-shrink-0">
-                    <DialogTitle className="flex items-center gap-2 text-xl text-foreground">
-                        <VideoIcon className="h-5 w-5 text-primary" />
-                        赛事视频库
+                    <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl text-foreground">
+                        <VideoIcon className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+                        <span className="truncate">赛事视频库</span>
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="mt-4 flex-1 overflow-hidden flex flex-col">
-                    {/* Tabs */}
-                    <div className="mb-6 flex space-x-2 border-b border-border flex-shrink-0">
+                <div className="mt-3 sm:mt-4 flex-1 overflow-hidden flex flex-col">
+                    {/* Tabs - Scrollable on mobile */}
+                    <div className="mb-4 sm:mb-6 flex space-x-1 sm:space-x-2 border-b border-border flex-shrink-0 overflow-x-auto scrollbar-hide">
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
                             const isActive = activeTab === tab.id;
@@ -98,16 +98,16 @@ export function VideoModal({ matchId, trigger, open, onOpenChange }: VideoModalP
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={cn(
-                                        "flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium transition-all relative",
+                                        "flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium transition-all relative whitespace-nowrap flex-shrink-0",
                                         isActive
                                             ? "text-primary"
                                             : "text-muted-foreground hover:text-foreground"
                                     )}
                                 >
-                                    <Icon className="h-4 w-4" />
-                                    {tab.label}
+                                    <Icon className="h-3 w-3 sm:h-4 sm:w-4 hidden xs:block" />
+                                    <span className="truncate">{tab.label}</span>
                                     <span className={cn(
-                                        "text-xs px-1.5 py-0.5 rounded-full",
+                                        "text-xs px-1 sm:px-1.5 py-0.5 rounded-full flex-shrink-0",
                                         isActive
                                             ? "bg-primary/10 text-primary"
                                             : "bg-muted text-muted-foreground"
@@ -123,21 +123,21 @@ export function VideoModal({ matchId, trigger, open, onOpenChange }: VideoModalP
                     </div>
 
                     {/* Content - Scrollable */}
-                    <div className="flex-1 overflow-y-auto min-h-[300px] pr-2">
+                    <div className="flex-1 overflow-y-auto min-h-[250px] sm:min-h-[300px] pr-1 sm:pr-2">
                         {loading ? (
-                            <div className="flex h-[300px] items-center justify-center">
+                            <div className="flex h-[250px] sm:h-[300px] items-center justify-center">
                                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                             </div>
                         ) : filteredVideos.length > 0 ? (
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 pb-4">
+                            <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3 pb-4">
                                 {filteredVideos.map((video) => (
                                     <VideoCard key={video.id} video={video} />
                                 ))}
                             </div>
                         ) : (
-                            <div className="flex h-[300px] flex-col items-center justify-center text-muted-foreground/50">
+                            <div className="flex h-[250px] sm:h-[300px] flex-col items-center justify-center text-muted-foreground/50">
                                 <VideoIcon className="mb-4 h-12 w-12 opacity-20" />
-                                <p>暂无{tabs.find(t => t.id === activeTab)?.label}视频</p>
+                                <p className="text-sm sm:text-base">暂无{tabs.find(t => t.id === activeTab)?.label}视频</p>
                             </div>
                         )}
                     </div>

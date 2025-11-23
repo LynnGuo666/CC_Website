@@ -633,6 +633,19 @@
   html.season-winter .gradient-apple {
     background: linear-gradient(135deg, #87ceeb 0%, #4682b4 100%) !important;
   }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+  }
 }
 
 /* Minecraft Square Bokeh Animation */
