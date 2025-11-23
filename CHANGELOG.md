@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.3] - 2025-11-23
+
+### Fixed
+- **Mixed Content 错误彻底修复**：解决 HTTPS 页面请求 HTTP API 的根本问题
+  - 问题：环境变量在构建时被固化，导致即使配置了 HTTPS，运行时仍使用 HTTP
+  - 根本原因：使用常量 `API_BASE_URL` 在构建时就确定了值，无法在运行时动态调整
+  - 解决方案：
+    - 将 `API_BASE_URL` 改为函数 `getApiBaseUrl()`，每次调用都动态计算
+    - 在客户端检测当前页面协议，如果是 HTTPS 则自动升级 API URL 为 HTTPS
+    - 移除 URL 末尾斜杠，避免重定向问题
+  - 影响：所有使用 `API_BASE_URL` 的地方都改为调用 `getApiBaseUrl()`
+  - 测试：部署后在浏览器控制台可以看到正确的 HTTPS URL
+
+### Changed
+- **API 配置重构**：
+  - `src/config/env.ts`：导出 `getApiBaseUrl()` 函数，支持运行时动态计算
+  - `src/app/admin/matches/[id]/videos/page.tsx`：所有 API URL 使用 `getApiBaseUrl()` 动态获取
+  - 添加详细的调试日志，方便排查 URL 问题
+
+### Technical Details
+- 前端版本：2.13.2 → 2.13.3
+- 后端版本：2.13.2 → 2.13.3
+- 修改文件：
+  - `frontend/src/config/env.ts`：重构为函数式 API
+  - `frontend/src/app/admin/matches/[id]/videos/page.tsx`：使用动态 API URL
+- 关键改进：
+  - 构建时：环境变量可以是 HTTP 或 HTTPS
+  - 运行时：根据页面协议自动选择正确的 API 协议
+  - 兼容性：保持向后兼容，仍然导出 `API_BASE_URL` 常量
+
 ## [2.13.2] - 2025-11-23
 
 ### Fixed

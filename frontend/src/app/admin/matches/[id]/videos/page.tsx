@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Plus, Pencil, Trash2, ExternalLink, Download } from 'lucide-react';
 import Link from 'next/link';
-import { API_BASE_URL } from '@/config/env';
+import { getApiBaseUrl } from '@/config/env';
 
 export default function AdminMatchVideosPage() {
     const router = useRouter();
@@ -72,11 +72,9 @@ export default function AdminMatchVideosPage() {
             setVideos(videosData);
 
             // Load all players for selection
-            // 确保使用 HTTPS 并移除末尾斜杠
-            const apiUrl = API_BASE_URL.replace(/\/$/, '').replace('http://', 'https://');
+            const apiUrl = getApiBaseUrl(); // 动态获取，确保使用正确的协议
             const usersUrl = `${apiUrl}/api/users`;
-            console.log('[Video Page] Original API_BASE_URL:', API_BASE_URL);
-            console.log('[Video Page] Cleaned API URL:', apiUrl);
+            console.log('[Video Page] API URL:', apiUrl);
             console.log('[Video Page] Fetching users from:', usersUrl);
 
             const response = await fetch(usersUrl, {
@@ -375,10 +373,10 @@ export default function AdminMatchVideosPage() {
                                                         src={
                                                             formData.thumbnail_url.startsWith('http://') || formData.thumbnail_url.startsWith('https://')
                                                                 ? formData.thumbnail_url.includes('hdslb.com') || formData.thumbnail_url.includes('bilibili.com')
-                                                                    ? `${API_BASE_URL}/api/admin/matches/videos/proxy-image?url=${encodeURIComponent(formData.thumbnail_url)}`
+                                                                    ? `${getApiBaseUrl()}/api/admin/matches/videos/proxy-image?url=${encodeURIComponent(formData.thumbnail_url)}`
                                                                     : formData.thumbnail_url
                                                                 : formData.thumbnail_url.startsWith('/api/')
-                                                                    ? `${API_BASE_URL}${formData.thumbnail_url}`
+                                                                    ? `${getApiBaseUrl()}${formData.thumbnail_url}`
                                                                     : formData.thumbnail_url
                                                         }
                                                         alt="缩略图预览"
@@ -440,9 +438,10 @@ export default function AdminMatchVideosPage() {
                         // 处理缩略图URL - Bilibili图片使用代理
                         const getThumbnailUrl = (url?: string | null) => {
                             if (!url) return undefined;
-                            if (url.startsWith('/api/')) return `${API_BASE_URL}${url}`;
+                            const apiUrl = getApiBaseUrl();
+                            if (url.startsWith('/api/')) return `${apiUrl}${url}`;
                             if (url.includes('hdslb.com') || url.includes('bilibili.com')) {
-                                return `${API_BASE_URL}/api/admin/matches/videos/proxy-image?url=${encodeURIComponent(url)}`;
+                                return `${apiUrl}/api/admin/matches/videos/proxy-image?url=${encodeURIComponent(url)}`;
                             }
                             return url;
                         };
