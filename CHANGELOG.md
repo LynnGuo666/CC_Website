@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.2] - 2025-11-23
+
+### Fixed
+- **管理员添加视频模态框滚动支持**：修复管理员添加/编辑视频的模态框内容过多时无法滚动的问题
+  - 模态框最大高度设置为视口的 90%
+  - 表单内容区域支持垂直滚动
+  - 标题和按钮固定在顶部和底部，不随内容滚动
+  - 优化移动端和小屏幕设备的使用体验
+- **Mixed Content 错误修复**：修复 HTTPS 页面请求 HTTP API 导致的安全错误
+  - 问题：前端通过 HTTPS 访问时，API 请求使用 HTTP 协议被浏览器阻止
+  - 错误：`Mixed Content: The page at 'https://...' was loaded over HTTPS, but requested an insecure resource 'http://...'`
+  - 解决：自动检测当前页面协议，如果是 HTTPS 则自动将 API URL 升级为 HTTPS
+  - 影响：生产环境 HTTPS 部署时 API 请求正常工作
+
+### Technical Details
+- 前端版本：2.13.1 → 2.13.2
+- 后端版本：2.13.1 → 2.13.2
+- 修改文件：
+  - `frontend/src/app/admin/matches/[id]/videos/page.tsx`：添加滚动支持
+  - `frontend/src/config/env.ts`：自动协议升级逻辑
+
+## [2.13.1] - 2025-11-23
+
+### Fixed
+- **管理员角色枚举值修复**：修复生产环境中 `admin_users` 表的 `role` 字段枚举值不匹配问题
+  - 问题：数据库中存储的是大写枚举名称（`ADMIN`, `EDITOR`, `VIEWER`），但代码期望小写枚举值（`admin`, `editor`, `viewer`）
+  - 错误：`LookupError: 'ADMIN' is not among the defined enum values`
+  - 解决：创建数据库迁移 `4993f1afd8ff`，将所有大写枚举名称转换为小写枚举值
+  - 影响：修复后管理员登录和权限检查功能恢复正常
+
+### Technical Details
+- 前端版本：2.13.0 → 2.13.1
+- 后端版本：2.13.0 → 2.13.1
+- 新增迁移：`alembic/versions/4993f1afd8ff_fix_admin_user_role_enum_values.py`
+- 迁移内容：
+  - `ADMIN` → `admin`
+  - `EDITOR` → `editor`
+  - `VIEWER` → `viewer`
+
 ## [2.13.0] - 2025-11-23
 
 ### Added

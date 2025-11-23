@@ -79,20 +79,46 @@ if __name__ == "__main__":
 
     # 在启动服务器之前运行数据库迁移
     logger = logging.getLogger(__name__)
-    logger.info("开始运行数据库迁移...")
 
     try:
         from pathlib import Path
         from alembic import command
         from alembic.config import Config
+        from alembic.script import ScriptDirectory
+        from alembic.runtime.migration import MigrationContext
+        from sqlalchemy import create_engine
         from app.core.config import settings
 
         alembic_cfg = Config(str(Path(__file__).parent / "alembic.ini"))
         alembic_cfg.set_main_option("sqlalchemy.url", settings.SQLALCHEMY_DATABASE_URI)
         # 禁用 alembic 的日志配置文件，使用我们自己的日志配置
         alembic_cfg.attributes['configure_logger'] = False
-        command.upgrade(alembic_cfg, "head")
-        logger.info("✅ 数据库迁移完成")
+
+        # 获取当前数据库版本
+        engine = create_engine(settings.SQLALCHEMY_DATABASE_URI)
+        with engine.connect() as connection:
+            context = MigrationContext.configure(connection)
+            current_rev = context.get_current_revision()
+
+        # 获取最新版本
+        script = ScriptDirectory.from_config(alembic_cfg)
+        head_rev = script.get_current_head()
+
+        logger.info("=" * 60)
+        logger.info("📊 数据库迁移状态")
+        logger.info(f"当前版本: {current_rev or '(空数据库)'}")
+        logger.info(f"最新版本: {head_rev}")
+
+        if current_rev == head_rev:
+            logger.info("✅ 数据库已是最新版本，无需迁移")
+        else:
+            logger.info("🔄 开始执行数据库迁移...")
+            command.upgrade(alembic_cfg, "head")
+            logger.info("✅ 数据库迁移完成")
+            logger.info(f"新版本: {head_rev}")
+
+        logger.info("=" * 60)
+
     except Exception as e:
         logger.exception("❌ 数据库迁移失败")
         sys.exit(1)

@@ -226,11 +226,11 @@ export default function AdminMatchVideosPage() {
                                     添加视频
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                                <DialogHeader>
+                            <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+                                <DialogHeader className="flex-shrink-0">
                                     <DialogTitle>{editing ? '编辑视频' : '添加视频'}</DialogTitle>
                                 </DialogHeader>
-                                <form className="space-y-4" onSubmit={handleSave}>
+                                <form id="video-form" className="space-y-4 overflow-y-auto flex-1 pr-2" onSubmit={handleSave}>
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div className="col-span-2">
                                             <Label htmlFor="url">视频链接</Label>
@@ -410,11 +410,11 @@ export default function AdminMatchVideosPage() {
                                             />
                                         </div>
                                     </div>
-                                    <div className="flex justify-end gap-2">
-                                        <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>取消</Button>
-                                        <Button type="submit">保存</Button>
-                                    </div>
                                 </form>
+                                <div className="flex justify-end gap-2 pt-4 border-t flex-shrink-0">
+                                    <Button variant="outline" type="button" onClick={() => setDialogOpen(false)}>取消</Button>
+                                    <Button type="submit" form="video-form">保存</Button>
+                                </div>
                             </DialogContent>
                         </Dialog>
                     </div>
