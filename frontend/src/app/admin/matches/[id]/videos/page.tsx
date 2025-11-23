@@ -72,10 +72,22 @@ export default function AdminMatchVideosPage() {
             setVideos(videosData);
 
             // Load all players for selection
-            console.log('[Video Page] API_BASE_URL:', API_BASE_URL);
-            console.log('[Video Page] Fetching users from:', `${API_BASE_URL}/api/users`);
-            const response = await fetch(`${API_BASE_URL}/api/users`);
+            // 确保使用 HTTPS 并移除末尾斜杠
+            const apiUrl = API_BASE_URL.replace(/\/$/, '').replace('http://', 'https://');
+            const usersUrl = `${apiUrl}/api/users`;
+            console.log('[Video Page] Original API_BASE_URL:', API_BASE_URL);
+            console.log('[Video Page] Cleaned API URL:', apiUrl);
+            console.log('[Video Page] Fetching users from:', usersUrl);
+
+            const response = await fetch(usersUrl, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                cache: 'no-cache', // 禁用缓存
+            });
             console.log('[Video Page] Response status:', response.status);
+            console.log('[Video Page] Response URL:', response.url);
             if (response.ok) {
                 const playersData = await response.json();
                 setPlayers(playersData);
