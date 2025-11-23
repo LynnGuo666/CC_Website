@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: str = "sqlite:///./test.db"
 
     # Version
-    BACKEND_VERSION: str = "2.12.0"
+    BACKEND_VERSION: str = "2.13.0"
 
     # Security
     SECRET_KEY: str = "a_very_secret_key"

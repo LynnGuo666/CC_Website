@@ -5,6 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.0] - 2025-11-23
+
+### Added
+- **完整的日志系统**：全面启用 FastAPI 应用日志，提升开发和运维体验
+  - 配置统一的日志格式（时间戳 - 模块名 - 级别 - 消息）
+  - 启用 HTTP 请求日志中间件，记录每个请求的方法、路径、状态码和处理时间
+  - 添加启动完成日志，显示应用版本、数据库配置等关键信息
+  - 数据库迁移日志优化，使用统一格式输出
+- **独立启动脚本**：新增 `run_server.py` 统一管理服务器启动流程
+  - 在启动前运行数据库迁移，避免迁移日志干扰应用日志
+  - 配置所有日志模块（uvicorn、fastapi、alembic、app）
+  - 禁用 uvicorn 内置访问日志，使用自定义中间件日志
+
+### Changed
+- **日志输出优化**：
+  - 所有日志使用统一格式：`YYYY-MM-DD HH:MM:SS - 模块名 - 级别 - 消息`
+  - HTTP 请求日志格式：`➡️ GET /api/path` 和 `⬅️ GET /api/path - 200 - 0.003s`
+  - 启动日志添加表情符号标识（✅ 成功、🚀 启动、📦 版本、🗄️ 数据库、📝 日志）
+- **启动流程优化**：
+  - 数据库迁移从 FastAPI 启动事件移到启动脚本，避免日志配置冲突
+  - 移除 alembic 和 command 的导入，简化 main.py 依赖
+
+### Fixed
+- **前端构建错误修复**：修复管理后台视频页面的 ESLint 错误
+  - 修复 `any` 类型警告，为 players 数组添加明确类型定义
+  - 修复 React Hook 依赖警告，添加 eslint-disable 注释
+  - 修复未转义的引号错误，使用 HTML 实体 `&ldquo;` 和 `&rdquo;`
+  - 修复 img 标签警告，添加 eslint-disable 注释（外部图片需要特殊处理）
+
+### Technical Details
+- 前端版本：2.12.0 → 2.13.0
+- 后端版本：2.12.0 → 2.13.0
+- 新增文件：
+  - `run_server.py`：统一的服务器启动脚本
+- 修改文件：
+  - `app/main.py`：移除数据库迁移启动事件，添加 HTTP 请求日志中间件
+  - `frontend/src/app/admin/matches/[id]/videos/page.tsx`：修复 ESLint 错误
+- 日志配置：
+  - 根日志级别：INFO
+  - uvicorn 访问日志：禁用（使用自定义中间件）
+  - 自定义中间件：记录请求/响应和处理时间
+
+### Usage
+启动服务器使用新的启动脚本：
+```bash
+python run_server.py
+```
+
 ## [2.12.0] - 2025-11-23
 
 ### Added

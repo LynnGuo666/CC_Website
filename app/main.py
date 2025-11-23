@@ -1,16 +1,26 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
 from pathlib import Path
 import logging
-
-from alembic import command
-from alembic.config import Config
+import time
 
 from app.core.middleware import DatabaseConnectionMiddleware
 from app.core.config import settings
+
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
+# 设置 uvicorn 和 fastapi 的日志级别
+logging.getLogger("uvicorn").setLevel(logging.INFO)
+logging.getLogger("uvicorn.access").setLevel(logging.INFO)
+logging.getLogger("fastapi").setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +29,27 @@ app = FastAPI(
     description="API for managing competitions, teams, and players.",
     version=settings.BACKEND_VERSION,  # 升级版本号表示新的队伍系统
 )
+
+logger.info(f"FastAPI 应用初始化完成 - 版本: {settings.BACKEND_VERSION}")
+
+# 添加请求日志中间件
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+
+    # 记录请求
+    logger.info(f"➡️  {request.method} {request.url.path}")
+
+    # 处理请求
+    response = await call_next(request)
+
+    # 计算处理时间
+    process_time = time.time() - start_time
+
+    # 记录响应
+    logger.info(f"⬅️  {request.method} {request.url.path} - {response.status_code} - {process_time:.3f}s")
+
+    return response
 
 # 添加数据库连接池监控中间件
 app.add_middleware(DatabaseConnectionMiddleware)
@@ -86,25 +117,25 @@ app.include_router(config_router, prefix="/api", tags=["config"])
 
 
 @app.on_event("startup")
-def run_migrations() -> None:
-    """确保服务启动时数据库迁移到最新版本。"""
-    try:
-        alembic_cfg = Config(str(Path(__file__).parent.parent / "alembic.ini"))
-        alembic_cfg.set_main_option("sqlalchemy.url", settings.SQLALCHEMY_DATABASE_URI)
-        command.upgrade(alembic_cfg, "head")
-    except Exception:
-        logger.exception("Failed to run Alembic migrations on startup")
-
-
-@app.on_event("startup")
 def start_background_tasks():
     """启动后台定时任务"""
     from app.core.scheduler import start_scheduler
     try:
         start_scheduler()
-        logger.info("后台定时任务已启动")
+        logger.info("✅ 后台定时任务已启动")
     except Exception:
         logger.exception("Failed to start background tasks")
+
+
+@app.on_event("startup")
+def startup_complete():
+    """启动完成"""
+    logger.info("=" * 60)
+    logger.info("🚀 Competition Server API 启动完成！")
+    logger.info(f"📦 版本: {settings.BACKEND_VERSION}")
+    logger.info(f"🗄️  数据库: {settings.SQLALCHEMY_DATABASE_URI}")
+    logger.info("📝 HTTP 请求日志已启用")
+    logger.info("=" * 60)
 
 
 @app.on_event("shutdown")
