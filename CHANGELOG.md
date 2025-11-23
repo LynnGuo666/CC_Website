@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.7] - 2025-11-23
+
+### Added
+- **视频类型可视化标识**：视频卡片右上角新增类型徽章，清晰区分直播（红色）、录播（蓝色）、集锦（琥珀色）
+- **可搜索选手选择器**：管理后台视频页面的选手选择改为输入框搜索，支持实时过滤、点击外部关闭、已选提示
+
+### Fixed
+- **删除视频 JSON 解析错误**：修复删除视频时"Unexpected end of JSON input"错误，`admin-api.ts` 的 `request` 方法现在正确处理 204 No Content 响应
+- **手机端视频模态框显示优化**：
+  - 修复标签文字换行问题，标签页支持横向滚动
+  - 添加 `scrollbar-hide` CSS 类隐藏滚动条
+  - 所有元素响应式尺寸调整（标题、图标、间距、内边距）
+  - 手机端隐藏标签图标节省空间
+  - 模态框宽度调整为手机端 95vw，桌面端保持原样
+- **Dialog 圆角丢失**：修复手机端模态框没有圆角的问题，将 `sm:rounded-lg` 改为 `rounded-lg`
+
+### Changed
+- **视频卡片布局优化**：
+  - 左上角：平台徽章（Bilibili/YouTube 等）
+  - 右上角：视频类型徽章（直播/录播/集锦）
+  - 右下角：时长信息
+  - 左下角：上传者名称
+
+### Technical Details
+- 前端版本：2.13.6 → 2.13.7
+- 后端版本：2.13.6 → 2.13.7
+- 修改文件：
+  - `frontend/src/lib/admin-api.ts`：处理 204 响应
+  - `frontend/src/app/admin/matches/[id]/videos/page.tsx`：可搜索选手选择器
+  - `frontend/src/components/video-modal.tsx`：手机端响应式优化
+  - `frontend/src/components/video-card.tsx`：视频类型徽章
+  - `frontend/src/components/ui/dialog.tsx`：圆角修复
+  - `frontend/src/app/globals.css`：新增 `scrollbar-hide` 工具类
+- 影响范围：管理后台视频管理、前端视频展示、手机端用户体验全面提升
+
 ## [2.13.6] - 2025-11-23
 
 ### Fixed

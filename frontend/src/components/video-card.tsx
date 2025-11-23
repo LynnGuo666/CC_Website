@@ -66,6 +66,26 @@ const PlatformBadge = ({ platform }: { platform: string }) => {
     );
 };
 
+const VideoTypeBadge = ({ videoType }: { videoType: 'livestream' | 'replay' | 'highlight' }) => {
+    const styles = {
+        livestream: "bg-red-500/80 text-white border-red-500",
+        replay: "bg-blue-500/80 text-white border-blue-500",
+        highlight: "bg-amber-500/80 text-white border-amber-500",
+    };
+
+    const labels = {
+        livestream: "直播",
+        replay: "录播",
+        highlight: "集锦",
+    };
+
+    return (
+        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-5 font-medium", styles[videoType])}>
+            {labels[videoType]}
+        </Badge>
+    );
+};
+
 const formatDuration = (seconds?: number) => {
     if (!seconds) return null;
     const h = Math.floor(seconds / 3600);
@@ -144,6 +164,11 @@ export function VideoCard({ video, className }: VideoCardProps) {
                 {/* Platform Badge */}
                 <div className="absolute top-2 left-2">
                     <PlatformBadge platform={video.platform} />
+                </div>
+
+                {/* Video Type Badge */}
+                <div className="absolute top-2 right-2">
+                    <VideoTypeBadge videoType={video.video_type} />
                 </div>
 
                 {/* Duration */}
