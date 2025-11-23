@@ -19,6 +19,11 @@ export interface Video {
         nickname: string;
         display_name?: string;
     };
+    team?: {
+        id: number;
+        name: string;
+        color?: string;
+    };
     match_game?: {
         id: number;
         game_name: string;
@@ -98,6 +103,12 @@ export function VideoCard({ video, className }: VideoCardProps) {
 
     const thumbnailUrl = getThumbnailUrl(video.thumbnail_url);
 
+    const handlePlayerClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = `/player/${video.user?.id}`;
+    };
+
     return (
         <a
             href={video.url}
@@ -139,6 +150,13 @@ export function VideoCard({ video, className }: VideoCardProps) {
                     </div>
                 )}
 
+                {/* Uploader Name - Bottom Left */}
+                {video.uploader_name && (
+                    <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded bg-black/60 px-2 py-1 text-[11px] text-white backdrop-blur-sm">
+                        <span className="truncate max-w-[150px]">{video.uploader_name}</span>
+                    </div>
+                )}
+
                 {/* Play Button Overlay */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
@@ -153,34 +171,34 @@ export function VideoCard({ video, className }: VideoCardProps) {
                     {video.title}
                 </h3>
 
-                <div className="mt-auto flex items-center justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                        {video.is_official ? (
-                            <span className="flex items-center gap-1 text-yellow-500/80">
-                                <span>🏆</span>
-                                <span>{video.uploader_name || "官方"}</span>
-                            </span>
-                        ) : (
-                            <span className="flex items-center gap-1">
-                                <span>👤</span>
-                                <span className="truncate max-w-[80px]">
-                                    {video.user?.display_name || video.user?.nickname || video.uploader_name || "未知"}
+                {/* Player Info Section - Show for player perspective videos */}
+                {video.user_id && video.user && (
+                    <div
+                        onClick={handlePlayerClick}
+                        className="mb-2 flex items-center gap-2 rounded-lg bg-primary/5 hover:bg-primary/10 px-2 py-1.5 transition-colors border border-primary/10 hover:border-primary/20 cursor-pointer"
+                    >
+                        <span className="text-xs font-semibold text-foreground truncate">
+                            {video.user.display_name || video.user.nickname}
+                        </span>
+                        {video.team && (
+                            <div className="flex items-center gap-1 ml-auto">
+                                <span className="text-xs text-muted-foreground">·</span>
+                                <div
+                                    className="w-2 h-2 rounded-full flex-shrink-0"
+                                    style={{ backgroundColor: video.team.color || '#6b7280' }}
+                                />
+                                <span className="text-xs text-foreground font-medium truncate">
+                                    {video.team.name}
                                 </span>
-                            </span>
+                            </div>
                         )}
                     </div>
+                )}
 
-                    {video.view_count !== undefined && video.view_count > 0 && (
-                        <div className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {formatViews(video.view_count)}
-                        </div>
-                    )}
-                </div>
-
-                {video.match_game && (
-                    <div className="mt-2 text-[10px] text-muted-foreground/60">
-                        🎮 {video.match_game.game_name}
+                {video.view_count !== undefined && video.view_count > 0 && (
+                    <div className="mt-auto flex items-center gap-1 text-xs text-muted-foreground">
+                        <Eye className="h-3 w-3" />
+                        {formatViews(video.view_count)}
                     </div>
                 )}
             </div>

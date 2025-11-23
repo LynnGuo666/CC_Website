@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.12.0] - 2025-11-23
+
+### Added
+- **视频观看数自动获取**：新增 Bilibili 视频观看数自动获取功能，创建视频时自动填充观看数
+- **视频观看数定时刷新**：新增定时任务系统，每天凌晨 3 点自动更新所有 B 站视频的观看数
+- **视频观看数刷新脚本**：新增 `scripts/update_video_views.py` 批量更新脚本，可一键更新所有 B 站视频的观看数
+- **视频观看数刷新 API**：新增 `POST /api/admin/matches/videos/{video_id}/refresh-views` 接口，支持手动刷新单个视频的观看数
+- **视频数量统计**：视频模态框标签页显示各分类的视频数量（如"官方录播 (5)"）
+- **选手队伍信息展示**：选手视角视频卡片显示选手所属队伍，使用带颜色的圆点标识
+
+### Changed
+- **视频卡片优化**：
+  - 移除视频卡片底部的冗余上传者信息和游戏信息
+  - UP 主名称直接显示在缩略图左下角，更加直观
+  - 选手信息卡片移除"选手视角"文字，避免重复
+  - 队伍显示改为"选手名称 · ● 队伍名称"格式，颜色圆点更清晰
+- **视频模态框滚动优化**：模态框支持内容滚动，标题和标签栏固定，最大高度为视口的 85%
+- **选手页面布局优化**：增加 Hero Header 区域的上内边距，避免被导航栏遮挡
+
+### Fixed
+- **嵌套链接问题**：修复视频卡片中 `<a>` 标签嵌套导致的 hydration 错误，改用 `div` + `onClick` 实现选手信息跳转
+- **后端队伍信息查询**：修复 `get_match_videos` 函数中关系名称错误（`match_team` → `team`）
+
+### Technical Details
+- 前端版本：2.11.0 → 2.12.0
+- 后端版本：2.11.0 → 2.12.0
+- 新增文件：
+  - `scripts/update_video_views.py`：批量更新视频观看数脚本
+  - `app/core/scheduler.py`：定时任务调度器模块
+- 新增依赖：
+  - `apscheduler>=3.10.4`：定时任务调度库
+- 修改文件：
+  - `app/modules/matches/crud.py`：为视频添加队伍信息查询
+  - `app/modules/matches/schemas.py`：MatchVideo schema 添加 team 字段
+  - `app/modules/matches/admin_router.py`：新增刷新观看数 API
+  - `frontend/src/components/video-card.tsx`：优化视频卡片布局和显示
+  - `frontend/src/components/video-modal.tsx`：添加滚动支持和视频数量统计
+  - `frontend/src/app/player/[id]/page.tsx`：优化选手页面布局
+  - `app/main.py`：集成定时任务调度器
+  - `requirements.txt`：添加 APScheduler 依赖
+
 ## [2.11.0] - 2025-11-23
 
 ### Added

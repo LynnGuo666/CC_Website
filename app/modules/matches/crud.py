@@ -899,8 +899,8 @@ def create_match_video(db: Session, match_id: int, video: schemas.MatchVideoCrea
     return db_video
 
 def get_match_videos(
-    db: Session, 
-    match_id: int, 
+    db: Session,
+    match_id: int,
     video_type: Optional[str] = None,
     is_official: Optional[bool] = None,
     platform: Optional[str] = None
@@ -909,15 +909,32 @@ def get_match_videos(
         selectinload(models.MatchVideo.user),
         selectinload(models.MatchVideo.match_game)
     ).filter(models.MatchVideo.match_id == match_id)
-    
+
     if video_type:
         query = query.filter(models.MatchVideo.video_type == video_type)
     if is_official is not None:
         query = query.filter(models.MatchVideo.is_official == is_official)
     if platform:
         query = query.filter(models.MatchVideo.platform == platform)
-        
-    return query.order_by(models.MatchVideo.created_at.desc()).all()
+
+    videos = query.order_by(models.MatchVideo.created_at.desc()).all()
+
+    # 为每个有选手的视频添加队伍信息
+    for video in videos:
+        if video.user_id:
+            # 查询该选手在这个比赛中的队伍
+            membership = db.query(models.MatchTeamMembership).join(
+                models.MatchTeam
+            ).filter(
+                models.MatchTeamMembership.user_id == video.user_id,
+                models.MatchTeam.match_id == match_id
+            ).first()
+
+            if membership:
+                # 动态添加 team 属性
+                video.team = membership.team
+
+    return videos
 
 def get_match_video(db: Session, video_id: int):
     return db.query(models.MatchVideo).filter(models.MatchVideo.id == video_id).first()

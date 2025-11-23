@@ -211,3 +211,42 @@ async def proxy_bilibili_image_endpoint(url: str):
         raise HTTPException(status_code=404, detail="图片获取失败")
 
     return response
+
+
+@router.post("/videos/{video_id}/refresh-views", status_code=status.HTTP_200_OK)
+async def refresh_video_views(
+    video_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(require_role(UserRole.EDITOR.value)),
+):
+    """刷新视频观看数（仅支持Bilibili）"""
+    from app.utils.bilibili import BilibiliAPI
+
+    # 获取视频
+    video = crud.get_match_video(db, video_id)
+    if not video:
+        raise HTTPException(status_code=404, detail="视频不存在")
+
+    # 仅支持Bilibili
+    if video.platform != models.VideoPlatform.BILIBILI:
+        raise HTTPException(status_code=400, detail="仅支持Bilibili视频")
+
+    # 获取最新视频信息
+    video_info = await BilibiliAPI.get_video_info_from_url(video.url)
+    if not video_info:
+        raise HTTPException(status_code=400, detail="无法获取视频信息")
+
+    # 更新观看数
+    old_views = video.view_count
+    new_views = video_info.get('view_count', 0)
+
+    video.view_count = new_views
+    db.commit()
+    db.refresh(video)
+
+    return {
+        "message": "观看数已更新",
+        "old_views": old_views,
+        "new_views": new_views,
+        "video": video
+    }

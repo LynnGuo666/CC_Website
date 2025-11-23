@@ -346,9 +346,10 @@ class MatchVideo(MatchVideoBase):
     published_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
-    
+
     # 关联对象简略信息
     user: Optional[User] = None
-    
+    team: Optional[MatchTeam] = None  # 选手在该比赛中的队伍
+
     class Config:
         from_attributes = True

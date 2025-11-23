@@ -94,3 +94,25 @@ def run_migrations() -> None:
         command.upgrade(alembic_cfg, "head")
     except Exception:
         logger.exception("Failed to run Alembic migrations on startup")
+
+
+@app.on_event("startup")
+def start_background_tasks():
+    """启动后台定时任务"""
+    from app.core.scheduler import start_scheduler
+    try:
+        start_scheduler()
+        logger.info("后台定时任务已启动")
+    except Exception:
+        logger.exception("Failed to start background tasks")
+
+
+@app.on_event("shutdown")
+def shutdown_background_tasks():
+    """关闭后台定时任务"""
+    from app.core.scheduler import shutdown_scheduler
+    try:
+        shutdown_scheduler()
+        logger.info("后台定时任务已关闭")
+    except Exception:
+        logger.exception("Failed to shutdown background tasks")
