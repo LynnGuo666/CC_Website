@@ -1,3 +1,7 @@
-import { API_BASE_URL as BASE_URL } from '@/config/env';
+import { getApiBaseUrl } from '@/config/env';
 
-export const API_BASE_URL = `${BASE_URL}/api`;
+export function getPublicApiBaseUrl(): string {
+  const baseUrl = getApiBaseUrl();
+  const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  return `${normalizedBase}/api`;
+}

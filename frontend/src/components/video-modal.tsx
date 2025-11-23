@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { VideoCard, Video } from '@/components/video-card';
 import { cn } from '@/lib/utils';
 import { Loader2, Video as VideoIcon, Film, User, Globe } from 'lucide-react';
-import { API_BASE_URL } from '@/config/env';
+import { getApiBaseUrl } from '@/config/env';
 
 interface VideoModalProps {
     matchId: number;
@@ -36,7 +36,9 @@ export function VideoModal({ matchId, trigger, open, onOpenChange }: VideoModalP
     const fetchVideos = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/matches/${matchId}/videos`);
+            const baseUrl = getApiBaseUrl();
+            const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+            const res = await fetch(`${normalizedBase}/api/matches/${matchId}/videos`);
             if (res.ok) {
                 const data = await res.json();
                 setVideos(data);

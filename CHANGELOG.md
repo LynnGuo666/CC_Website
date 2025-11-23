@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.13.4] - 2025-11-23
+
+### Fixed
+- **管理后台视频页面 Mixed Content 反复出现**：定位到多个客户端请求仍直接使用构建期固定的 `API_BASE_URL` 或裸露的 `NEXT_PUBLIC_API_URL`，在 HTTPS 页面下被浏览器拦截
+  - `admin-api.ts`、`services/api.ts`、`configService.ts` 及 `video-modal.tsx` 统一改为调用 `getApiBaseUrl()`，每次请求前动态裁剪协议与末尾斜杠
+  - `Footer` 的版本探测、`VideoCard` 的缩略图代理和 `Avatar` 的后台代理均复用新逻辑，彻底消除 HTTP 请求
+  - 额外修复 `/matches/[id]` 服务端页面的数据抓取，确保 SSR 与客户端一致地读取 API 根路径
+
+### Technical Details
+- 前端版本：2.13.3 → 2.13.4
+- 后端版本：2.13.3 → 2.13.4
+- 修改文件：`frontend/src/services/api.ts`、`frontend/src/lib/admin-api.ts`、`frontend/src/services/configService.ts`、`frontend/src/components/footer.tsx`、`frontend/src/components/video-modal.tsx`、`frontend/src/components/video-card.tsx`、`frontend/src/components/ui/avatar.tsx`、`frontend/src/app/matches/[id]/page.tsx`、`frontend/src/services/config.ts`
+- 结果：所有浏览器端请求都会根据当前协议自动升级为 HTTPS，避免与 `cc.lynn6.top` 的 HTTPS 页面产生混合内容告警
+
 ## [2.13.3] - 2025-11-23
 
 ### Fixed

@@ -4,14 +4,19 @@ import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { configService, SiteConfig } from '@/services/configService';
 import packageJson from '../../package.json';
+import { getApiBaseUrl } from '@/config/env';
 
 export function Footer() {
   const [config, setConfig] = useState<SiteConfig | null>(null);
   const frontendVersion = process.env.NEXT_PUBLIC_FRONTEND_VERSION || packageJson.version || '0.0.0';
   const [backendVersion, setBackendVersion] = useState<string>(process.env.NEXT_PUBLIC_BACKEND_VERSION || '未设置');
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || '';
 
   useEffect(() => {
+    const normalizedBaseUrl = (() => {
+      const baseUrl = getApiBaseUrl();
+      return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    })();
+
     const loadConfig = async () => {
       try {
         const siteConfig = await configService.getConfig();
@@ -22,7 +27,7 @@ export function Footer() {
     };
     const loadBackendVersion = async () => {
       try {
-        const endpoint = apiBaseUrl ? `${apiBaseUrl}/api/version` : '/api/version';
+        const endpoint = normalizedBaseUrl ? `${normalizedBaseUrl}/api/version` : '/api/version';
         const res = await fetch(endpoint);
         if (res.ok) {
           const data = await res.json();

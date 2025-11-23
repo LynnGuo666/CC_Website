@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { API_BASE_URL, API_KEY } from '@/config/env';
+import { getApiBaseUrl, API_KEY } from '@/config/env';
 
 // --- 基础配置 ---
 
@@ -25,7 +25,8 @@ type NextFetchRequestConfig = {
 async function apiFetch<T>(endpoint: string, options: FetchOptions = {}): Promise<T> {
   const { method = 'GET', body, schema, ...restOptions } = options;
 
-  const base = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+  const runtimeBaseUrl = getApiBaseUrl();
+  const base = runtimeBaseUrl.endsWith('/') ? runtimeBaseUrl.slice(0, -1) : runtimeBaseUrl;
   const url = `${base}${endpoint}`;
 
   const headers: Record<string, string> = {

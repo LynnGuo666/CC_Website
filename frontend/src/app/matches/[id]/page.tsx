@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { FloatingActionButton } from "@/components/floating-action-button";
-import { API_BASE_URL } from '@/config/env';
+import { getApiBaseUrl } from '@/config/env';
 import { MatchVideoFloatingButton } from '@/components/match-video-floating-button';
 
 
@@ -65,7 +65,9 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
 
 
     // 优化：使用新的完整数据API，一次请求获取所有数据
-    const response = await fetch(`${API_BASE_URL}/api/matches/${matchId}/full`, {
+    const baseUrl = getApiBaseUrl();
+    const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const response = await fetch(`${normalizedBase}/api/matches/${matchId}/full`, {
       cache: 'no-store'
     });
 

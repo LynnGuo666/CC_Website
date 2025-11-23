@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '@/config/env';
+import { getApiBaseUrl } from '@/config/env';
 
 export interface SiteConfig {
   notification_text?: string;
@@ -13,7 +13,9 @@ export interface SiteConfig {
 class ConfigService {
   async getConfig(): Promise<SiteConfig> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/config`);
+      const baseUrl = getApiBaseUrl();
+      const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+      const response = await fetch(`${normalizedBase}/api/config`);
       if (!response.ok) throw new Error('Failed to fetch config');
       return await response.json();
     } catch (error) {

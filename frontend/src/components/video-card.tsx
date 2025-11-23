@@ -2,6 +2,7 @@ import React from 'react';
 import { Play, ExternalLink, Eye, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { getApiBaseUrl } from '@/config/env';
 
 export interface Video {
     id: number;
@@ -83,6 +84,9 @@ const formatViews = (views?: number) => {
 };
 
 export function VideoCard({ video, className }: VideoCardProps) {
+    const baseUrl = getApiBaseUrl();
+    const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+
     // 处理缩略图URL - 如果是Bilibili图片且不是代理URL，则使用代理
     const getThumbnailUrl = (url?: string) => {
         if (!url) return url;
@@ -90,13 +94,13 @@ export function VideoCard({ video, className }: VideoCardProps) {
         if (url.startsWith('http://') || url.startsWith('https://')) {
             // 如果是B站图片，需要代理
             if (url.includes('hdslb.com') || url.includes('bilibili.com')) {
-                return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/admin/matches/videos/proxy-image?url=${encodeURIComponent(url)}`;
+                return `${normalizedBase}/api/admin/matches/videos/proxy-image?url=${encodeURIComponent(url)}`;
             }
             return url;
         }
         // 如果是相对路径的代理URL，添加API基础URL
         if (url.startsWith('/api/')) {
-            return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${url}`;
+            return `${normalizedBase}${url}`;
         }
         return url;
     };

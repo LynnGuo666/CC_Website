@@ -2,7 +2,7 @@
  * 管理后台 API 客户端
  */
 
-import { API_BASE_URL } from '@/config/env';
+import { getApiBaseUrl } from '@/config/env';
 
 export interface LoginCredentials {
   username: string;
@@ -106,6 +106,11 @@ class AdminAPI {
     }
   }
 
+  private getBaseUrl(): string {
+    const baseUrl = getApiBaseUrl();
+    return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  }
+
   setToken(token: string) {
     this.token = token;
     if (typeof window !== 'undefined') {
@@ -138,7 +143,8 @@ class AdminAPI {
       headers.set('Authorization', `Bearer ${this.token}`);
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    const baseUrl = this.getBaseUrl();
+    const response = await fetch(`${baseUrl}${endpoint}`, {
       ...options,
       headers,
     });
@@ -162,7 +168,8 @@ class AdminAPI {
     formData.append('username', credentials.username);
     formData.append('password', credentials.password);
 
-    const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
+    const baseUrl = this.getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/admin/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -259,7 +266,8 @@ class AdminAPI {
   // ==================== 导入/导出 ====================
 
   async exportGamesCSV(): Promise<Blob> {
-    const response = await fetch(`${API_BASE_URL}/api/admin/import-export/games/export/csv`, {
+    const baseUrl = this.getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/admin/import-export/games/export/csv`, {
       headers: {
         'Authorization': `Bearer ${this.token}`,
       },
@@ -268,7 +276,8 @@ class AdminAPI {
   }
 
   async exportGamesJSON(): Promise<Blob> {
-    const response = await fetch(`${API_BASE_URL}/api/admin/import-export/games/export/json`, {
+    const baseUrl = this.getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/admin/import-export/games/export/json`, {
       headers: {
         'Authorization': `Bearer ${this.token}`,
       },
@@ -280,7 +289,8 @@ class AdminAPI {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_BASE_URL}/api/admin/import-export/games/import/csv`, {
+    const baseUrl = this.getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/admin/import-export/games/import/csv`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.token}`,
@@ -292,7 +302,8 @@ class AdminAPI {
   }
 
   async exportUsersCSV(): Promise<Blob> {
-    const response = await fetch(`${API_BASE_URL}/api/admin/import-export/users/export/csv`, {
+    const baseUrl = this.getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/admin/import-export/users/export/csv`, {
       headers: {
         'Authorization': `Bearer ${this.token}`,
       },
@@ -301,7 +312,8 @@ class AdminAPI {
   }
 
   async exportUsersJSON(): Promise<Blob> {
-    const response = await fetch(`${API_BASE_URL}/api/admin/import-export/users/export/json`, {
+    const baseUrl = this.getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/admin/import-export/users/export/json`, {
       headers: {
         'Authorization': `Bearer ${this.token}`,
       },
@@ -313,7 +325,8 @@ class AdminAPI {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_BASE_URL}/api/admin/import-export/users/import/csv`, {
+    const baseUrl = this.getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/admin/import-export/users/import/csv`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.token}`,
@@ -381,8 +394,9 @@ class AdminAPI {
     if (options?.eventType) qs.append('event_type', options.eventType);
     if (options?.recalc) qs.append('recalc', 'true');
 
+    const baseUrl = this.getBaseUrl();
     const response = await fetch(
-      `${API_BASE_URL}/api/admin/matches/${matchId}/score-events/import${qs.toString() ? `?${qs.toString()}` : ''}`,
+      `${baseUrl}/api/admin/matches/${matchId}/score-events/import${qs.toString() ? `?${qs.toString()}` : ''}`,
       {
         method: 'POST',
         headers: {

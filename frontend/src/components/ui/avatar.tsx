@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { API_BASE_URL } from '@/services/config';
+import { getPublicApiBaseUrl } from '@/services/config';
 
 interface AvatarProps {
   userId?: string | number;
@@ -107,7 +107,8 @@ export function Avatar({
     if (!useProxy) {
       // First error: try using backend proxy
       const identifier = username || userId;
-      const proxyUrl = `${API_BASE_URL}/users/avatar/${identifier}/${size}`;
+      const proxyBaseUrl = getPublicApiBaseUrl();
+      const proxyUrl = `${proxyBaseUrl}/users/avatar/${identifier}/${size}`;
       setImageUrl(proxyUrl);
       setUseProxy(true);
       setImageError(false); // Reset error to try proxy
