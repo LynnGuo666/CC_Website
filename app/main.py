@@ -28,6 +28,7 @@ app = FastAPI(
     title="Competition Server API",
     description="API for managing competitions, teams, and players.",
     version=settings.BACKEND_VERSION,  # 升级版本号表示新的队伍系统
+    redirect_slashes=False,  # 禁用自动斜杠重定向，避免 HTTPS 代理后重定向到 HTTP
 )
 
 logger.info(f"FastAPI 应用初始化完成 - 版本: {settings.BACKEND_VERSION}")

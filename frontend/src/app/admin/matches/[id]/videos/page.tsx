@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { AdminNav } from '@/components/admin-nav';
 import { useAdminAuth } from '@/contexts/admin-auth-context';
@@ -29,6 +29,8 @@ export default function AdminMatchVideosPage() {
 
     const [players, setPlayers] = useState<Array<{ id: number; display_name?: string; nickname: string }>>([]);
     const [fetchingVideoInfo, setFetchingVideoInfo] = useState(false);
+    const [playerSearchQuery, setPlayerSearchQuery] = useState('');
+    const [showPlayerDropdown, setShowPlayerDropdown] = useState(false);
     const [formData, setFormData] = useState<MatchVideoPayload>({
         title: '',
         url: '',
@@ -43,6 +45,8 @@ export default function AdminMatchVideosPage() {
         view_count: undefined,
     });
 
+    const playerDropdownRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
             router.push('/admin/login');
@@ -53,8 +57,25 @@ export default function AdminMatchVideosPage() {
         if (isAuthenticated && matchId) {
             loadData();
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, matchId]);
+
+    // Click outside to close player dropdown
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (playerDropdownRef.current && !playerDropdownRef.current.contains(event.target as Node)) {
+                setShowPlayerDropdown(false);
+            }
+        };
+
+        if (showPlayerDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showPlayerDropdown]);
 
     const loadData = async () => {
         setLoading(true);
@@ -140,6 +161,7 @@ export default function AdminMatchVideosPage() {
             duration: undefined,
             view_count: undefined,
         });
+        setPlayerSearchQuery('');
     };
 
     const handleEdit = (video: MatchVideo) => {
@@ -158,8 +180,30 @@ export default function AdminMatchVideosPage() {
             duration: video.duration || undefined,
             view_count: video.view_count || undefined,
         });
+        // Set the search query to the selected player's name
+        if (video.user_id) {
+            const player = players.find(p => p.id === video.user_id);
+            if (player) {
+                setPlayerSearchQuery(player.display_name || player.nickname);
+            }
+        } else {
+            setPlayerSearchQuery('');
+        }
         setDialogOpen(true);
     };
+
+    // Get player display name by ID
+    const getPlayerName = (userId?: number) => {
+        if (!userId) return '';
+        const player = players.find(p => p.id === userId);
+        return player ? (player.display_name || player.nickname) : '';
+    };
+
+    // Filter players based on search query
+    const filteredPlayers = players.filter(player => {
+        const name = (player.display_name || player.nickname).toLowerCase();
+        return name.includes(playerSearchQuery.toLowerCase());
+    });
 
     // Auto-detect platform from URL
     const handleUrlChange = (url: string) => {
@@ -388,21 +432,58 @@ export default function AdminMatchVideosPage() {
                                                 </div>
                                             )}
                                         </div>
-                                        <div>
-                                            <Label htmlFor="user_id">关联选手（选手视角）</Label>
-                                            <select
-                                                id="user_id"
-                                                className="mt-1 w-full rounded-md border border-input bg-background p-2 text-sm"
-                                                value={formData.user_id || ''}
-                                                onChange={(e) => setFormData({ ...formData, user_id: e.target.value ? Number(e.target.value) : undefined })}
-                                            >
-                                                <option value="">无（非选手视角）</option>
-                                                {players.map((player) => (
-                                                    <option key={player.id} value={player.id}>
-                                                        {player.display_name || player.nickname}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                        <div className="relative" ref={playerDropdownRef}>
+                                            <Label htmlFor="user_search">关联选手（选手视角）</Label>
+                                            <Input
+                                                id="user_search"
+                                                placeholder="输入选手名称搜索..."
+                                                value={playerSearchQuery}
+                                                onChange={(e) => {
+                                                    setPlayerSearchQuery(e.target.value);
+                                                    setShowPlayerDropdown(true);
+                                                }}
+                                                onFocus={() => setShowPlayerDropdown(true)}
+                                                autoComplete="off"
+                                            />
+                                            {showPlayerDropdown && (
+                                                <div className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md">
+                                                    <div
+                                                        className="px-3 py-2 text-sm hover:bg-accent cursor-pointer"
+                                                        onClick={() => {
+                                                            setFormData({ ...formData, user_id: undefined });
+                                                            setPlayerSearchQuery('');
+                                                            setShowPlayerDropdown(false);
+                                                        }}
+                                                    >
+                                                        无（非选手视角）
+                                                    </div>
+                                                    {filteredPlayers.length > 0 ? (
+                                                        filteredPlayers.map((player) => (
+                                                            <div
+                                                                key={player.id}
+                                                                className={`px-3 py-2 text-sm hover:bg-accent cursor-pointer ${formData.user_id === player.id ? 'bg-accent' : ''
+                                                                    }`}
+                                                                onClick={() => {
+                                                                    setFormData({ ...formData, user_id: player.id });
+                                                                    setPlayerSearchQuery(player.display_name || player.nickname);
+                                                                    setShowPlayerDropdown(false);
+                                                                }}
+                                                            >
+                                                                {player.display_name || player.nickname}
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                                                            未找到匹配的选手
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {formData.user_id && (
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    已选择: {getPlayerName(formData.user_id)}
+                                                </p>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-2 pt-8">
                                             <input
