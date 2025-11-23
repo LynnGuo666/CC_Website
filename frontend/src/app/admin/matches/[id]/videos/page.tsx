@@ -27,7 +27,7 @@ export default function AdminMatchVideosPage() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editing, setEditing] = useState<MatchVideo | null>(null);
 
-    const [players, setPlayers] = useState<any[]>([]);
+    const [players, setPlayers] = useState<Array<{ id: number; display_name?: string; nickname: string }>>([]);
     const [fetchingVideoInfo, setFetchingVideoInfo] = useState(false);
     const [formData, setFormData] = useState<MatchVideoPayload>({
         title: '',
@@ -53,6 +53,7 @@ export default function AdminMatchVideosPage() {
         if (isAuthenticated && matchId) {
             loadData();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, matchId]);
 
     const loadData = async () => {
@@ -264,7 +265,7 @@ export default function AdminMatchVideosPage() {
                                             </div>
                                             {formData.platform === 'bilibili' && (
                                                 <p className="text-xs text-muted-foreground mt-1">
-                                                    检测到Bilibili链接，点击"识别视频"按钮自动填充视频信息
+                                                    检测到Bilibili链接，点击&ldquo;识别视频&rdquo;按钮自动填充视频信息
                                                 </p>
                                             )}
                                         </div>
@@ -354,6 +355,7 @@ export default function AdminMatchVideosPage() {
                                             />
                                             {formData.thumbnail_url && (
                                                 <div className="mt-2">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
                                                     <img
                                                         src={
                                                             formData.thumbnail_url.startsWith('http://') || formData.thumbnail_url.startsWith('https://')
@@ -435,6 +437,7 @@ export default function AdminMatchVideosPage() {
                             <div key={video.id} className="relative flex flex-col overflow-hidden rounded-lg border bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
                                 <div className="aspect-video w-full bg-gray-100 dark:bg-gray-900 relative group">
                                     {thumbnailUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
                                         <img src={thumbnailUrl} alt={video.title} className="h-full w-full object-cover" />
                                     ) : (
                                         <div className="flex h-full w-full items-center justify-center text-gray-400">
