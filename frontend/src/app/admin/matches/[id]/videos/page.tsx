@@ -72,7 +72,10 @@ export default function AdminMatchVideosPage() {
             setVideos(videosData);
 
             // Load all players for selection
+            console.log('[Video Page] API_BASE_URL:', API_BASE_URL);
+            console.log('[Video Page] Fetching users from:', `${API_BASE_URL}/api/users`);
             const response = await fetch(`${API_BASE_URL}/api/users`);
+            console.log('[Video Page] Response status:', response.status);
             if (response.ok) {
                 const playersData = await response.json();
                 setPlayers(playersData);

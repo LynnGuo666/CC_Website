@@ -7,6 +7,7 @@
 function getApiBaseUrl(): string {
   // 服务端渲染时使用内部 URL
   if (typeof window === 'undefined' && process.env.INTERNAL_API_URL) {
+    console.log('[ENV] Using INTERNAL_API_URL:', process.env.INTERNAL_API_URL);
     return process.env.INTERNAL_API_URL;
   }
 
@@ -14,19 +15,20 @@ function getApiBaseUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL;
 
   if (envUrl) {
-    // 如果当前页面是 HTTPS，自动将 API URL 也改为 HTTPS
-    if (typeof window !== 'undefined' && window.location.protocol === 'https:' && envUrl.startsWith('http://')) {
-      return envUrl.replace('http://', 'https://');
-    }
+    console.log('[ENV] Using environment variable:', envUrl);
+    console.log('[ENV] NEXT_PUBLIC_API_BASE_URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
+    console.log('[ENV] NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
     return envUrl;
   }
 
   // 默认本地开发地址
+  console.log('[ENV] Using default localhost');
   return 'http://localhost:8000';
 }
 
 // API Base URL - 默认指向 localhost:8000 用于本地开发
 export const API_BASE_URL = getApiBaseUrl();
+console.log('[ENV] Final API_BASE_URL:', API_BASE_URL);
 
 // WebSocket URL
 export const WS_URL =
