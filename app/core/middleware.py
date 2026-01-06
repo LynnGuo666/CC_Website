@@ -6,7 +6,7 @@ import time
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
-from app.core.db import engine
+from app.core.db import async_engine
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class DatabaseConnectionMiddleware(BaseHTTPMiddleware):
         start_time = time.time()
         
         # 记录请求开始前的连接池状态
-        pool = engine.pool
+        pool = async_engine.sync_engine.pool
         pool_status_before = {
             "size": pool.size(),
             "checked_out": pool.checkedout(),

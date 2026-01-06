@@ -489,10 +489,18 @@ def get_match_events_summary(db: Session, match_id: int):
 # --- MatchGame CRUD ---
 
 def get_match_game(db: Session, match_game_id: int):
-    return db.query(models.MatchGame).filter(models.MatchGame.id == match_game_id).first()
+    return db.query(models.MatchGame).options(
+        selectinload(models.MatchGame.score_events).selectinload(models.ScoreEvent.user),
+        selectinload(models.MatchGame.score_events).selectinload(models.ScoreEvent.team),
+        selectinload(models.MatchGame.score_events).selectinload(models.ScoreEvent.opponent_team)
+    ).filter(models.MatchGame.id == match_game_id).first()
 
 def get_match_games_by_match(db: Session, match_id: int):
-    return db.query(models.MatchGame).filter(models.MatchGame.match_id == match_id).order_by(models.MatchGame.game_order).all()
+    return db.query(models.MatchGame).options(
+        selectinload(models.MatchGame.score_events).selectinload(models.ScoreEvent.user),
+        selectinload(models.MatchGame.score_events).selectinload(models.ScoreEvent.team),
+        selectinload(models.MatchGame.score_events).selectinload(models.ScoreEvent.opponent_team)
+    ).filter(models.MatchGame.match_id == match_id).order_by(models.MatchGame.game_order).all()
 
 def create_match_game(db: Session, match_id: int, match_game: schemas.MatchGameCreate):
     db_match_game = models.MatchGame(
@@ -637,7 +645,7 @@ def create_match_score(db: Session, match_game_id: int, score: schemas.ScoreCrea
         calculate_standard_scores_for_match_game(db, match_game_id)
 
         # 异步更新相关队伍的积分
-        update_team_scores_async([correct_team_id])
+        queue_team_scores_update([correct_team_id])
 
     return db_score
 
@@ -658,7 +666,7 @@ def delete_score(db: Session, score_id: int):
     
     # 异步更新队伍积分
     if team_id:
-        update_team_scores_async([team_id])
+        queue_team_scores_update([team_id])
     
     return True
 
@@ -781,7 +789,7 @@ def recalculate_match_standard_scores(db: Session, match_id: int) -> bool:
         team_ids = [team.id for team in db_match.teams]
         if team_ids:
             # 使用同步方法确保计算立即完成
-            update_team_scores_sync(team_ids)
+            update_team_scores_sync(db, team_ids)
             # 再次显式调用排名更新，确保万无一失
             update_team_rankings(db, match_id)
             
@@ -793,12 +801,8 @@ def recalculate_game_standard_scores(db: Session, match_game_id: int) -> bool:
 
 # --- 队伍积分更新函数 ---
 
-def update_team_scores_sync(team_ids: list[int]):
-    """同步更新指定队伍的积分（在独立的数据库会话中），考虑游戏倍率"""
-    from app.core.db import SessionLocal
-
-    db = SessionLocal()
-
+def update_team_scores_sync(db: Session, team_ids: list[int]):
+    """同步更新指定队伍的积分（使用现有数据库会话），考虑游戏倍率"""
     try:
         for team_id in team_ids:
             # 计算队伍总积分和参与游戏数，考虑游戏倍率
@@ -846,14 +850,23 @@ def update_team_scores_sync(team_ids: list[int]):
     except Exception as e:
         print(f"更新队伍积分时出错: {e}")
         db.rollback()
-    finally:
-        db.close()
 
-def update_team_scores_async(team_ids: list[int]):
-    """异步更新队伍积分（在后台线程中执行）"""
-    # 在新线程中运行同步更新函数
-    loop = asyncio.get_event_loop()
-    loop.run_in_executor(None, update_team_scores_sync, team_ids)
+def queue_team_scores_update(team_ids: list[int]):
+    """在事件循环中调度队伍积分更新任务"""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        asyncio.run(update_team_scores_async(team_ids))
+        return
+    loop.create_task(update_team_scores_async(team_ids))
+
+
+async def update_team_scores_async(team_ids: list[int]):
+    """异步更新队伍积分（使用独立的数据库会话）"""
+    from app.core.db import AsyncSessionLocal
+
+    async with AsyncSessionLocal() as db:
+        await db.run_sync(update_team_scores_sync, team_ids)
 
 def update_team_rankings(db, match_id: int):
     """更新指定比赛的队伍排名"""
@@ -937,7 +950,25 @@ def get_match_videos(
     return videos
 
 def get_match_video(db: Session, video_id: int):
-    return db.query(models.MatchVideo).filter(models.MatchVideo.id == video_id).first()
+    video = db.query(models.MatchVideo).options(
+        selectinload(models.MatchVideo.user),
+        selectinload(models.MatchVideo.match_game)
+    ).filter(models.MatchVideo.id == video_id).first()
+    if not video:
+        return None
+
+    if video.user_id:
+        membership = db.query(models.MatchTeamMembership).join(
+            models.MatchTeam
+        ).filter(
+            models.MatchTeamMembership.user_id == video.user_id,
+            models.MatchTeam.match_id == video.match_id
+        ).first()
+
+        if membership:
+            video.team = membership.team
+
+    return video
 
 def update_match_video(db: Session, video_id: int, video_update: schemas.MatchVideoUpdate):
     db_video = get_match_video(db, video_id)

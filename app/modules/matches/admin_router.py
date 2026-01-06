@@ -5,100 +5,100 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db
 from app.core.security import require_role
 from app.modules.admin.models import UserRole
-from . import crud, schemas
+from . import crud, schemas, models
 from .importer import import_score_events_from_csv
 
 router = APIRouter()
 
 
 @router.get("/", response_model=List[schemas.MatchList])
-def list_matches(
+async def list_matches(
     skip: int = 0,
     limit: int = 100,
     status_filter: Optional[schemas.MatchStatus] = None,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.VIEWER.value)),
 ):
     """获取比赛列表（后台）"""
-    return crud.get_matches(db, skip=skip, limit=limit, status=status_filter)
+    return await db.run_sync(lambda sync_db: crud.get_matches(sync_db, skip=skip, limit=limit, status=status_filter))
 
 
 @router.get("/{match_id}", response_model=schemas.Match)
-def get_match(
+async def get_match(
     match_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.VIEWER.value)),
 ):
     """获取单个比赛详情（后台）"""
-    match = crud.get_match(db, match_id=match_id)
+    match = await db.run_sync(crud.get_match, match_id)
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
     return match
 
 
 @router.post("/", response_model=schemas.Match, status_code=status.HTTP_201_CREATED)
-def create_match(
+async def create_match(
     payload: schemas.MatchCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.EDITOR.value)),
 ):
     """创建比赛"""
-    return crud.create_match(db, payload)
+    return await db.run_sync(lambda sync_db: crud.create_match(sync_db, payload))
 
 
 @router.put("/{match_id}", response_model=schemas.Match)
-def update_match(
+async def update_match(
     match_id: int,
     payload: schemas.MatchUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.EDITOR.value)),
 ):
     """更新比赛"""
-    match = crud.update_match(db, match_id, payload)
+    match = await db.run_sync(lambda sync_db: crud.update_match(sync_db, match_id, payload))
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
     return match
 
 
 @router.delete("/{match_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_match(
+async def delete_match(
     match_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.ADMIN.value)),
 ):
     """删除比赛"""
-    success = crud.delete_match(db, match_id)
+    success = await db.run_sync(crud.delete_match, match_id)
     if not success:
         raise HTTPException(status_code=404, detail="Match not found")
     return None
 
 
 @router.post("/{match_id}/start", response_model=schemas.Match)
-def start_match(
+async def start_match(
     match_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.EDITOR.value)),
 ):
     """开始比赛"""
-    match = crud.start_match(db, match_id)
+    match = await db.run_sync(crud.start_match, match_id)
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
     return match
 
 
 @router.post("/{match_id}/finish", response_model=schemas.Match)
-def finish_match(
+async def finish_match(
     match_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.EDITOR.value)),
 ):
     """结束比赛"""
-    match = crud.finish_match(db, match_id)
+    match = await db.run_sync(crud.finish_match, match_id)
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
     return match
@@ -113,20 +113,22 @@ async def import_score_events(
     event_type: str = "game_score",
     recalc: bool = False,
     preview: bool = False,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.EDITOR.value)),
 ):
     """从 CSV 导入小分（ScoreEvent）并可选重算标准分"""
     content = await file.read()
     try:
-        result = import_score_events_from_csv(
-            db=db,
-            match_id=match_id,
-            file_bytes=content,
-            tournament_stage=tournament_stage,
-            event_type=event_type,
-            clear_existing=clear_existing,
-            dry_run=preview,
+        result = await db.run_sync(
+            lambda sync_db: import_score_events_from_csv(
+                db=sync_db,
+                match_id=match_id,
+                file_bytes=content,
+                tournament_stage=tournament_stage,
+                event_type=event_type,
+                clear_existing=clear_existing,
+                dry_run=preview,
+            )
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -134,7 +136,7 @@ async def import_score_events(
         raise HTTPException(status_code=500, detail=f"导入失败: {exc}") from exc
 
     if recalc and not preview:
-        crud.recalculate_match_standard_scores(db, match_id=match_id)
+        await db.run_sync(crud.recalculate_match_standard_scores, match_id)
 
     return result
 
@@ -142,42 +144,52 @@ async def import_score_events(
 # --- 视频管理接口 ---
 
 @router.post("/{match_id}/videos", response_model=schemas.MatchVideo, status_code=status.HTTP_201_CREATED)
-def create_match_video(
+async def create_match_video(
     match_id: int,
     video: schemas.MatchVideoCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.EDITOR.value)),
 ):
     """添加比赛视频（管理员）"""
-    db_match = crud.get_match(db, match_id=match_id)
+    db_match = await db.run_sync(crud.get_match, match_id)
     if not db_match:
         raise HTTPException(status_code=404, detail="Match not found")
 
-    return crud.create_match_video(db, match_id=match_id, video=video)
+    def _create(sync_db):
+        created = crud.create_match_video(sync_db, match_id=match_id, video=video)
+        return crud.get_match_video(sync_db, created.id)
+
+    return await db.run_sync(_create)
 
 
 @router.put("/videos/{video_id}", response_model=schemas.MatchVideo)
-def update_match_video(
+async def update_match_video(
     video_id: int,
     video_update: schemas.MatchVideoUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.EDITOR.value)),
 ):
     """更新视频信息（管理员）"""
-    db_video = crud.update_match_video(db, video_id=video_id, video_update=video_update)
+    def _update(sync_db):
+        updated = crud.update_match_video(sync_db, video_id=video_id, video_update=video_update)
+        if not updated:
+            return None
+        return crud.get_match_video(sync_db, updated.id)
+
+    db_video = await db.run_sync(_update)
     if not db_video:
         raise HTTPException(status_code=404, detail="Video not found")
     return db_video
 
 
 @router.delete("/videos/{video_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_match_video(
+async def delete_match_video(
     video_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.EDITOR.value)),
 ):
     """删除视频（管理员）"""
-    success = crud.delete_match_video(db, video_id=video_id)
+    success = await db.run_sync(crud.delete_match_video, video_id)
     if not success:
         raise HTTPException(status_code=404, detail="Video not found")
     return None
@@ -216,14 +228,14 @@ async def proxy_bilibili_image_endpoint(url: str):
 @router.post("/videos/{video_id}/refresh-views", status_code=status.HTTP_200_OK)
 async def refresh_video_views(
     video_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.EDITOR.value)),
 ):
     """刷新视频观看数（仅支持Bilibili）"""
     from app.utils.bilibili import BilibiliAPI
 
     # 获取视频
-    video = crud.get_match_video(db, video_id)
+    video = await db.run_sync(crud.get_match_video, video_id)
     if not video:
         raise HTTPException(status_code=404, detail="视频不存在")
 
@@ -240,9 +252,18 @@ async def refresh_video_views(
     old_views = video.view_count
     new_views = video_info.get('view_count', 0)
 
-    video.view_count = new_views
-    db.commit()
-    db.refresh(video)
+    def _update(sync_db):
+        video_obj = crud.get_match_video(sync_db, video_id)
+        if not video_obj:
+            return None
+        video_obj.view_count = new_views
+        sync_db.commit()
+        sync_db.refresh(video_obj)
+        return video_obj
+
+    video = await db.run_sync(_update)
+    if not video:
+        raise HTTPException(status_code=404, detail="视频不存在")
 
     return {
         "message": "观看数已更新",

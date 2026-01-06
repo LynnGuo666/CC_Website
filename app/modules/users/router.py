@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 import httpx
 import logging
@@ -14,24 +14,24 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=schemas.User)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
-    return crud.create_user(db=db, user=user)
+async def create_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_db), _admin_user = Depends(get_api_key)):
+    return await db.run_sync(crud.create_user, user)
 
 
 @router.get("/", response_model=List[schemas.User])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    users = crud.get_users(db, skip=skip, limit=limit)
+async def read_users(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+    users = await db.run_sync(lambda sync_db: crud.get_users(sync_db, skip=skip, limit=limit))
     return users
 
 
 # --- 排行榜接口 (必须在 /{user_id} 路由之前) ---
 
 @router.get("/leaderboard")
-def get_leaderboard(
+async def get_leaderboard(
     skip: int = 0, 
     limit: int = 100, 
     game_code: str = None, 
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     获取游戏等级分排行榜
@@ -47,7 +47,7 @@ def get_leaderboard(
     # 限制最大返回数量
     limit = min(limit, 100)
     
-    leaderboard = crud.get_leaderboard(db, skip=skip, limit=limit, game_code=game_code)
+    leaderboard = await db.run_sync(lambda sync_db: crud.get_leaderboard(sync_db, skip=skip, limit=limit, game_code=game_code))
     return {
         "leaderboard": leaderboard,
         "total_displayed": len(leaderboard),
@@ -55,15 +55,15 @@ def get_leaderboard(
     }
 
 @router.get("/leaderboard/level-distribution")
-def get_level_distribution(db: Session = Depends(get_db)):
+async def get_level_distribution(db: AsyncSession = Depends(get_db)):
     """获取等级分布统计"""
-    return crud.get_level_distribution(db)
+    return await db.run_sync(crud.get_level_distribution)
 
 @router.get("/leaderboard/games")
-def get_available_games_for_leaderboard(db: Session = Depends(get_db)):
+async def get_available_games_for_leaderboard(db: AsyncSession = Depends(get_db)):
     """获取有排行榜数据的游戏列表"""
     return {
-        "games": crud.get_available_games_for_leaderboard(db)
+        "games": await db.run_sync(crud.get_available_games_for_leaderboard)
     }
 
 
@@ -109,35 +109,35 @@ async def get_avatar_proxy(identifier: str, size: int = 64):
 
 
 @router.get("/{user_id}", response_model=schemas.User)
-def read_user(user_id: int, db: Session = Depends(get_db)):
-    db_user = crud.get_user(db, user_id=user_id)
+async def read_user(user_id: int, db: AsyncSession = Depends(get_db)):
+    db_user = await db.run_sync(crud.get_user, user_id)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
 
 @router.get("/{user_id}/stats", response_model=schemas.UserStats)
-def get_user_stats(user_id: int, db: Session = Depends(get_db)):
+async def get_user_stats(user_id: int, db: AsyncSession = Depends(get_db)):
     """获取玩家详细统计信息，包括历史比赛数据"""
-    stats = crud.get_user_stats(db, user_id=user_id)
+    stats = await db.run_sync(crud.get_user_stats, user_id)
     if not stats:
         raise HTTPException(status_code=404, detail="User not found")
     return stats
 
 
 @router.get("/{user_id}/matches")
-def get_user_match_history(user_id: int, skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+async def get_user_match_history(user_id: int, skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db)):
     """获取玩家历史比赛记录"""
-    history = crud.get_user_match_history(db, user_id=user_id, skip=skip, limit=limit)
+    history = await db.run_sync(lambda sync_db: crud.get_user_match_history(sync_db, user_id=user_id, skip=skip, limit=limit))
     if not history:
         raise HTTPException(status_code=404, detail="User not found")
     return history
 
 
 @router.get("/{user_id}/teams")
-def get_user_team_history(user_id: int, db: Session = Depends(get_db)):
+async def get_user_team_history(user_id: int, db: AsyncSession = Depends(get_db)):
     """获取玩家队伍历史"""
-    teams = crud.get_user_team_history(db, user_id=user_id)
+    teams = await db.run_sync(crud.get_user_team_history, user_id)
     if teams is None:
         raise HTTPException(status_code=404, detail="User not found")
     return {
@@ -147,7 +147,7 @@ def get_user_team_history(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{user_id}/radar")
-def get_user_radar_chart(user_id: int, match_id: int = None, db: Session = Depends(get_db)):
+async def get_user_radar_chart(user_id: int, match_id: int = None, db: AsyncSession = Depends(get_db)):
     """
     获取玩家六维能力雷达图数据
     
@@ -158,25 +158,24 @@ def get_user_radar_chart(user_id: int, match_id: int = None, db: Session = Depen
     from app.modules.users.radar_calculator import RadarCalculator
     
     # 检查用户是否存在
-    user = crud.get_user(db, user_id=user_id)
+    user = await db.run_sync(crud.get_user, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
         
-    calculator = RadarCalculator(db)
-    return calculator.calculate_user_radar(user_id, match_id)
+    return await db.run_sync(lambda sync_db: RadarCalculator(sync_db).calculate_user_radar(user_id, match_id))
 
 @router.put("/{user_id}", response_model=schemas.User)
-def update_user(user_id: int, user: schemas.UserCreate, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
+async def update_user(user_id: int, user: schemas.UserCreate, db: AsyncSession = Depends(get_db), _admin_user = Depends(get_api_key)):
     """更新用户信息"""
-    db_user = crud.update_user(db, user_id=user_id, user_update=user)
+    db_user = await db.run_sync(lambda sync_db: crud.update_user(sync_db, user_id=user_id, user_update=user))
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db), _admin_user = Depends(get_api_key)):
+async def delete_user(user_id: int, db: AsyncSession = Depends(get_db), _admin_user = Depends(get_api_key)):
     """删除用户"""
-    success = crud.delete_user(db, user_id=user_id)
+    success = await db.run_sync(crud.delete_user, user_id)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted successfully"}

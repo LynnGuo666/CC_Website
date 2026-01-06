@@ -1,14 +1,13 @@
 """
 数据库和其他依赖项的统一管理
 """
-from sqlalchemy.orm import Session
-from app.core.db import SessionLocal
+from collections.abc import AsyncGenerator
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.db import AsyncSessionLocal
 
 
-def get_db():
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """获取数据库会话的依赖函数"""
-    db = SessionLocal()
-    try:
+    async with AsyncSessionLocal() as db:
         yield db
-    finally:
-        db.close()

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from datetime import timedelta
 
@@ -17,12 +17,12 @@ router = APIRouter()
 @router.post("/login", response_model=schemas.Token)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     管理员登录
     """
-    user = crud.authenticate_user(db, form_data.username, form_data.password)
+    user = await db.run_sync(crud.authenticate_user, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -51,37 +51,37 @@ async def read_users_me(current_user: schemas.AdminUser = Depends(get_current_ac
 async def list_admin_users(
     skip: int = 0,
     limit: int = 100,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.ADMIN.value))
 ):
     """
     获取管理员用户列表（仅管理员可访问）
     """
-    users = crud.get_admin_users(db, skip=skip, limit=limit)
+    users = await db.run_sync(lambda sync_db: crud.get_admin_users(sync_db, skip=skip, limit=limit))
     return users
 
 
 @router.post("/users", response_model=schemas.AdminUser, status_code=status.HTTP_201_CREATED)
 async def create_admin_user(
     user: schemas.AdminUserCreate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.ADMIN.value))
 ):
     """
     创建管理员用户（仅管理员可访问）
     """
     # 检查用户名是否已存在
-    db_user = crud.get_admin_user_by_username(db, username=user.username)
+    db_user = await db.run_sync(lambda sync_db: crud.get_admin_user_by_username(sync_db, username=user.username))
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
 
     # 检查邮箱是否已存在
-    db_user = crud.get_admin_user_by_email(db, email=user.email)
+    db_user = await db.run_sync(lambda sync_db: crud.get_admin_user_by_email(sync_db, email=user.email))
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
     try:
-        return crud.create_admin_user(db=db, user=user)
+        return await db.run_sync(lambda sync_db: crud.create_admin_user(sync_db, user=user))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -90,14 +90,14 @@ async def create_admin_user(
 async def update_admin_user(
     user_id: int,
     user_update: schemas.AdminUserUpdate,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.ADMIN.value))
 ):
     """
     更新管理员用户（仅管理员可访问）
     """
     try:
-        db_user = crud.update_admin_user(db, user_id, user_update)
+        db_user = await db.run_sync(lambda sync_db: crud.update_admin_user(sync_db, user_id, user_update))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if not db_user:
@@ -108,7 +108,7 @@ async def update_admin_user(
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_admin_user(
     user_id: int,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.ADMIN.value))
 ):
     """
@@ -118,7 +118,7 @@ async def delete_admin_user(
     if user_id == current_user.id:
         raise HTTPException(status_code=400, detail="Cannot delete yourself")
 
-    success = crud.delete_admin_user(db, user_id)
+    success = await db.run_sync(crud.delete_admin_user, user_id)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")
 

@@ -5,9 +5,9 @@
 import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from sqlalchemy.orm import Session
+from sqlalchemy import select
 
-from app.core.db import SessionLocal
+from app.core.db import AsyncSessionLocal
 from app.modules.matches import models
 from app.utils.bilibili import BilibiliAPI
 
@@ -23,50 +23,48 @@ async def update_all_video_views():
     每天凌晨3点执行
     """
     logger.info("开始定时更新视频观看数...")
-    db: Session = SessionLocal()
+    async with AsyncSessionLocal() as db:
+        try:
+            result = await db.execute(
+                select(models.MatchVideo).where(
+                    models.MatchVideo.platform == models.VideoPlatform.BILIBILI
+                )
+            )
+            videos = result.scalars().all()
 
-    try:
-        # 获取所有Bilibili平台的视频
-        videos = db.query(models.MatchVideo).filter(
-            models.MatchVideo.platform == models.VideoPlatform.BILIBILI
-        ).all()
+            logger.info(f"找到 {len(videos)} 个Bilibili视频")
 
-        logger.info(f"找到 {len(videos)} 个Bilibili视频")
+            updated_count = 0
+            failed_count = 0
 
-        updated_count = 0
-        failed_count = 0
+            for video in videos:
+                try:
+                    # 获取视频信息
+                    video_info = await BilibiliAPI.get_video_info_from_url(video.url)
 
-        for video in videos:
-            try:
-                # 获取视频信息
-                video_info = await BilibiliAPI.get_video_info_from_url(video.url)
+                    if video_info and video_info.get('view_count'):
+                        old_views = video.view_count
+                        new_views = video_info['view_count']
 
-                if video_info and video_info.get('view_count'):
-                    old_views = video.view_count
-                    new_views = video_info['view_count']
+                        video.view_count = new_views
 
-                    video.view_count = new_views
+                        logger.info(f"更新视频 [{video.title}]: {old_views} -> {new_views}")
+                        updated_count += 1
+                    else:
+                        logger.warning(f"无法获取视频信息: {video.title}")
+                        failed_count += 1
 
-                    logger.info(f"更新视频 [{video.title}]: {old_views} -> {new_views}")
-                    updated_count += 1
-                else:
-                    logger.warning(f"无法获取视频信息: {video.title}")
+                except Exception as e:
+                    logger.error(f"更新视频失败 [{video.title}]: {e}")
                     failed_count += 1
 
-            except Exception as e:
-                logger.error(f"更新视频失败 [{video.title}]: {e}")
-                failed_count += 1
+            await db.commit()
 
-        # 提交更改
-        db.commit()
+            logger.info(f"视频观看数更新完成 - 成功: {updated_count}, 失败: {failed_count}, 总计: {len(videos)}")
 
-        logger.info(f"视频观看数更新完成 - 成功: {updated_count}, 失败: {failed_count}, 总计: {len(videos)}")
-
-    except Exception as e:
-        logger.error(f"定时任务执行失败: {e}")
-        db.rollback()
-    finally:
-        db.close()
+        except Exception as e:
+            logger.error(f"定时任务执行失败: {e}")
+            await db.rollback()
 
 
 def start_scheduler():

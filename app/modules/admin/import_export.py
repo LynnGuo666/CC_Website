@@ -4,7 +4,7 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from fastapi.responses import StreamingResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 import csv
 import io
@@ -24,13 +24,13 @@ router = APIRouter()
 
 @router.get("/games/export/csv")
 async def export_games_csv(
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.VIEWER.value))
 ):
     """
     导出比赛项目为 CSV 文件
     """
-    games = db.query(game_models.Game).all()
+    games = await db.run_sync(lambda sync_db: sync_db.query(game_models.Game).all())
 
     # 创建 CSV 内容
     output = io.StringIO()
@@ -62,13 +62,13 @@ async def export_games_csv(
 
 @router.get("/games/export/json")
 async def export_games_json(
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.VIEWER.value))
 ):
     """
     导出比赛项目为 JSON 文件
     """
-    games = db.query(game_models.Game).all()
+    games = await db.run_sync(lambda sync_db: sync_db.query(game_models.Game).all())
 
     games_data = [
         {
@@ -95,7 +95,7 @@ async def export_games_json(
 @router.post("/games/import/csv")
 async def import_games_csv(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.EDITOR.value))
 ):
     """
@@ -109,46 +109,52 @@ async def import_games_csv(
     csv_content = content.decode('utf-8')
     csv_reader = csv.DictReader(io.StringIO(csv_content))
 
-    created_count = 0
-    updated_count = 0
-    errors = []
+    rows = list(csv_reader)
 
-    for row_num, row in enumerate(csv_reader, start=2):
-        try:
-            # 检查必填字段
-            if not row.get('项目名称') or not row.get('项目代码'):
-                errors.append(f"第 {row_num} 行: 缺少必填字段")
-                continue
+    def _import(sync_db):
+        created_count = 0
+        updated_count = 0
+        errors = []
 
-            # 检查是否已存在
-            from app.modules.games import crud as game_crud
+        for row_num, row in enumerate(rows, start=2):
+            try:
+                # 检查必填字段
+                if not row.get('项目名称') or not row.get('项目代码'):
+                    errors.append(f"第 {row_num} 行: 缺少必填字段")
+                    continue
 
-            game_data = game_schemas.GameCreate(
-                name=row['项目名称'],
-                code=row['项目代码'],
-                description=row.get('项目介绍', ''),
-                seasonal=row.get('是否季节限定', 'No').lower() in ['yes', 'true', '1', '是']
-            )
+                # 检查是否已存在
+                from app.modules.games import crud as game_crud
 
-            existing_game = db.query(game_models.Game).filter(
-                game_models.Game.code == game_data.code
-            ).first()
+                game_data = game_schemas.GameCreate(
+                    name=row['项目名称'],
+                    code=row['项目代码'],
+                    description=row.get('项目介绍', ''),
+                    seasonal=row.get('是否季节限定', 'No').lower() in ['yes', 'true', '1', '是']
+                )
 
-            if existing_game:
-                # 更新现有游戏
-                existing_game.name = game_data.name
-                existing_game.description = game_data.description
-                existing_game.seasonal = game_data.seasonal
-                updated_count += 1
-            else:
-                # 创建新游戏
-                game_crud.create_game(db, game_data)
-                created_count += 1
+                existing_game = sync_db.query(game_models.Game).filter(
+                    game_models.Game.code == game_data.code
+                ).first()
 
-        except Exception as e:
-            errors.append(f"第 {row_num} 行: {str(e)}")
+                if existing_game:
+                    # 更新现有游戏
+                    existing_game.name = game_data.name
+                    existing_game.description = game_data.description
+                    existing_game.seasonal = game_data.seasonal
+                    updated_count += 1
+                else:
+                    # 创建新游戏
+                    game_crud.create_game(sync_db, game_data)
+                    created_count += 1
 
-    db.commit()
+            except Exception as e:
+                errors.append(f"第 {row_num} 行: {str(e)}")
+
+        sync_db.commit()
+        return created_count, updated_count, errors
+
+    created_count, updated_count, errors = await db.run_sync(_import)
 
     return {
         "success": True,
@@ -162,13 +168,13 @@ async def import_games_csv(
 
 @router.get("/users/export/csv")
 async def export_users_csv(
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.VIEWER.value))
 ):
     """
     导出选手为 CSV 文件
     """
-    users = db.query(user_models.User).all()
+    users = await db.run_sync(lambda sync_db: sync_db.query(user_models.User).all())
 
     # 创建 CSV 内容
     output = io.StringIO()
@@ -212,13 +218,13 @@ async def export_users_csv(
 
 @router.get("/users/export/json")
 async def export_users_json(
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.VIEWER.value))
 ):
     """
     导出选手为 JSON 文件
     """
-    users = db.query(user_models.User).all()
+    users = await db.run_sync(lambda sync_db: sync_db.query(user_models.User).all())
 
     users_data = [
         {
@@ -253,7 +259,7 @@ async def export_users_json(
 @router.post("/users/import/csv")
 async def import_users_csv(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user = Depends(require_role(UserRole.EDITOR.value))
 ):
     """
@@ -267,46 +273,52 @@ async def import_users_csv(
     csv_content = content.decode('utf-8')
     csv_reader = csv.DictReader(io.StringIO(csv_content))
 
-    created_count = 0
-    updated_count = 0
-    errors = []
+    rows = list(csv_reader)
 
-    for row_num, row in enumerate(csv_reader, start=2):
-        try:
-            # 检查必填字段
-            if not row.get('昵称'):
-                errors.append(f"第 {row_num} 行: 缺少必填字段 '昵称'")
-                continue
+    def _import(sync_db):
+        created_count = 0
+        updated_count = 0
+        errors = []
 
-            # 检查是否已存在
-            from app.modules.users import crud as user_crud
+        for row_num, row in enumerate(rows, start=2):
+            try:
+                # 检查必填字段
+                if not row.get('昵称'):
+                    errors.append(f"第 {row_num} 行: 缺少必填字段 '昵称'")
+                    continue
 
-            user_data = user_schemas.UserCreate(
-                nickname=row['昵称'],
-                display_name=row.get('显示名称', None),
-                source=row.get('数据来源', None)
-            )
+                # 检查是否已存在
+                from app.modules.users import crud as user_crud
 
-            existing_user = db.query(user_models.User).filter(
-                user_models.User.nickname == user_data.nickname
-            ).first()
+                user_data = user_schemas.UserCreate(
+                    nickname=row['昵称'],
+                    display_name=row.get('显示名称', None),
+                    source=row.get('数据来源', None)
+                )
 
-            if existing_user:
-                # 更新现有用户
-                if user_data.display_name:
-                    existing_user.display_name = user_data.display_name
-                if user_data.source:
-                    existing_user.source = user_data.source
-                updated_count += 1
-            else:
-                # 创建新用户
-                user_crud.create_user(db, user_data)
-                created_count += 1
+                existing_user = sync_db.query(user_models.User).filter(
+                    user_models.User.nickname == user_data.nickname
+                ).first()
 
-        except Exception as e:
-            errors.append(f"第 {row_num} 行: {str(e)}")
+                if existing_user:
+                    # 更新现有用户
+                    if user_data.display_name:
+                        existing_user.display_name = user_data.display_name
+                    if user_data.source:
+                        existing_user.source = user_data.source
+                    updated_count += 1
+                else:
+                    # 创建新用户
+                    user_crud.create_user(sync_db, user_data)
+                    created_count += 1
 
-    db.commit()
+            except Exception as e:
+                errors.append(f"第 {row_num} 行: {str(e)}")
+
+        sync_db.commit()
+        return created_count, updated_count, errors
+
+    created_count, updated_count, errors = await db.run_sync(_import)
 
     return {
         "success": True,

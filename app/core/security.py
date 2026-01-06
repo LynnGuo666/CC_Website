@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import Security, HTTPException, status, Depends
 from fastapi.security import APIKeyHeader, OAuth2PasswordBearer
 from jose import JWTError, jwt
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.deps import get_db
@@ -17,7 +17,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/admin/login")
 
 async def get_api_key(
     api_key_header_value: str = Security(api_key_header),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     从请求头中获取并验证 API Key，返回对应的管理员用户。
@@ -28,7 +28,7 @@ async def get_api_key(
             detail="Invalid or missing API Key",
         )
 
-    admin_user = crud.get_admin_user_by_api_key(db, api_key_header_value)
+    admin_user = await db.run_sync(crud.get_admin_user_by_api_key, api_key_header_value)
     if not admin_user or not admin_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -61,7 +61,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     从 JWT token 中获取当前用户
@@ -83,7 +83,7 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    user = crud.get_admin_user_by_username(db, username=token_data.username)
+    user = await db.run_sync(crud.get_admin_user_by_username, username=token_data.username)
     if user is None:
         raise credentials_exception
 

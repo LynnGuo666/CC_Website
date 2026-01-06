@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.0] - 2026-01-06
+
+### Changed
+- **后端数据库访问异步化**：API 请求链路统一改为 AsyncSession + aiosqlite 驱动，依赖注入与路由处理全面异步化，降低阻塞风险
+
+### Dependencies
+- 新增 `aiosqlite>=0.20.0` 以支持 SQLite 异步驱动
+- 新增 `greenlet>=3.0.3` 以支持 AsyncSession.run_sync 的同步桥接
+
+### Technical Details
+- 前端版本：2.13.7 → 2.14.0
+- 后端版本：2.13.7 → 2.14.0
+- 修改文件：`app/core/db.py`、`app/core/deps.py`、`app/core/middleware.py`、`app/core/scheduler.py`、`app/core/security.py`、`app/modules/**/router.py`、`app/modules/admin/import_export.py`、`app/modules/matches/crud.py`、`requirements.txt`、`frontend/package.json`、`README.md`
+- 影响范围：API 请求数据库访问、中间件连接池监控、定时任务数据库读写、管理后台导入导出
+
 ## [2.13.7] - 2025-11-23
 
 ### Added
