@@ -60,10 +60,6 @@ export default function Home() {
                 className="absolute inset-0 refraction-highlight opacity-50"
               ></span>
             </span>
-            <br />
-            <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl text-foreground/80 font-light">
-              TRIALHAMMER x RIA x INF
-            </span>
           </h1>
 
           {/* Subtitle with glass effect */}
@@ -130,7 +126,7 @@ export default function Home() {
             </span>
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
             {/* TRIALHAMMER */}
             <GlassCard className="p-6 h-full flex flex-col hover:scale-105 transition-transform duration-300 bg-green-500/5 border-green-500/20 shadow-[0_8px_16px_-4px_rgba(34,197,94,0.1)] hover:bg-green-500/10 hover:shadow-[0_20px_40px_-4px_rgba(34,197,94,0.2)] hover:border-green-500/30">
               <CardHeader className="text-center pb-4">
@@ -181,6 +177,25 @@ export default function Home() {
                 <div className="mt-auto">
                   <Button asChild variant="outline" className="w-full border-purple-500/30 text-purple-500 hover:border-purple-500/60 hover:bg-purple-500/5 hover:text-purple-600 transition-all duration-200 rounded-full">
                     <Link href="https://wiki.infinf.info" target="_blank" rel="noopener noreferrer">
+                      访问官方Wiki
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </GlassCard>
+
+            {/* 天际服 */}
+            <GlassCard className="p-6 h-full flex flex-col hover:scale-105 transition-transform duration-300 bg-blue-500/5 border-blue-500/20 shadow-[0_8px_16px_-4px_rgba(59,130,246,0.1)] hover:bg-blue-500/10 hover:shadow-[0_20px_40px_-4px_rgba(59,130,246,0.2)] hover:border-blue-500/30">
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="text-2xl font-bold text-blue-500 mb-2">天际服</CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col">
+                <p className="text-muted-foreground leading-relaxed mb-6 flex-1">
+                  天际服是一个致力于打造温馨友善 Minecraft 公益社区，采用正版验证 + 公益免费的模式，确保游戏环境公平和谐。同时拥有大量的黑名单样本和反作弊机制，能够从根源杜绝影响游戏体验的情况。
+                </p>
+                <div className="mt-auto">
+                  <Button asChild variant="outline" className="w-full border-blue-500/30 text-blue-500 hover:border-blue-500/60 hover:bg-blue-500/5 hover:text-blue-600 transition-all duration-200 rounded-full">
+                    <Link href="https://wiki.tianjimc.com" target="_blank" rel="noopener noreferrer">
                       访问官方Wiki
                     </Link>
                   </Button>

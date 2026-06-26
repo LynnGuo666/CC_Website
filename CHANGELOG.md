@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.14.1] - 2026-06-26
+
+### Added
+- **首页新增天际服社区卡片**：在“了解各个社区”区域加入天际服入口，链接至 `wiki.tianjimc.com`，并使用蓝色主题强调其社区标识
+
+### Changed
+- **首页社区布局适配四社区**：社区卡片网格由三列调整为响应式四列，确保新增社区在桌面端并列展示
+
+### Technical Details
+- 前端版本：2.14.0 → 2.14.1
+- 后端版本：2.14.0 → 2.14.1
+- 修改文件：`frontend/src/app/page.tsx`、`frontend/package.json`、`app/core/config.py`、`CHANGELOG.md`
+- 影响范围：首页社区展示与版本信息
+
 ## [2.14.0] - 2026-01-06
 
 ### Changed
