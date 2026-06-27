@@ -171,7 +171,19 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    transition: background-color 1s ease, border-color 1s ease, color 1s ease, fill 1s ease, stroke 1s ease, opacity 1s ease, box-shadow 1s ease, transform 0.3s ease;
+  }
+
+  /* 主题 / 季节切换时的材质过渡只施加在玻璃面板、按钮、正文等材质元素上，
+     不再对 * 全局施加 1s 过渡，避免 score-timeline 折线图、liquid-background
+     粒子等高频重绘元素卡顿，也避免与组件自身的 transition-all 叠加。 */
+  body,
+  .glass,
+  .glass-card,
+  .glass-panel,
+  .glass-nav,
+  .liquid-btn,
+  .card-hover {
+    transition: background-color 1s ease, border-color 1s ease, color 1s ease, fill 1s ease, stroke 1s ease, opacity 1s ease, box-shadow 1s ease;
   }
 
   html {

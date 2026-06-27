@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   getLeaderboard,
@@ -19,7 +19,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -35,7 +34,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { BarChart3, BadgeCheck, Inbox, Home } from "lucide-react";
 import { HeroSection } from "@/components/hero-section";
+import { LoadingState, ErrorState, EmptyState } from "@/components/ui/state-blocks";
 
 export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([]);
@@ -131,15 +132,11 @@ export default function LeaderboardPage() {
         />
         <section className="section-shell">
           <div className="max-w-7xl mx-auto">
-            <div className="glass-card text-center p-12">
-              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-muted flex items-center justify-center animate-pulse">
-                <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-semibold mb-2 text-foreground">正在加载排行榜...</h3>
-              <p className="text-muted-foreground">请稍候</p>
-            </div>
+            <LoadingState
+              icon={<BarChart3 className="w-10 h-10 text-muted-foreground" strokeWidth={2} />}
+              title="正在加载排行榜..."
+              subtitle="请稍候"
+            />
           </div>
         </section>
       </div>
@@ -156,19 +153,10 @@ export default function LeaderboardPage() {
         />
         <section className="section-shell">
           <div className="max-w-7xl mx-auto">
-            <div className="glass-card border border-destructive/40 text-destructive p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 rounded-2xl bg-destructive/10 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-                <p className="font-medium">{error}</p>
-              </div>
-              <Button onClick={() => loadData()} variant="outline">
-                重新加载
-              </Button>
-            </div>
+            <ErrorState
+              message={error}
+              onRetry={() => loadData()}
+            />
           </div>
         </section>
       </div>
@@ -213,9 +201,7 @@ export default function LeaderboardPage() {
                   <Card className="glass">
                     <CardHeader>
                       <CardTitle className="flex items-center text-lg">
-                        <svg className="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
+                        <BarChart3 className="w-5 h-5 mr-2 text-purple-500" strokeWidth={2} />
                         等级分布
                       </CardTitle>
                       <CardDescription>
@@ -284,23 +270,15 @@ export default function LeaderboardPage() {
             {/* 排行榜主体 */}
             <div className="xl:col-span-3">
               <h2 className="text-2xl font-bold mb-6 flex items-center">
-                <svg className="w-6 h-6 mr-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
+                <BadgeCheck className="w-6 h-6 mr-3 text-yellow-500" strokeWidth={2} />
                 {currentGameName}
               </h2>
 
               {leaderboard.length === 0 ? (
-                <Card className="glass">
-                  <CardContent className="text-center py-12">
-                    <div className="w-16 h-16 rounded-full bg-muted/20 flex items-center justify-center mb-4 mx-auto">
-                      <svg className="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                      </svg>
-                    </div>
-                    <p className="text-muted-foreground">暂无排行榜数据</p>
-                  </CardContent>
-                </Card>
+                <EmptyState
+                  icon={<Inbox className="w-8 h-8 text-muted-foreground" strokeWidth={2} />}
+                  title="暂无排行榜数据"
+                />
               ) : (
                 <Card className="glass overflow-hidden">
                   <div className="overflow-x-auto">
@@ -431,9 +409,7 @@ export default function LeaderboardPage() {
               href="/"
               className="inline-flex items-center px-6 py-3 rounded-2xl glass card-hover border-primary/20 hover:border-primary/40 transition-all"
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-              </svg>
+              <Home className="w-5 h-5 mr-2" strokeWidth={2} />
               返回首页
             </Link>
           </div>

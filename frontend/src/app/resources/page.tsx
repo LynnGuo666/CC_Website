@@ -1,37 +1,9 @@
 import { getApiBaseUrl } from '@/config/env';
-import { Film } from 'lucide-react';
+import { Film, CircleAlert } from 'lucide-react';
 import { HeroSection } from '@/components/hero-section';
 import { LiquidBackground } from '@/components/ui/liquid-background';
 import { MatchVideoSection } from './match-video-section';
-
-interface Video {
-    id: number;
-    match_id: number;
-    match_game_id?: number | null;
-    user_id?: number | null;
-    title: string;
-    url: string;
-    platform: 'bilibili' | 'youtube' | 'twitch' | 'douyu' | 'huya' | 'other';
-    video_type: 'livestream' | 'replay' | 'highlight';
-    is_official: boolean;
-    uploader_name?: string | null;
-    description?: string | null;
-    duration?: number | null;
-    thumbnail_url?: string | null;
-    view_count: number;
-    published_at?: string | null;
-    created_at: string;
-    updated_at: string;
-    user?: {
-        id: number;
-        nickname: string;
-        display_name?: string;
-    } | null;
-    match_game?: {
-        id: number;
-        game_name: string;
-    } | null;
-}
+import type { Video } from '@/components/video-card';
 
 interface Match {
     id: number;
@@ -109,9 +81,7 @@ export default async function ResourcesPage() {
                     <div className="p-6 rounded-2xl bg-destructive/10 border border-destructive/20 glass">
                         <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
-                                <svg className="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+                                <CircleAlert className="w-5 h-5 text-destructive" strokeWidth={2} />
                             </div>
                             <p className="text-destructive font-medium">{error}</p>
                         </div>

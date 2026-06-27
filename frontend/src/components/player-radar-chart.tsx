@@ -19,6 +19,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { ChartPie } from "lucide-react";
 
 type RadarData = Record<string, number>;
 
@@ -100,25 +101,7 @@ export default function PlayerRadarChart({ userId, userMatches, className }: Pla
             <CardHeader className="pb-2">
                 <div className="flex justify-between items-start gap-4">
                     <CardTitle className="text-xl font-bold flex items-center gap-2">
-                        <svg
-                            className="w-5 h-5 text-primary"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
-                            />
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
-                            />
-                        </svg>
+                        <ChartPie className="w-5 h-5 text-primary" strokeWidth={2} />
                         能力雷达
                     </CardTitle>
                     <div className="text-sm font-medium text-muted-foreground">

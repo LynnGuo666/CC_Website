@@ -11,8 +11,8 @@ import {
     Tooltip,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ChartPie } from "lucide-react";
 
 type RadarData = Record<string, number>;
 
@@ -95,25 +95,7 @@ export default function MatchRadarChart({ userId, matchId, userName, className }
                     <CardHeader className="pb-2">
                         <div className="flex justify-between items-center">
                             <CardTitle className="text-lg font-bold flex items-center gap-2">
-                                <svg
-                                    className="w-4 h-4 text-primary"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
-                                    />
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
-                                    />
-                                </svg>
+                                <ChartPie className="w-4 h-4 text-primary" strokeWidth={2} />
                                 {userName} - 本赛事能力
                             </CardTitle>
                             <div className="text-sm font-medium text-muted-foreground">

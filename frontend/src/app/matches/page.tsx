@@ -12,46 +12,19 @@ import {
 } from "@/components/ui/card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { LiquidBackground } from "@/components/ui/liquid-background";
+import { Zap, CircleAlert } from "lucide-react";
+import { getMatchStatusStyle } from "@/lib/status";
+import { LoadingState, EmptyState } from "@/components/ui/state-blocks";
 
-// 比赛状态映射
+// 比赛状态映射（颜色统一走 @/lib/status）
 const getStatusInfo = (status: string) => {
-  switch (status) {
-    case 'preparing':
-      return {
-        text: '筹办中',
-        color: 'text-yellow-500',
-        bgColor: 'bg-yellow-500/10',
-        dotColor: 'bg-yellow-500'
-      };
-    case 'ongoing':
-      return {
-        text: '进行中',
-        color: 'text-green-500',
-        bgColor: 'bg-green-500/10',
-        dotColor: 'bg-green-500'
-      };
-    case 'finished':
-      return {
-        text: '已结束',
-        color: 'text-gray-500',
-        bgColor: 'bg-gray-500/10',
-        dotColor: 'bg-gray-500'
-      };
-    case 'cancelled':
-      return {
-        text: '已取消',
-        color: 'text-red-500',
-        bgColor: 'bg-red-500/10',
-        dotColor: 'bg-red-500'
-      };
-    default:
-      return {
-        text: '未知',
-        color: 'text-gray-400',
-        bgColor: 'bg-gray-400/10',
-        dotColor: 'bg-gray-400'
-      };
-  }
+  const style = getMatchStatusStyle(status);
+  return {
+    text: style.label,
+    color: style.text,
+    bgColor: style.bg,
+    dotColor: style.dot,
+  };
 };
 
 export default function MatchesPage() {
@@ -105,22 +78,16 @@ export default function MatchesPage() {
       <section className="section-shell">
         <div className="max-w-6xl mx-auto">
           {loading ? (
-            <GlassCard className="text-center p-12">
-              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-muted flex items-center justify-center animate-pulse">
-                <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                </svg>
-              </div>
-              <h3 className="text-2xl font-semibold mb-2 text-foreground">正在加载赛事...</h3>
-              <p className="text-muted-foreground">请稍候</p>
-            </GlassCard>
+            <LoadingState
+              icon={<Zap className="w-10 h-10 text-muted-foreground" strokeWidth={2} />}
+              title="正在加载赛事..."
+              subtitle="请稍候"
+            />
           ) : error ? (
             <GlassCard className="border border-destructive/40 text-destructive p-6">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 rounded-2xl bg-destructive/10 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
+                  <CircleAlert className="w-5 h-5 text-destructive" strokeWidth={2} />
                 </div>
                 <p className="font-medium">{error}</p>
               </div>
@@ -168,15 +135,11 @@ export default function MatchesPage() {
 
               {/* Empty State */}
               {matches.length === 0 && (
-                <GlassCard className="text-center p-12">
-                  <svg className="w-16 h-16 mx-auto mb-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                  </svg>
-                  <h3 className="text-2xl font-semibold mb-2">暂无赛事</h3>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    还没有创建任何赛事。等待管理员添加新的比赛项目吧！
-                  </p>
-                </GlassCard>
+                <EmptyState
+                  icon={<Zap className="w-16 h-16 text-muted-foreground" strokeWidth={1.5} />}
+                  title="暂无赛事"
+                  description="还没有创建任何赛事。等待管理员添加新的比赛项目吧！"
+                />
               )}
             </>
           )}
@@ -216,9 +179,7 @@ function MatchCard({ match, priority = false }: { match: MatchList; priority?: b
               )}
             </div>
             <div className="p-2 rounded-lg bg-primary/10">
-              <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-              </svg>
+              <Zap className="w-5 h-5 text-primary" strokeWidth={2} />
             </div>
           </div>
         </CardHeader>

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { configService, SiteConfig } from '@/services/configService';
 import packageJson from '../../package.json';
 import { getApiBaseUrl } from '@/config/env';
+import { ArrowUpDown } from 'lucide-react';
 
 export function Footer() {
   const [config, setConfig] = useState<SiteConfig | null>(null);
@@ -78,9 +79,7 @@ export function Footer() {
           <span>© 2023-2025 联合锦标赛</span>
           <span className="text-xs">保留所有权利</span>
           <div className="flex items-center justify-center md:justify-start gap-2 text-xs">
-            <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 8l4-4m0 0l4 4m-4-4v16m-4-4l4 4m0 0l4-4" />
-            </svg>
+            <ArrowUpDown className="w-4 h-4 text-primary" strokeWidth={2} />
             <span>前端 v{frontendVersion} · 后端 v{backendVersion}</span>
           </div>
         </div>

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Play, ExternalLink, Eye, Clock } from 'lucide-react';
+import { Play, Eye, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { getApiBaseUrl } from '@/config/env';
+import { getPlatformStyle, getVideoTypeStyle } from '@/lib/status';
 
 export interface Video {
     id: number;
@@ -11,15 +12,15 @@ export interface Video {
     platform: 'bilibili' | 'youtube' | 'twitch' | 'douyu' | 'huya' | 'other';
     video_type: 'livestream' | 'replay' | 'highlight';
     is_official: boolean;
-    uploader_name?: string;
-    thumbnail_url?: string;
-    view_count?: number;
-    duration?: number;
+    uploader_name?: string | null;
+    thumbnail_url?: string | null;
+    view_count?: number | null;
+    duration?: number | null;
     user?: {
         id: number;
         nickname: string;
-        display_name?: string;
-    };
+        display_name?: string | null;
+    } | null;
     team?: {
         id: number;
         name: string;
@@ -28,9 +29,9 @@ export interface Video {
     match_game?: {
         id: number;
         game_name: string;
-    };
-    user_id?: number;
-    published_at?: string;
+    } | null;
+    user_id?: number | null;
+    published_at?: string | null;
 }
 
 interface VideoCardProps {
@@ -39,54 +40,24 @@ interface VideoCardProps {
 }
 
 const PlatformBadge = ({ platform }: { platform: string }) => {
-    const styles = {
-        bilibili: "bg-pink-500/20 text-pink-500 border-pink-500/50 hover:bg-pink-500/30",
-        youtube: "bg-red-500/20 text-red-500 border-red-500/50 hover:bg-red-500/30",
-        twitch: "bg-purple-500/20 text-purple-500 border-purple-500/50 hover:bg-purple-500/30",
-        douyu: "bg-orange-500/20 text-orange-500 border-orange-500/50 hover:bg-orange-500/30",
-        huya: "bg-yellow-500/20 text-yellow-500 border-yellow-500/50 hover:bg-yellow-500/30",
-        other: "bg-gray-500/20 text-gray-500 border-gray-500/50 hover:bg-gray-500/30",
-    };
-
-    const labels = {
-        bilibili: "Bilibili",
-        youtube: "YouTube",
-        twitch: "Twitch",
-        douyu: "Douyu",
-        huya: "Huya",
-        other: "Link",
-    };
-
-    const key = platform.toLowerCase() as keyof typeof styles;
-
+    const style = getPlatformStyle(platform);
     return (
-        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-5", styles[key] || styles.other)}>
-            {labels[key] || labels.other}
+        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-5", style.text, style.bg, style.border, "hover:opacity-80")}>
+            {style.label}
         </Badge>
     );
 };
 
 const VideoTypeBadge = ({ videoType }: { videoType: 'livestream' | 'replay' | 'highlight' }) => {
-    const styles = {
-        livestream: "bg-red-500/80 text-white border-red-500",
-        replay: "bg-blue-500/80 text-white border-blue-500",
-        highlight: "bg-amber-500/80 text-white border-amber-500",
-    };
-
-    const labels = {
-        livestream: "直播",
-        replay: "录播",
-        highlight: "集锦",
-    };
-
+    const style = getVideoTypeStyle(videoType);
     return (
-        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-5 font-medium", styles[videoType])}>
-            {labels[videoType]}
+        <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-5 font-medium", style.bg, style.text, style.border)}>
+            {style.label}
         </Badge>
     );
 };
 
-const formatDuration = (seconds?: number) => {
+const formatDuration = (seconds?: number | null) => {
     if (!seconds) return null;
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -96,7 +67,7 @@ const formatDuration = (seconds?: number) => {
     return `${m}:${s.toString().padStart(2, '0')}`;
 };
 
-const formatViews = (views?: number) => {
+const formatViews = (views?: number | null) => {
     if (!views) return null;
     if (views >= 10000) return `${(views / 10000).toFixed(1)}w`;
     if (views >= 1000) return `${(views / 1000).toFixed(1)}k`;
@@ -108,7 +79,7 @@ export function VideoCard({ video, className }: VideoCardProps) {
     const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
 
     // 处理缩略图URL - 如果是Bilibili图片且不是代理URL，则使用代理
-    const getThumbnailUrl = (url?: string) => {
+    const getThumbnailUrl = (url?: string | null) => {
         if (!url) return url;
         // 如果已经是完整的URL（包含http），直接返回
         if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -171,6 +142,17 @@ export function VideoCard({ video, className }: VideoCardProps) {
                     <VideoTypeBadge videoType={video.video_type} />
                 </div>
 
+                {/* 官方 / 选手视角 角标 */}
+                {video.is_official ? (
+                    <div className="absolute top-9 right-2 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded font-medium shadow-sm">
+                        官方
+                    </div>
+                ) : video.user_id ? (
+                    <div className="absolute top-9 right-2 bg-accent text-accent-foreground text-[10px] px-1.5 py-0.5 rounded font-medium shadow-sm">
+                        选手视角
+                    </div>
+                ) : null}
+
                 {/* Duration */}
                 {video.duration && (
                     <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white backdrop-blur-sm">
@@ -200,8 +182,8 @@ export function VideoCard({ video, className }: VideoCardProps) {
                     {video.title}
                 </h3>
 
-                {/* Player Info Section - Show for player perspective videos */}
-                {video.user_id && video.user && (
+                {/* 上传者 / 选手信息 */}
+                {video.user ? (
                     <div
                         onClick={handlePlayerClick}
                         className="mb-2 flex items-center gap-2 rounded-lg bg-primary/5 hover:bg-primary/10 px-2 py-1.5 transition-colors border border-primary/10 hover:border-primary/20 cursor-pointer"
@@ -222,9 +204,16 @@ export function VideoCard({ video, className }: VideoCardProps) {
                             </div>
                         )}
                     </div>
+                ) : (
+                    video.uploader_name && (
+                        <div className="mb-2 flex items-center gap-1 text-xs text-muted-foreground">
+                            <Eye className="h-3 w-3" />
+                            <span className="truncate">{video.uploader_name || '未知上传者'}</span>
+                        </div>
+                    )
                 )}
 
-                {video.view_count !== undefined && video.view_count > 0 && (
+                {video.view_count != null && video.view_count > 0 && (
                     <div className="mt-auto flex items-center gap-1 text-xs text-muted-foreground">
                         <Eye className="h-3 w-3" />
                         {formatViews(video.view_count)}

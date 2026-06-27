@@ -3,7 +3,8 @@
 import React, { useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
+import { Users, BarChart3, Zap, TrendingUp } from 'lucide-react'
+import { getGameLevelStyle } from '@/lib/status'
 
 type TimelineItem = {
   match_id: number
@@ -54,20 +55,8 @@ export default function ScoreTimeline({ scoreTimeline, scoreTimelineByGame, game
   }, [scoreTimelineByGame, gameScores])
 
   const getLevelStyle = (level: string) => {
-    switch (level) {
-      case 'S':
-        return { bgColor: 'bg-gradient-to-r from-yellow-400 to-yellow-600', textColor: 'text-yellow-600' }
-      case 'A':
-        return { bgColor: 'bg-gradient-to-r from-green-400 to-green-600', textColor: 'text-green-600' }
-      case 'B':
-        return { bgColor: 'bg-gradient-to-r from-blue-400 to-blue-600', textColor: 'text-blue-600' }
-      case 'C':
-        return { bgColor: 'bg-gradient-to-r from-orange-400 to-orange-600', textColor: 'text-orange-600' }
-      case 'D':
-        return { bgColor: 'bg-gradient-to-r from-gray-400 to-gray-600', textColor: 'text-gray-600' }
-      default:
-        return { bgColor: 'bg-gray-500', textColor: 'text-gray-600' }
-    }
+    const style = getGameLevelStyle(level)
+    return { bgColor: style.dot, textColor: style.text }
   }
 
   if (gameStats.length === 0) return null
@@ -76,9 +65,7 @@ export default function ScoreTimeline({ scoreTimeline, scoreTimelineByGame, game
     <div className="mb-16">
       <div className="flex items-center mb-8 gap-3">
         <div className="p-2 rounded-2xl bg-primary/10 text-primary shadow-inner">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c2.21 0 4-1.79 4-4S14.21 0 12 0 8 1.79 8 4s1.79 4 4 4zm0 2c-3.313 0-6 2.239-6 5v3h12v-3c0-2.761-2.687-5-6-5zM4 18h16v4H4z" transform="translate(0 2)" />
-          </svg>
+          <Users className="w-6 h-6" strokeWidth={2} />
         </div>
         <h2 className="text-2xl font-bold">选手表现总览</h2>
       </div>
@@ -136,15 +123,11 @@ export default function ScoreTimeline({ scoreTimeline, scoreTimelineByGame, game
                     </CardTitle>
                     <div className="flex items-center space-x-3 text-sm text-muted-foreground">
                       <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
+                        <BarChart3 className="w-4 h-4 mr-1" strokeWidth={2} />
                         {game.matchCount} 场
                       </span>
                       <span className="flex items-center">
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
+                        <Zap className="w-4 h-4 mr-1" strokeWidth={2} />
                         {game.avgScore.toFixed(1)} 标准分
                       </span>
                     </div>
@@ -245,9 +228,7 @@ export default function ScoreTimeline({ scoreTimeline, scoreTimelineByGame, game
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-muted-foreground">排名趋势</span>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                        </svg>
+                        <TrendingUp className="w-3 h-3" strokeWidth={2} />
                         <span>数值越小排名越靠前</span>
                       </div>
                     </div>
