@@ -1,5 +1,6 @@
 import apiFetch from './api';
-import { UserSchema, UserStatsSchema } from '@/types/schemas';
+import { UserSchema, UserStatsSchema, UserTeamEntrySchema, UserRadarSchema } from '@/types/schemas';
+import type { UserTeamEntry, UserRadarData } from '@/types/schemas';
 import { z } from 'zod';
 
 // Infer the TypeScript type from the schema
@@ -88,12 +89,12 @@ export async function getUserMatchHistory(id: number, skip: number = 0, limit: n
  * @param id The ID of the user.
  * @returns A promise that resolves to user team history.
  */
-export async function getUserTeamHistory(id: number): Promise<{ current_team: any, historical_teams: any[] }> {
-  return await apiFetch<{ current_team: any, historical_teams: any[] }>(`/api/users/${id}/teams`, {
+export async function getUserTeamHistory(id: number): Promise<{ current_team: UserTeamEntry | null, historical_teams: UserTeamEntry[] }> {
+  return await apiFetch<{ current_team: UserTeamEntry | null, historical_teams: UserTeamEntry[] }>(`/api/users/${id}/teams`, {
     method: 'GET',
     schema: z.object({
-      current_team: z.any().nullable(),
-      historical_teams: z.array(z.any()),
+      current_team: UserTeamEntrySchema.nullable(),
+      historical_teams: z.array(UserTeamEntrySchema),
     }),
   });
 }
@@ -101,17 +102,16 @@ export async function getUserTeamHistory(id: number): Promise<{ current_team: an
 /**
  * 获取玩家六维能力雷达图数据
  * @param id The ID of the user.
+ * @param matchId Optional match id to scope the radar to a single match.
  * @returns A promise that resolves to user radar chart data.
  */
-export async function getUserRadar(id: number, matchId?: number): Promise<Record<string, number>> {
+export async function getUserRadar(id: number, matchId?: number): Promise<UserRadarData> {
   const url = matchId
     ? `/api/users/${id}/radar?match_id=${matchId}`
     : `/api/users/${id}/radar`;
 
-  const data = await apiFetch<any>(url, {
+  return await apiFetch<UserRadarData>(url, {
     method: 'GET',
-    schema: z.any(), // Temporary relax for debugging
+    schema: UserRadarSchema,
   });
-  console.log("Radar Data Received:", data);
-  return data;
 }

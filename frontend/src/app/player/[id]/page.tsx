@@ -1,4 +1,5 @@
-import { getUserById, getUserStats, getUserTeamHistory, User, UserStats } from '@/services/userService';
+import { getUserById, getUserStats, getUserTeamHistory, getUserRadar, User, UserStats } from '@/services/userService';
+import type { UserRadarData, UserTeamEntry } from '@/types/schemas';
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import {
@@ -35,7 +36,8 @@ type PlayerDetailPageProps = {
 export default async function PlayerDetailPage({ params }: PlayerDetailPageProps) {
   let player: User | null = null;
   let playerStats: UserStats | null = null;
-  let teamHistory: any = null;
+  let teamHistory: { current_team: UserTeamEntry | null; historical_teams: UserTeamEntry[] } | null = null;
+  let initialRadar: UserRadarData | null = null;
   let error: string | null = null;
 
   try {
@@ -48,25 +50,29 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
     // 获取用户基本信息
     player = await getUserById(playerId);
 
-    // 获取用户统计信息
-    try {
-      playerStats = await getUserStats(playerId);
-    } catch (statsError) {
-      console.warn('Failed to load player stats:', statsError);
-    }
+    // 并行预取统计 / 队伍历史 / 雷达数据，任一失败不阻塞整页
+    const [statsResult, teamsResult, radarResult] = await Promise.all([
+      getUserStats(playerId).catch((err: unknown) => {
+        console.warn('Failed to load player stats:', err);
+        return null;
+      }),
+      getUserTeamHistory(playerId).catch((err: unknown) => {
+        console.warn('Failed to load team history:', err);
+        return null;
+      }),
+      getUserRadar(playerId).catch((err: unknown) => {
+        console.warn('Failed to load radar data:', err);
+        return null;
+      }),
+    ]);
 
-    // 获取队伍历史
-    try {
-      teamHistory = await getUserTeamHistory(playerId);
-    } catch (teamError) {
-      console.warn('Failed to load team history:', teamError);
-    }
+    playerStats = statsResult;
+    teamHistory = teamsResult;
+    initialRadar = radarResult;
 
-    // 雷达图数据由 PlayerRadarChart 客户端组件自行加载，此处不再预取
-
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error(e);
-    error = e.message || '加载选手详情失败。';
+    error = e instanceof Error ? e.message : '加载选手详情失败。';
   }
 
   if (error) {
@@ -148,7 +154,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                     <Badge
                       variant="outline"
                       className="text-lg px-4 py-2"
-                      style={{ borderColor: currentTeam.color, color: currentTeam.color }}
+                      style={{ borderColor: currentTeam.color ?? undefined, color: currentTeam.color ?? undefined }}
                     >
                       {currentTeam.name}
                     </Badge>
@@ -161,7 +167,8 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
             <div className="w-full max-w-md lg:w-[400px] flex-shrink-0 mt-8 lg:mt-0">
               <PlayerRadarChart
                 userId={player.id}
-                userMatches={matchHistory.map((m: any) => ({ id: m.match_id, name: m.match_name }))}
+                initialData={initialRadar ?? undefined}
+                userMatches={matchHistory.map((m) => ({ id: m.match_id, name: m.match_name }))}
               />
             </div>
 
@@ -206,7 +213,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {matchHistory.map((match: any, index: number) => (
+                      {matchHistory.map((match, index: number) => (
                         <TableRow key={index}>
                           <TableCell className="font-medium">
                             <Link
@@ -258,7 +265,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                         <div className="relative">
                           <div
                             className="w-16 h-16 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg transition-transform duration-300 group-hover:scale-110"
-                            style={{ backgroundColor: currentTeam.color }}
+                            style={{ backgroundColor: currentTeam.color ?? undefined }}
                           >
                             {currentTeam.name.charAt(0)}
                           </div>
@@ -303,7 +310,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                   </Badge>
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {historicalTeams.map((team: any, index: number) => (
+                  {historicalTeams.map((team, index: number) => (
                     <Link key={index} href={`/teams/${team.id}`}>
                       <Card className="glass-card h-full cursor-pointer transition-all duration-300 hover:shadow-lg group relative overflow-hidden">
                         {/* 背景装饰 */}
@@ -312,8 +319,8 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                           className="refraction-blob top-0 right-0 w-32 h-32 opacity-0 group-hover:opacity-60 transition-opacity duration-500"
                           style={
                             {
-                              '--blob-primary': `${team.color}33`,
-                              '--blob-secondary': `${team.color}1f`,
+                              '--blob-primary': `${team.color ?? '#0071e3'}33`,
+                              '--blob-secondary': `${team.color ?? '#0071e3'}1f`,
                             } as CSSProperties
                           }
                         ></div>
@@ -324,7 +331,7 @@ export default async function PlayerDetailPage({ params }: PlayerDetailPageProps
                             <div className="relative flex-shrink-0">
                               <div
                                 className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
-                                style={{ backgroundColor: team.color }}
+                                style={{ backgroundColor: team.color ?? undefined }}
                               >
                                 {team.name.charAt(0)}
                               </div>

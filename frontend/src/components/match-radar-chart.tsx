@@ -7,12 +7,16 @@ import {
     PolarGrid,
     PolarAngleAxis,
     PolarRadiusAxis,
-    ResponsiveContainer,
-    Tooltip,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChartPie } from "lucide-react";
+import {
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+    type ChartConfig,
+} from "@/components/ui/chart";
 
 type RadarData = Record<string, number>;
 
@@ -33,8 +37,16 @@ const DIMENSION_LABELS: Record<string, string> = {
     "身法": "身法",
 };
 
-// Order of dimensions for the chart
+// Order of dimensions for the chart (六维)
 const DIMENSION_ORDER = ["武力", "爆发", "知识", "身法", "协作", "策略"];
+
+// 颜色通过 ChartConfig + CSS 变量注入，与 player-radar-chart 保持一致。
+const chartConfig = {
+    radar: {
+        label: "能力值",
+        color: "var(--chart-1)",
+    },
+} satisfies ChartConfig;
 
 export default function MatchRadarChart({ userId, matchId, userName, className }: MatchRadarChartProps) {
     const [data, setData] = useState<RadarData | null>(null);
@@ -72,7 +84,7 @@ export default function MatchRadarChart({ userId, matchId, userName, className }
 
     // Calculate average score for display
     const totalScore = data ? Object.values(data).reduce((sum, score) => sum + score, 0) : 0;
-    const averageScore = data ? Math.round(totalScore / 6) : 0;
+    const averageScore = data ? Math.round(totalScore / DIMENSION_ORDER.length) : 0;
 
     return (
         <div className={className}>
@@ -104,15 +116,15 @@ export default function MatchRadarChart({ userId, matchId, userName, className }
                         </div>
                     </CardHeader>
                     <CardContent className="h-[280px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ChartContainer config={chartConfig} className="h-full w-full aspect-auto">
                             <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
-                                <PolarGrid stroke="hsl(var(--primary) / 0.3)" strokeWidth={1.5} />
+                                <PolarGrid stroke="var(--color-radar)" strokeOpacity={0.3} strokeWidth={1.5} />
                                 <PolarAngleAxis
                                     dataKey="subject"
-                                    tick={{ fill: "hsl(var(--foreground))", fontSize: 11, fontWeight: 600 }}
+                                    tick={{ fill: "var(--foreground)", fontSize: 11, fontWeight: 600 }}
                                 />
                                 <PolarRadiusAxis
-                                    angle={30}
+                                    angle={90}
                                     domain={[0, 100]}
                                     tick={false}
                                     axisLine={false}
@@ -120,23 +132,22 @@ export default function MatchRadarChart({ userId, matchId, userName, className }
                                 <Radar
                                     name="能力值"
                                     dataKey="A"
-                                    stroke="hsl(var(--primary))"
+                                    stroke="var(--color-radar)"
                                     strokeWidth={2.5}
-                                    fill="hsl(var(--primary))"
+                                    fill="var(--color-radar)"
                                     fillOpacity={0.3}
                                 />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: "hsl(var(--popover))",
-                                        border: "1px solid hsl(var(--border))",
-                                        borderRadius: "8px",
-                                        color: "hsl(var(--popover-foreground))",
-                                    }}
-                                    itemStyle={{ color: "hsl(var(--popover-foreground))" }}
-                                    formatter={(value: number) => [value.toFixed(1), "分数"]}
+                                <ChartTooltip
+                                    cursor={false}
+                                    content={
+                                        <ChartTooltipContent
+                                            nameKey="radar"
+                                            labelKey="subject"
+                                        />
+                                    }
                                 />
                             </RadarChart>
-                        </ResponsiveContainer>
+                        </ChartContainer>
                     </CardContent>
                 </Card>
             )}

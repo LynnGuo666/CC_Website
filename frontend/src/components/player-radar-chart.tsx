@@ -7,8 +7,6 @@ import {
     PolarGrid,
     PolarAngleAxis,
     PolarRadiusAxis,
-    ResponsiveContainer,
-    Tooltip,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -20,11 +18,19 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ChartPie } from "lucide-react";
+import {
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+    type ChartConfig,
+} from "@/components/ui/chart";
 
 type RadarData = Record<string, number>;
 
 interface PlayerRadarChartProps {
     userId: number;
+    /** 服务端预取的「综合」雷达数据，用于首屏直接渲染，消除 loading 闪烁 */
+    initialData?: RadarData;
     userMatches?: Array<{ id: number; name: string }>;
     className?: string;
 }
@@ -39,16 +45,34 @@ const DIMENSION_LABELS: Record<string, string> = {
     "身法": "身法",
 };
 
-// Order of dimensions for the chart
+// Order of dimensions for the chart (六维)
 const DIMENSION_ORDER = ["武力", "爆发", "知识", "身法", "协作", "策略"];
 
-export default function PlayerRadarChart({ userId, userMatches, className }: PlayerRadarChartProps) {
+// 颜色通过 ChartConfig + CSS 变量注入：
+// ChartContainer 会把 `color` 编译为 `--color-radar`，
+// recharts 元素写 `fill="var(--color-radar)"` 即拿到合法颜色（--chart-1），
+// 彻底绕开 `hsl(var(--primary))` 这种把已是颜色值的变量再塞进 hsl() 的错误用法。
+const chartConfig = {
+    radar: {
+        label: "能力值",
+        color: "var(--chart-1)",
+    },
+} satisfies ChartConfig;
+
+export default function PlayerRadarChart({ userId, initialData, userMatches, className }: PlayerRadarChartProps) {
     const [selectedMatch, setSelectedMatch] = useState<string>("all");
-    const [data, setData] = useState<RadarData | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState<RadarData | null>(initialData ?? null);
+    const [loading, setLoading] = useState(!initialData);
 
     useEffect(() => {
         const loadRadarData = async () => {
+            // 综合视图复用服务端预取数据，无需再次请求
+            if (selectedMatch === "all" && initialData) {
+                setData(initialData);
+                setLoading(false);
+                return;
+            }
+
             setLoading(true);
             try {
                 const { getUserRadar } = await import('@/services/userService');
@@ -63,7 +87,7 @@ export default function PlayerRadarChart({ userId, userMatches, className }: Pla
         };
 
         loadRadarData();
-    }, [userId, selectedMatch]);
+    }, [userId, selectedMatch, initialData]);
 
     if (loading) {
         return (
@@ -94,7 +118,7 @@ export default function PlayerRadarChart({ userId, userMatches, className }: Pla
 
     // Calculate average score for display
     const totalScore = Object.values(data).reduce((sum, score) => sum + score, 0);
-    const averageScore = Math.round(totalScore / 6);
+    const averageScore = Math.round(totalScore / DIMENSION_ORDER.length);
 
     return (
         <Card className={`glass overflow-hidden ${className}`}>
@@ -134,15 +158,15 @@ export default function PlayerRadarChart({ userId, userMatches, className }: Pla
                 )}
             </CardHeader>
             <CardContent className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ChartContainer config={chartConfig} className="h-full w-full aspect-auto">
                     <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-                        <PolarGrid stroke="hsl(var(--primary) / 0.3)" strokeWidth={1.5} />
+                        <PolarGrid stroke="var(--color-radar)" strokeOpacity={0.3} strokeWidth={1.5} />
                         <PolarAngleAxis
                             dataKey="subject"
-                            tick={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 600 }}
+                            tick={{ fill: "var(--foreground)", fontSize: 12, fontWeight: 600 }}
                         />
                         <PolarRadiusAxis
-                            angle={30}
+                            angle={90}
                             domain={[0, 100]}
                             tick={false}
                             axisLine={false}
@@ -150,23 +174,22 @@ export default function PlayerRadarChart({ userId, userMatches, className }: Pla
                         <Radar
                             name="能力值"
                             dataKey="A"
-                            stroke="hsl(var(--primary))"
+                            stroke="var(--color-radar)"
                             strokeWidth={3}
-                            fill="hsl(var(--primary))"
+                            fill="var(--color-radar)"
                             fillOpacity={0.4}
                         />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: "hsl(var(--popover))",
-                                border: "1px solid hsl(var(--border))",
-                                borderRadius: "8px",
-                                color: "hsl(var(--popover-foreground))",
-                            }}
-                            itemStyle={{ color: "hsl(var(--popover-foreground))" }}
-                            formatter={(value: number) => [value.toFixed(1), "分数"]}
+                        <ChartTooltip
+                            cursor={false}
+                            content={
+                                <ChartTooltipContent
+                                    nameKey="radar"
+                                    labelKey="subject"
+                                />
+                            }
                         />
                     </RadarChart>
-                </ResponsiveContainer>
+                </ChartContainer>
             </CardContent>
         </Card>
     );
