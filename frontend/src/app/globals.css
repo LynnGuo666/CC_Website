@@ -41,6 +41,31 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* Elevation token 体系 —— 统一全站阴影语言（生成 shadow-elev-* / shadow-popover 工具类） */
+  --shadow-elev-1: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-elev-2: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-elev-3: 0 16px 48px rgba(0, 0, 0, 0.12);
+  --shadow-popover: var(--shadow-elev-2);
+}
+
+/* 语义色 —— success / warning / info，随明暗与季节切换（见 lib/status.ts） */
+:root {
+  --success: #34c759;
+  --success-foreground: #ffffff;
+  --warning: #ff9500;
+  --warning-foreground: #ffffff;
+  --info: #0071e3;
+  --info-foreground: #ffffff;
+}
+
+.dark {
+  --success: #30d158;
+  --success-foreground: #ffffff;
+  --warning: #ff9f0a;
+  --warning-foreground: #ffffff;
+  --info: #0a84ff;
+  --info-foreground: #ffffff;
 }
 
 :root {
@@ -55,6 +80,8 @@
   --glass-background: rgba(255, 255, 255, 0.65);
   --glass-border: rgba(255, 255, 255, 0.4);
   --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --glass-shadow-hover: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
+  --glass-card-shadow-hover: 0 16px 48px 0 rgba(31, 38, 135, 0.15);
 
   --card: rgba(255, 255, 255, 0.65);
   --card-foreground: #1d1d1f;
@@ -64,6 +91,8 @@
   /* Primary - Apple Blue */
   --primary: #0071e3;
   --primary-foreground: #ffffff;
+  /* RGB 通道变量 —— 修复所有 rgba(var(--primary), ...) 失效（粒子发光阴影、nav bubble 等） */
+  --primary-rgb: 0 113 227;
 
   /* Secondary - Light Gray */
   --secondary: #f5f5f7;
@@ -119,6 +148,8 @@
   --glass-background: rgba(28, 28, 30, 0.65);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  --glass-shadow-hover: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+  --glass-card-shadow-hover: 0 16px 48px 0 rgba(0, 0, 0, 0.5);
 
   --card: rgba(28, 28, 30, 0.65);
   --card-foreground: #f5f5f7;
@@ -128,6 +159,8 @@
   /* Primary - Apple Blue (Dark Mode) */
   --primary: #0a84ff;
   --primary-foreground: #ffffff;
+  /* RGB 通道变量 —— 暗色模式对应主色通道 */
+  --primary-rgb: 10 132 255;
 
   /* Secondary - Dark Gray */
   --secondary: #1c1c1e;
@@ -183,7 +216,7 @@
   .glass-nav,
   .liquid-btn,
   .card-hover {
-    transition: background-color 1s ease, border-color 1s ease, color 1s ease, fill 1s ease, stroke 1s ease, opacity 1s ease, box-shadow 1s ease;
+    transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, fill 300ms ease, stroke 300ms ease, opacity 300ms ease, box-shadow 300ms ease;
   }
 
   html {
@@ -377,8 +410,8 @@
     box-shadow:
       inset 0 0 0 1px rgba(255, 255, 255, 0.1),
       0 30px 80px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(50px) saturate(180%);
-    -webkit-backdrop-filter: blur(50px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.95) 50%, rgba(0, 0, 0, 0));
     pointer-events: none;
     transition: opacity 0.6s ease, transform 1.2s ease;
@@ -432,18 +465,18 @@
   }
 
   .glass:hover {
-    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
+    box-shadow: var(--glass-shadow-hover);
     transform: translateY(-2px);
   }
 
   .dark .glass:hover {
-    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+    box-shadow: var(--glass-shadow-hover);
   }
 
   /* Apple-style Material Card - Elevated */
   .glass-card {
     position: relative;
-    border-radius: 1.25rem;
+    border-radius: var(--radius-xl);
     padding: 1.5rem;
     background: var(--glass-background);
     border: 1px solid var(--glass-border);
@@ -455,30 +488,30 @@
 
   .glass-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 16px 48px 0 rgba(31, 38, 135, 0.15);
+    box-shadow: var(--glass-card-shadow-hover);
   }
 
   .dark .glass-card:hover {
-    box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.5);
+    box-shadow: var(--glass-card-shadow-hover);
   }
 
   /* Apple-style Material Panel - Subtle */
   .glass-panel {
     position: relative;
-    border-radius: 1rem;
+    border-radius: var(--radius-lg);
     padding: 1rem;
-    background: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 4px 16px 0 rgba(31, 38, 135, 0.05);
+    background: var(--glass-background);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-elev-1);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark .glass-panel {
-    background: rgba(28, 28, 30, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.2);
+    background: var(--glass-background);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-elev-1);
   }
 
 
@@ -548,103 +581,9 @@
     background: rgba(28, 28, 30, 0.6);
   }
 
-  /* ==================== 季节主题 ==================== */
-
-  /* 春日主题 - 樱花粉 */
-  html.season-spring {
-    --primary: #ff69b4 !important;
-    --accent: #98d8c8 !important;
-    --ring: #ff69b4 !important;
-    --chart-1: #ff69b4 !important;
-    --chart-2: #98d8c8 !important;
-  }
-
-  html.season-spring body::before {
-    background:
-      radial-gradient(circle at 20% 30%, rgba(255, 105, 180, 0.12), transparent 50%),
-      radial-gradient(circle at 80% 70%, rgba(152, 216, 200, 0.12), transparent 50%) !important;
-  }
-
-  html.season-spring .refraction-blob {
-    --blob-primary: rgba(255, 105, 180, 0.35) !important;
-    --blob-secondary: rgba(152, 216, 200, 0.28) !important;
-  }
-
-  html.season-spring .gradient-apple {
-    background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%) !important;
-  }
-
-  /* 夏日主题 - 海洋蓝 */
-  html.season-summer {
-    --primary: #00bfff !important;
-    --accent: #ffd700 !important;
-    --ring: #00bfff !important;
-    --chart-1: #00bfff !important;
-    --chart-2: #ffd700 !important;
-  }
-
-  html.season-summer body::before {
-    background:
-      radial-gradient(circle at 20% 30%, rgba(0, 191, 255, 0.15), transparent 50%),
-      radial-gradient(circle at 80% 70%, rgba(255, 215, 0, 0.12), transparent 50%) !important;
-  }
-
-  html.season-summer .refraction-blob {
-    --blob-primary: rgba(0, 191, 255, 0.38) !important;
-    --blob-secondary: rgba(255, 215, 0, 0.3) !important;
-  }
-
-  html.season-summer .gradient-apple {
-    background: linear-gradient(135deg, #00bfff 0%, #1e90ff 100%) !important;
-  }
-
-  /* 秋日主题 - 枫叶橙 */
-  html.season-autumn {
-    --primary: #ff8c00 !important;
-    --accent: #dc143c !important;
-    --ring: #ff8c00 !important;
-    --chart-1: #ff8c00 !important;
-    --chart-2: #dc143c !important;
-  }
-
-  html.season-autumn body::before {
-    background:
-      radial-gradient(circle at 20% 30%, rgba(255, 140, 0, 0.12), transparent 50%),
-      radial-gradient(circle at 80% 70%, rgba(220, 20, 60, 0.12), transparent 50%) !important;
-  }
-
-  html.season-autumn .refraction-blob {
-    --blob-primary: rgba(255, 140, 0, 0.35) !important;
-    --blob-secondary: rgba(220, 20, 60, 0.28) !important;
-  }
-
-  html.season-autumn .gradient-apple {
-    background: linear-gradient(135deg, #ff8c00 0%, #ff6347 100%) !important;
-  }
-
-  /* 冬日主题 - 冰雪蓝 */
-  html.season-winter {
-    --primary: #87ceeb !important;
-    --accent: #b0e0e6 !important;
-    --ring: #87ceeb !important;
-    --chart-1: #87ceeb !important;
-    --chart-2: #b0e0e6 !important;
-  }
-
-  html.season-winter body::before {
-    background:
-      radial-gradient(circle at 20% 30%, rgba(135, 206, 235, 0.15), transparent 50%),
-      radial-gradient(circle at 80% 70%, rgba(176, 224, 230, 0.12), transparent 50%) !important;
-  }
-
-  html.season-winter .refraction-blob {
-    --blob-primary: rgba(135, 206, 235, 0.38) !important;
-    --blob-secondary: rgba(176, 224, 230, 0.3) !important;
-  }
-
-  html.season-winter .gradient-apple {
-    background: linear-gradient(135deg, #87ceeb 0%, #4682b4 100%) !important;
-  }
+  /* ==================== 季节主题 ====================
+     注意：季节变量与覆盖规则已移至文件末尾的未命名层（与 :root/.dark 同级），
+     靠特异性决胜覆盖暗色模式，故无需 !important（见文件底部）。 */
 
   /* Hide scrollbar but keep functionality */
   .scrollbar-hide {
@@ -703,4 +642,108 @@
 
 .rotate-x-90 {
   transform: rotateX(90deg);
+}
+
+/* ==================== 季节主题（无 !important）====================
+   html.season-* 选择器特异性 (0,1,1) 高于 .dark (0,1,0) 与 :root (0,1,0)，
+   故无论是否暗色模式，季节类都能正确覆盖主色 / 玻璃 / 背景等变量。 */
+
+/* 春日主题 - 樱花粉 */
+html.season-spring {
+  --primary: #ff69b4;
+  --primary-rgb: 255 105 180;
+  --accent: #98d8c8;
+  --ring: #ff69b4;
+  --chart-1: #ff69b4;
+  --chart-2: #98d8c8;
+}
+
+html.season-spring body::before {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 105, 180, 0.12), transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(152, 216, 200, 0.12), transparent 50%);
+}
+
+html.season-spring .refraction-blob {
+  --blob-primary: rgba(255, 105, 180, 0.35);
+  --blob-secondary: rgba(152, 216, 200, 0.28);
+}
+
+html.season-spring .gradient-apple {
+  background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+}
+
+/* 夏日主题 - 海洋蓝 */
+html.season-summer {
+  --primary: #00bfff;
+  --primary-rgb: 0 191 255;
+  --accent: #ffd700;
+  --ring: #00bfff;
+  --chart-1: #00bfff;
+  --chart-2: #ffd700;
+}
+
+html.season-summer body::before {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(0, 191, 255, 0.15), transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(255, 215, 0, 0.12), transparent 50%);
+}
+
+html.season-summer .refraction-blob {
+  --blob-primary: rgba(0, 191, 255, 0.38);
+  --blob-secondary: rgba(255, 215, 0, 0.3);
+}
+
+html.season-summer .gradient-apple {
+  background: linear-gradient(135deg, #00bfff 0%, #1e90ff 100%);
+}
+
+/* 秋日主题 - 枫叶橙 */
+html.season-autumn {
+  --primary: #ff8c00;
+  --primary-rgb: 255 140 0;
+  --accent: #dc143c;
+  --ring: #ff8c00;
+  --chart-1: #ff8c00;
+  --chart-2: #dc143c;
+}
+
+html.season-autumn body::before {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255, 140, 0, 0.12), transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(220, 20, 60, 0.12), transparent 50%);
+}
+
+html.season-autumn .refraction-blob {
+  --blob-primary: rgba(255, 140, 0, 0.35);
+  --blob-secondary: rgba(220, 20, 60, 0.28);
+}
+
+html.season-autumn .gradient-apple {
+  background: linear-gradient(135deg, #ff8c00 0%, #ff6347 100%);
+}
+
+/* 冬日主题 - 冰雪蓝 */
+html.season-winter {
+  --primary: #87ceeb;
+  --primary-rgb: 135 206 235;
+  --accent: #b0e0e6;
+  --ring: #87ceeb;
+  --chart-1: #87ceeb;
+  --chart-2: #b0e0e6;
+}
+
+html.season-winter body::before {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(135, 206, 235, 0.15), transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(176, 224, 230, 0.12), transparent 50%);
+}
+
+html.season-winter .refraction-blob {
+  --blob-primary: rgba(135, 206, 235, 0.38);
+  --blob-secondary: rgba(176, 224, 230, 0.3);
+}
+
+html.season-winter .gradient-apple {
+  background: linear-gradient(135deg, #87ceeb 0%, #4682b4 100%);
 }
