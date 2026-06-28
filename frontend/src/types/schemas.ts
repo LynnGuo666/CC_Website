@@ -30,6 +30,21 @@ export const MatchTeamMembershipSchema = z.object({
     user: UserSchema,
 });
 
+// Simplified team entry used in user stats / team history responses.
+// All optional fields are nullable to tolerate backend nulls without failing
+// the whole-page validation.
+export const UserTeamEntrySchema = z.object({
+    id: z.number(),
+    name: z.string(),
+    color: z.string().nullable().optional(),
+    match_name: z.string().nullable().optional(),
+});
+export type UserTeamEntry = z.infer<typeof UserTeamEntrySchema>;
+
+// Six-dimension radar data: { "武力": 80, "爆发": 75, ... }
+export const UserRadarSchema = z.record(z.string(), z.number());
+export type UserRadarData = z.infer<typeof UserRadarSchema>;
+
 // Represents MatchTeam
 export const MatchTeamSchema = z.object({
     id: z.number(),
@@ -235,8 +250,8 @@ export const UserStatsSchema = z.object({
     created_at: z.string().nullable(),
     last_active: z.string().nullable(),
   }),
-  current_team: z.any().nullable(),
-  historical_teams: z.array(z.any()).default([]),
+  current_team: UserTeamEntrySchema.nullable(),
+  historical_teams: z.array(UserTeamEntrySchema).default([]),
   match_history: z.array(z.object({
     match_id: z.number(),
     match_name: z.string(),

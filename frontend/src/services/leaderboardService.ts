@@ -1,5 +1,6 @@
 import apiFetch from './api';
 import { z } from 'zod';
+import { getGameLevelStyle } from '@/lib/status';
 
 // 基础玩家数据Schema
 const BasePlayerSchema = z.object({
@@ -137,54 +138,20 @@ export async function getAvailableGamesForLeaderboard(): Promise<AvailableGamesR
 
 /**
  * 获取等级对应的颜色和样式
+ *
+ * 内部委托给 `@/lib/status` 的 `getGameLevelStyle`，保持全局只有一份等级色映射。
+ * 保留 `color / bgColor / borderColor / bgLight` 字段名以兼容现有调用点。
  * @param level 等级
  * @returns 样式对象
  */
 export function getLevelStyle(level: string) {
-  switch (level) {
-    case 'S':
-      return {
-        color: 'text-yellow-500',
-        bgColor: 'bg-gradient-to-r from-yellow-400 to-yellow-600',
-        borderColor: 'border-yellow-400',
-        bgLight: 'bg-yellow-500/10'
-      };
-    case 'A':
-      return {
-        color: 'text-green-500',
-        bgColor: 'bg-gradient-to-r from-green-400 to-green-600',
-        borderColor: 'border-green-400',
-        bgLight: 'bg-green-500/10'
-      };
-    case 'B':
-      return {
-        color: 'text-blue-500',
-        bgColor: 'bg-gradient-to-r from-blue-400 to-blue-600',
-        borderColor: 'border-blue-400',
-        bgLight: 'bg-blue-500/10'
-      };
-    case 'C':
-      return {
-        color: 'text-orange-500',
-        bgColor: 'bg-gradient-to-r from-orange-400 to-orange-600',
-        borderColor: 'border-orange-400',
-        bgLight: 'bg-orange-500/10'
-      };
-    case 'D':
-      return {
-        color: 'text-gray-500',
-        bgColor: 'bg-gradient-to-r from-gray-400 to-gray-600',
-        borderColor: 'border-gray-400',
-        bgLight: 'bg-gray-500/10'
-      };
-    default:
-      return {
-        color: 'text-gray-500',
-        bgColor: 'bg-gradient-to-r from-gray-400 to-gray-600',
-        borderColor: 'border-gray-400',
-        bgLight: 'bg-gray-500/10'
-      };
-  }
+  const style = getGameLevelStyle(level);
+  return {
+    color: style.text,
+    bgColor: style.dot,
+    borderColor: style.border ?? 'border-gray-400',
+    bgLight: style.bg,
+  };
 }
 
 /**

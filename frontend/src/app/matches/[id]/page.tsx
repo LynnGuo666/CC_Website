@@ -1,7 +1,6 @@
-import { getMatchById, Match, getMatchGames, MatchGame, getMatchGameScores, getGameById } from '@/services/matchService';
-import { getMatchTeams, MatchTeam } from '@/services/matchTeamService';
+import { Match } from '@/services/matchService';
+import { MatchTeam } from '@/services/matchTeamService';
 import Link from 'next/link';
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -17,19 +16,30 @@ import {
 import { FloatingActionButton } from "@/components/floating-action-button";
 import { getApiBaseUrl } from '@/config/env';
 import { MatchVideoFloatingButton } from '@/components/match-video-floating-button';
+import { getMatchStatusStyle } from '@/lib/status';
+import { ErrorState, BackLink } from '@/components/ui/state-blocks';
+import {
+  Users,
+  ClipboardList,
+  BarChart3,
+  Zap,
+  Sparkles,
+  BadgeCheck,
+} from 'lucide-react';
 
 
-// Function to get status badge styling
+// Function to get status badge styling（颜色统一走 @/lib/status，ongoing 以绿色为准）
 function getStatusBadge(status: string) {
+  const style = getMatchStatusStyle(status);
   switch (status) {
     case 'preparing':
-      return <Badge variant="secondary">筹办中</Badge>;
+      return <Badge variant="secondary">{style.label}</Badge>;
     case 'ongoing':
-      return <Badge variant="default" className="bg-blue-500">进行中</Badge>;
+      return <Badge variant="default" className="bg-green-500">{style.label}</Badge>;
     case 'finished':
-      return <Badge variant="default" className="bg-green-500">已结束</Badge>;
+      return <Badge variant="default" className="bg-gray-500">{style.label}</Badge>;
     case 'cancelled':
-      return <Badge variant="destructive">已取消</Badge>;
+      return <Badge variant="destructive">{style.label}</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -92,19 +102,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
   if (error) {
     return (
       <main className="container mx-auto p-4">
-        <div className="p-6 rounded-2xl bg-destructive/10 border border-destructive/20 glass">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-destructive/20 flex items-center justify-center">
-              <svg className="w-5 h-5 text-destructive" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-            <p className="text-destructive font-medium">{error}</p>
-          </div>
-        </div>
-        <Link href="/matches" className="text-primary hover:underline mt-4 inline-block">
-          ← 返回赛事列表
-        </Link>
+        <ErrorState message={error} backHref="/matches" backLabel="返回赛事列表" />
       </main>
     );
   }
@@ -113,9 +111,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
     return (
       <main className="container mx-auto p-4">
         <p className="text-muted-foreground">未找到该赛事。</p>
-        <Link href="/matches" className="text-primary hover:underline mt-4 inline-block">
-          ← 返回赛事列表
-        </Link>
+        <BackLink href="/matches" label="返回赛事列表" className="mt-4" />
       </main>
     );
   }
@@ -147,30 +143,22 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
               {/* Match Info - Small Tags */}
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8">
                 <Badge variant="secondary" className="px-4 py-2 text-sm">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
+                  <Users className="w-4 h-4 mr-2" strokeWidth={2} />
                   {teams.length} 支队伍
                 </Badge>
 
                 <Badge variant="secondary" className="px-4 py-2 text-sm">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
+                  <ClipboardList className="w-4 h-4 mr-2" strokeWidth={2} />
                   {matchGames.length} 个项目
                 </Badge>
 
                 <Badge variant="secondary" className="px-4 py-2 text-sm">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
+                  <BarChart3 className="w-4 h-4 mr-2" strokeWidth={2} />
                   {matchGames.reduce((total, game) => total + game.scores.length, 0)} 条记录
                 </Badge>
 
                 <Badge variant="secondary" className="px-4 py-2 text-sm">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
+                  <Zap className="w-4 h-4 mr-2" strokeWidth={2} />
                   最高 {teamStats[0]?.total_score || 0} 分
                 </Badge>
 
@@ -181,9 +169,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
                 {/* Champion Badge */}
                 {(match.winning_team_id || (match.status === 'finished' && teamStats.length > 0)) && (
                   <Badge variant="default" className="px-4 py-2 text-sm bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-0">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                    </svg>
+                    <Sparkles className="w-4 h-4 mr-2" strokeWidth={2} />
                     总冠军: {
                       match.winning_team_id
                         ? (teams.find(t => t.id === match.winning_team_id)?.name || '未知队伍')
@@ -209,9 +195,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
             <div className="xl:col-span-1">
               <div className="sticky top-6">
                 <h2 className="text-2xl font-bold mb-6 flex items-center">
-                  <svg className="w-6 h-6 mr-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                  </svg>
+                  <BadgeCheck className="w-6 h-6 mr-3 text-yellow-500" strokeWidth={2} />
                   积分榜
                 </h2>
 
@@ -258,9 +242,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
             {/* Games Detail */}
             <div className="xl:col-span-2 space-y-8">
               <h2 className="text-2xl font-bold flex items-center">
-                <svg className="w-6 h-6 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
+                <ClipboardList className="w-6 h-6 mr-3 text-blue-500" strokeWidth={2} />
                 赛程详情
               </h2>
 
@@ -437,15 +419,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
 
           {/* Navigation */}
           <div className="flex justify-center pt-12">
-            <Link
-              href="/matches"
-              className="inline-flex items-center px-6 py-3 rounded-2xl glass card-hover border-primary/20 hover:border-primary/40 transition-all"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
-              </svg>
-              返回赛事列表
-            </Link>
+            <BackLink href="/matches" label="返回赛事列表" />
           </div>
         </div>
       </section>
@@ -456,9 +430,7 @@ export default async function MatchDetailPage({ params }: MatchDetailPageProps) 
         href={`/matches/${match.id}/events`}
         title="查看详细数据"
         icon={
-          <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
+          <BarChart3 className="w-7 h-7 text-primary" strokeWidth={2} />
         }
       />
     </div>

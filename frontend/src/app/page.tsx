@@ -52,7 +52,7 @@ export default function Home() {
           {/* Main heading with liquid glass effect */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight mb-8">
             <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent" style={{ animation: 'shimmer 3s linear infinite' }}>
+              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto]" style={{ animation: 'shimmer 3s linear infinite' }}>
                 联合锦标赛
               </span>
               <span

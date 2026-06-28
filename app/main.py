@@ -58,16 +58,7 @@ app.add_middleware(DatabaseConnectionMiddleware)
 # 添加CORS中间件
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://cc.ziip.space",
-        "https://cc-mc-website.vercel.app",
-        "https://api-cc.lynn6.top",
-        "https://cc.lynn6.top",
-        "https://championship.midnight.school",
-        "https://cc.midnight.school"
-    ],
+    allow_origins=["*"],  # 放行所有来源
     allow_credentials=True,
     allow_methods=["*"],  # 允许所有HTTP方法，包括OPTIONS
     allow_headers=["*"],  # 允许所有请求头

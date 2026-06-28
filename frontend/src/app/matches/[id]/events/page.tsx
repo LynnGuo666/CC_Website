@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getMatchEvents, getMatchById, type Match, type MatchEventsResponse } from "@/services/matchService";
 import { FloatingActionButton } from "@/components/floating-action-button";
+import { ArrowLeft } from "lucide-react";
 
 // 优化：使用 memo 避免不必要的重渲染
 const EventRow = memo(({ event }: { event: any }) => {
@@ -604,9 +605,7 @@ export default function MatchEventsPage() {
         href={`/matches/${match.id}`}
         title="返回赛事详情"
         icon={
-          <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 5l-7 7 7 7" />
-          </svg>
+          <ArrowLeft className="w-7 h-7 text-primary" strokeWidth={2} />
         }
       />
     </div>

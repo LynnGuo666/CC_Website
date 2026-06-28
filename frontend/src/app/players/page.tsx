@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { HeroSection } from '@/components/hero-section';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Users } from 'lucide-react';
+import { getGameLevelStyle } from '@/lib/status';
+import { LoadingState } from '@/components/ui/state-blocks';
 
 export default function PlayersPage() {
   const [players, setPlayers] = useState<User[]>([]);
@@ -137,15 +140,11 @@ export default function PlayersPage() {
         />
         <section className="section-shell">
           <div className="max-w-6xl mx-auto">
-            <div className="glass-card text-center p-12">
-              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-muted flex items-center justify-center animate-pulse">
-                <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
-              <h3 className="text-2xl font-semibold mb-2 text-foreground">正在加载选手...</h3>
-              <p className="text-muted-foreground">请稍候</p>
-            </div>
+            <LoadingState
+              icon={<Users className="w-10 h-10 text-muted-foreground" strokeWidth={2} />}
+              title="正在加载选手..."
+              subtitle="请稍候"
+            />
           </div>
         </section>
       </div>
@@ -214,23 +213,11 @@ export default function PlayersPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {currentPlayers.length > 0 ? (
                 currentPlayers.map((player) => {
-                  // 获取等级样式
+                  // 获取等级样式（颜色统一走 @/lib/status）
                   const getLevelStyle = (level?: string) => {
                     if (!level) return { bgColor: 'bg-gray-500', textColor: 'text-white' };
-                    switch (level) {
-                      case 'S':
-                        return { bgColor: 'bg-gradient-to-br from-yellow-400 to-orange-500', textColor: 'text-white' };
-                      case 'A':
-                        return { bgColor: 'bg-gradient-to-br from-purple-500 to-pink-500', textColor: 'text-white' };
-                      case 'B':
-                        return { bgColor: 'bg-gradient-to-br from-blue-500 to-cyan-500', textColor: 'text-white' };
-                      case 'C':
-                        return { bgColor: 'bg-gradient-to-br from-green-500 to-emerald-500', textColor: 'text-white' };
-                      case 'D':
-                        return { bgColor: 'bg-gradient-to-br from-gray-400 to-gray-500', textColor: 'text-white' };
-                      default:
-                        return { bgColor: 'bg-gray-500', textColor: 'text-white' };
-                    }
+                    const style = getGameLevelStyle(level);
+                    return { bgColor: style.dot, textColor: 'text-white' };
                   };
 
                   const levelStyle = getLevelStyle(player.game_level);

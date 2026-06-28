@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { getMatches } from '@/services/matchService';
 import { getMatchTeams, MatchTeam } from '@/services/matchTeamService';
 import { HeroSection } from '@/components/hero-section';
+import { Users, Clock } from 'lucide-react';
+import { getMatchStatusStyle } from '@/lib/status';
+import { LoadingState, EmptyState } from '@/components/ui/state-blocks';
 
 interface MatchWithTeams {
   id: number;
@@ -52,38 +55,25 @@ export default function TeamsPage() {
       <section className="section-shell">
         <div className="max-w-6xl mx-auto space-y-10">
           {loading ? (
-            <div className="glass-card text-center p-12">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center animate-pulse">
-                <svg className="w-9 h-9 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-1">正在加载队伍...</h3>
-              <p className="text-muted-foreground">请稍候</p>
-            </div>
+            <LoadingState
+              icon={<Users className="w-9 h-9 text-muted-foreground" strokeWidth={2} />}
+              title="正在加载队伍..."
+              subtitle="请稍候"
+            />
           ) : error ? (
             <div className="glass-card border border-destructive/40 text-destructive p-6">
               {error}
             </div>
           ) : matchesWithTeams.length === 0 ? (
-            <div className="glass-card text-center p-12">
-              <svg className="w-16 h-16 mx-auto mb-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-              </svg>
-              <h3 className="text-2xl font-semibold mb-2">暂无比赛</h3>
-              <p className="text-muted-foreground">还没有创建任何比赛，请等待管理员添加新的比赛项目！</p>
-            </div>
+            <EmptyState
+              icon={<Users className="w-16 h-16 text-muted-foreground" strokeWidth={1.5} />}
+              title="暂无比赛"
+              description="还没有创建任何比赛，请等待管理员添加新的比赛项目！"
+            />
           ) : (
             <div className="space-y-10">
               {matchesWithTeams.map((match) => {
-                const statusText =
-                  match.status === 'preparing'
-                    ? '筹办中'
-                    : match.status === 'ongoing'
-                      ? '进行中'
-                      : match.status === 'finished'
-                        ? '已结束'
-                        : '未知状态';
+                const statusText = getMatchStatusStyle(match.status).label;
 
                 return (
                   <div key={match.id} className="glass-card space-y-6 p-6">
@@ -92,15 +82,11 @@ export default function TeamsPage() {
                         <h2 className="text-2xl font-semibold text-foreground">{match.name}</h2>
                         <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mt-2">
                           <span className="flex items-center gap-1.5">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
+                            <Users className="w-4 h-4" strokeWidth={2} />
                             {match.teams.length} 支队伍
                           </span>
                           <span className="flex items-center gap-1.5">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                            <Clock className="w-4 h-4" strokeWidth={2} />
                             {statusText}
                           </span>
                         </div>

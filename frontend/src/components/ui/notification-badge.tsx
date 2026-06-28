@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { ChevronRight } from "lucide-react";
 
 interface NotificationBadgeProps {
     text: string;
@@ -40,9 +41,7 @@ export function NotificationBadge({ text, link, className }: NotificationBadgePr
 
                         {/* Animated arrow */}
                         <div className="relative flex items-center justify-center group-hover:translate-x-1 transition-transform duration-300">
-                            <svg className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors duration-300" strokeWidth={2} />
                         </div>
                     </div>
                 </div>

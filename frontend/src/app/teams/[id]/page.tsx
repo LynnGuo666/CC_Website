@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
-import { Users, Trophy, Star, ArrowLeft, UserPlus, Crown } from 'lucide-react';
+import { Users, Trophy, Star, ArrowLeft, UserPlus } from 'lucide-react';
+import { getMatchStatusStyle } from '@/lib/status';
+import { ErrorState } from '@/components/ui/state-blocks';
 
 type TeamDetailPageProps = {
   params: Promise<{ id: string }>;
@@ -65,26 +67,11 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
       <main className="min-h-screen bg-gradient-to-br from-background via-muted/5 to-background">
         <div className="container mx-auto px-6 py-12">
           <div className="max-w-md mx-auto">
-            <div className="p-8 rounded-3xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 backdrop-blur-sm">
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-900/40 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-red-900 dark:text-red-100">加载失败</h3>
-                  <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
-                </div>
-              </div>
-              <Link 
-                href="/teams" 
-                className="inline-flex items-center space-x-2 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>返回队伍列表</span>
-              </Link>
-            </div>
+            <ErrorState
+              message={error}
+              backHref="/teams"
+              backLabel="返回队伍列表"
+            />
           </div>
         </div>
       </main>
@@ -144,13 +131,11 @@ export default async function TeamDetailPage({ params }: TeamDetailPageProps) {
                     <p className="text-sm text-muted-foreground">{team.match_name}</p>
                   </div>
                 </div>
-                <Badge 
+                <Badge
                   variant={team.match_status === 'ongoing' ? 'default' : team.match_status === 'finished' ? 'secondary' : 'outline'}
                   className="text-xs"
                 >
-                  {team.match_status === 'preparing' ? '筹备中' : 
-                   team.match_status === 'ongoing' ? '进行中' : 
-                   team.match_status === 'finished' ? '已结束' : '已取消'}
+                  {getMatchStatusStyle(team.match_status).label}
                 </Badge>
               </div>
             </div>
